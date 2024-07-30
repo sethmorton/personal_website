@@ -4,7 +4,7 @@ import { StyleSheet, Text, View, ImageBackground, TouchableOpacity, Linking, Dim
 import TypeWriter from 'react-native-typewriter';
 
 // Constants
-const IMAGE_SOURCE = require('./assets/circle_chips.gif');
+const IMAGE_SOURCE = require('./assets/chips.gif');
 const LINKS = [
   { title: 'Github', url: 'https://github.com/sethmorton' },
   { title: 'LinkedIn', url: 'https://www.linkedin.com/in/seth-morton-118574242' },
@@ -12,37 +12,26 @@ const LINKS = [
 ];
 const { width, height } = Dimensions.get('window');
 
-// Helper functions
-const scaleText = (size) => {
-  const baseWidth = 350;
-  const scaleFactor = Math.min(width, height) / baseWidth;
-  return Math.min(Math.max(size * scaleFactor, 12), 40); // Adjusted min and max sizes
-};
-
 // Components
-const TypeWriterText = ({ content, delay, size }) => (
-  <TypeWriter typing={1} initialDelay={delay} minDelay={50} maxDelay={100} style={[styles.text, { fontSize: scaleText(size) }]}>
+const TypeWriterText = ({ content, delay, style }) => (
+  <TypeWriter typing={1} initialDelay={delay} minDelay={50} maxDelay={100} style={style}>
     {content}
   </TypeWriter>
 );
 
 const IntroText = () => (
   <View style={styles.textContainer}>
-    <TypeWriterText content="Hello!" size={20} delay={0} /> {/* Reduced size */}
-    <View style={styles.gap} />
-    <TypeWriterText content="I'm Seth" size={20} delay={300} /> {/* Reduced size */}
+    <TypeWriterText content="Hello!" delay={0} style={styles.titleText} />
+    <TypeWriterText content="I'm Seth" delay={300} style={styles.titleText} />
   </View>
 );
 
 const Links = () => (
   <View style={styles.linksContainer}>
     {LINKS.map((link, index) => (
-      <React.Fragment key={index}>
-        {index > 0 && <Text style={[styles.text, { fontSize: scaleText(10) }]}> | </Text>}
-        <TouchableOpacity onPress={() => Linking.openURL(link.url)}>
-          <TypeWriterText content={link.title} size={10} delay={600 + index * 200} /> {/* Reduced size */}
-        </TouchableOpacity>
-      </React.Fragment>
+      <TouchableOpacity key={index} onPress={() => Linking.openURL(link.url)} style={styles.linkButton}>
+        <TypeWriterText content={link.title} delay={600 + index * 200} style={styles.linkText} />
+      </TouchableOpacity>
     ))}
   </View>
 );
@@ -51,14 +40,14 @@ const Links = () => (
 export default function App() {
   return (
     <View style={styles.container}>
-      <View style={styles.gifContainer}>
-        <ImageBackground source={IMAGE_SOURCE} resizeMode="contain" style={styles.image}>
+      <ImageBackground source={IMAGE_SOURCE} resizeMode="cover" style={styles.image}>
+        <View style={styles.overlay}>
           <View style={styles.contentContainer}>
             <IntroText />
             <Links />
           </View>
-        </ImageBackground>
-      </View>
+        </View>
+      </ImageBackground>
       <StatusBar style="light" />
     </View>
   );
@@ -69,44 +58,51 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'black',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gifContainer: {
-    width: Math.min(width, height) * 0.9, // Increased to 90% of the smaller dimension
-    height: Math.min(width, height) * 0.9, // Increased to 90% of the smaller dimension
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   image: {
+    flex: 1,
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   contentContainer: {
-    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '80%', // Limit the width of the content
+    padding: 20,
   },
   textContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 30, // Increased margin to accommodate larger text
+  },
+  titleText: {
+    color: 'white',
+    fontSize: 60, // Increased from 32 to 48
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 5, // Added some vertical margin between lines
   },
   linksContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10, // Reduced margin
-    flexWrap: 'wrap', // Allow wrapping if needed
+    flexWrap: 'wrap',
     justifyContent: 'center',
   },
-  text: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
+  linkButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingVertical: 10, // Slightly increased for better touch area
+    paddingHorizontal: 20, // Slightly increased for better proportions
+    borderRadius: 25, // Increased to maintain rounded look with larger buttons
+    margin: 8, // Slightly increased for more space between buttons
   },
-  gap: {
-    height: 5, // Reduced gap
+  linkText: {
+    color: 'white',
+    fontSize: 18, // Slightly increased from 16 to 18
+    fontWeight: 'bold',
   },
 });
