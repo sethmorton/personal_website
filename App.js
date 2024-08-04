@@ -4,14 +4,12 @@ import { StyleSheet, Text, View, ImageBackground, TouchableOpacity, Linking, Dim
 import TypeWriter from 'react-native-typewriter';
 
 // Constants
-const IMAGE_SOURCE = require('./assets/chips.gif');
+const IMAGE_SOURCE = require('./assets/circle_chips.gif');
 const LINKS = [
   { title: 'Github', url: 'https://github.com/sethmorton' },
   { title: 'LinkedIn', url: 'https://www.linkedin.com/in/seth-morton-118574242' },
   { title: 'Resume', url: 'https://drive.google.com/file/d/1PhMwbAJn1X4-PdA_ictxGq8tT8G37COo/view?usp=sharing' },
 ];
-const { width, height } = Dimensions.get('window');
-
 // Components
 const TypeWriterText = ({ content, delay, style }) => (
   <TypeWriter typing={1} initialDelay={delay} minDelay={50} maxDelay={100} style={style}>
