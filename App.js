@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     color: 'white',
-    fontSize: 18, // Slightly increased from 16 to 18
+    fontSize: 20, // Slightly increased from 16 to 18
     fontWeight: 'bold',
   },
 });
