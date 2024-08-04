@@ -34,3 +34,5 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 /assets/gradient-waves.gif
+
+assets/chips.gif
