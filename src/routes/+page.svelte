@@ -12,10 +12,10 @@
        class="p-2.5 cursor-pointer hover:underline hover:text-gray-500">blog</a>
   </nav>
 
-  <main class="flex-1 flex flex-col items-center justify-center">
-    <h1 class="text-2xl font-bold">hi, i'm seth morton</h1>
-    <p class="pt-2.5 text-lg">:)</p>
-    <p class="pt-2.5 text-lg">
+  <main class="flex-1 flex flex-col items-center justify-center ">
+    <h1 class="text-2xl font-bold text-center">hi, i'm seth morton</h1>
+    <p class="pt-2.5 text-lg text-center">:)</p>
+    <p class="pt-2.5 text-sm sm:text-lg text-center">
       I'm building <a href="https://digestibletext.com" class="text-black underline hover:text-gray-500">Digestible Text</a>, 
       a tool to help you understand what you read.
     </p>
