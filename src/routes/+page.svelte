@@ -4,6 +4,10 @@
   let hoveredIcon = $state(null);
 </script>
 
+<svelte:head>
+  <title>Seth Morton</title>
+</svelte:head>
+
 <div class="flex w-screen h-screen flex-col justify-center items-center">
   <nav class="absolute top-12 left-0 right-0 flex flex-row justify-center gap-5">
     <a href="/about" 
