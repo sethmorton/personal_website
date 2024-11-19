@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  const publishDate = new Date('2024-03-21');
+  const publishDate = new Date('2024-11-19');
 
   function goBack() {
     goto('/blog');
@@ -12,10 +12,10 @@
 <div class="h-full overflow-y-auto">
     <div class="flex justify-start p-8">
         <button class="text-blue-600 hover:text-blue-800" onclick={() => goto('/blog')}>Back</button>
-      </div>
-  <article class="prose prose-lg mx-auto max-w-3xl px-4 py-8 text-black">
+    </div>
+    <article class="prose prose-lg mx-auto max-w-3xl px-4 py-8 text-black">
 
-    <header class="mb-8">
+      <header class="mb-8">
       <time datetime={publishDate.toISOString()} class="text-sm text-gray-500">
         {publishDate.toLocaleDateString()}
       </time>
