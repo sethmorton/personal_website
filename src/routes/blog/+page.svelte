@@ -6,7 +6,7 @@
       title: 'balance',
       description: 'Thoughts on finding equilibrium in life and work',
       slug: 'balance',
-      date: '2024-03'
+      date: '2024-11-19'
     }
   ]);
 </script>

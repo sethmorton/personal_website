@@ -1,10 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   const publishDate = new Date('2024-11-19');
-
-  function goBack() {
-    goto('/blog');
-  }
 </script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/computer-modern-font@1.0.1/fonts/Serif/cmun-serif.css">
