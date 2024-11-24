@@ -30,7 +30,7 @@ Ideal balance relates to the concept of perfection. In my philosophy classes,
 I've argued that the state of perfection doesn't exist. Perhaps the balance limit equation should go more like this:
 
 $$
-lim_{t \to \infty} f(t) DNE
+lim_{t \to \infty} f(t)  \text{ } \text{DNE}
 $$
 
 Why does balance never manifest in its ideal state? This brings us into the idea of some higher power, 

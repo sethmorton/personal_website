@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
     import MarkdownIt from 'markdown-it';
     import mk from 'markdown-it-katex';
 
