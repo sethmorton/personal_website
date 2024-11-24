@@ -1,0 +1,51 @@
+
+## Balance
+
+Yin-yang, unity of opposites.
+
+I've found myself consumed in a battle to achieve ideal balance. 
+The more I grow the more I realize that balance is essential - for the good, you need the bad, and vice versa. 
+Balance means two contradictory forces interconnected forming a dynamic whole.
+
+Balance presents itself in every waking moment of my life:
+
+Balancing my side projects, school, health, relationships, and money;  
+Balancing my drives, needs, and wants;
+Balancing what I give to the world and what I take.
+
+Balance seems like a concept akin to infinity - a limit we approach but we'll never fully get there. 
+That's how I feel about a lot of things… if $f(t)$ is our journey towards balance as a function of time $t$, 
+this feels like a good equation that summarizes life:
+
+$$
+lim_{t \to \infty} f(t) = L
+$$
+
+where $L$ is the ideal balance, the end goal that we'll never meet.
+
+Perhaps there's something beautiful about that. In striving for an ideal balance, 
+we further ourselves, create a positive lasting impact on the world.
+
+Ideal balance relates to the concept of perfection. In my philosophy classes, 
+I've argued that the state of perfection doesn't exist. Perhaps the balance limit equation should go more like this:
+
+$$
+lim_{t \to \infty} f(t) DNE
+$$
+
+Why does balance never manifest in its ideal state? This brings us into the idea of some higher power, 
+some universal energy that seems to enforce these laws of balance - something I think I've been aware of 
+since I was young but not as acutely as I am now.
+
+The meeting point between harmony and disharmony, two forces of opposite direction tugging back and forth 
+so that we're in a constant state of neutrality.
+
+Where would we be without the yin? Without the struggle?
+
+Working to embrace pain, to utilize it as a tool to improve and to strive to struggle less, 
+or struggle on more pleasurable struggles.
+
+Pain makes the highs feel higher.
+
+I feel as if over my life, I've had to endure a lot of pain. Then, I take a step back and recognize my blessings, 
+my privilege to be alive, to have a mind, the freedom of thought and the capability to exercise it.

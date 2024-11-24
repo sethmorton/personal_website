@@ -30,6 +30,9 @@
 		"vite": "^5.0.3"
 	},
 	"dependencies": {
-		"lucide-svelte": "^0.456.0"
+		"katex": "^0.16.11",
+		"lucide-svelte": "^0.456.0",
+		"markdown-it": "^14.1.0",
+		"markdown-it-katex": "^2.0.3"
 	}
 }
