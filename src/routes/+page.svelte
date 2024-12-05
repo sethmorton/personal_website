@@ -35,7 +35,7 @@
         />
       </a>
       
-      <a href="https://utfs.io/f/PZA8aODL9FcWieL8bIKfdeShDqYV93tLPQ7JaE21HbGwnlFW" 
+      <a href="https://utfs.io/f/PZA8aODL9FcWtX2t5yXFRFdpYJG36XyxbLAE02DMTgvOeHhz" 
          class="p-2.5 mx-2.5 cursor-pointer transition-transform duration-200 hover:scale-110"
          onmouseenter={() => hoveredIcon = 'resume'}
          onmouseleave={() => hoveredIcon = null}>
