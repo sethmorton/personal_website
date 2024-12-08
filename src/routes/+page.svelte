@@ -2,20 +2,6 @@
 	import { FileText, Linkedin, Mail } from 'lucide-svelte';
 
 	let hoveredIcon = $state(null);
-	const LINKS = [
-		{
-			name: 'resume',
-			url: 'http://go.sethmorton.xyz/resume'
-		},
-		{
-			name: 'linkedin',
-			url: 'http://go.sethmorton.xyz/linkedin'
-		},
-		{
-			name: 'github',
-			url: 'https://go.sethmorton.xyz/github'
-		}
-	];
 </script>
 
 <svelte:head>
@@ -49,7 +35,7 @@
 			</a>
 
 			<a
-				href="hhttp://go.sethmorton.xyz/resume"
+				href="https://go.sethmorton.xyz/resume"
 				class="mx-2.5 cursor-pointer p-2.5 transition-transform duration-200 hover:scale-110"
 				onmouseenter={() => (hoveredIcon = 'resume')}
 				onmouseleave={() => (hoveredIcon = null)}
@@ -58,7 +44,7 @@
 			</a>
 
 			<a
-				href="http://go.sethmorton.xyz/linkedin"
+				href="https://go.sethmorton.xyz/linkedin"
 				class="mx-2.5 cursor-pointer p-2.5 transition-transform duration-200 hover:scale-110"
 				onmouseenter={() => (hoveredIcon = 'linkedin')}
 				onmouseleave={() => (hoveredIcon = null)}
