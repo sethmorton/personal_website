@@ -33,9 +33,10 @@
 	},
 	"dependencies": {
 		"@vercel/analytics": "^1.4.1",
-		"katex": "^0.16.11",
+		"katex": "^0.16.18",
 		"lucide-svelte": "^0.456.0",
 		"markdown-it": "^14.1.0",
-		"markdown-it-katex": "^2.0.3"
+		"markdown-it-katex": "^2.0.3",
+		"markdown-it-math": "^4.1.1"
 	}
 }

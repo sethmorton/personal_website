@@ -1,0 +1,36 @@
+## Gratitude & Hyperbolic Discounting
+
+My friend and I had an interesting conversation the other day about hyperbolic discounting. Essentially, it's a psychological phenomenon where people value immediate rewards much more than future rewards, even if the future reward is greater. Take this example: imagine you're offered &#36;10 today or &#36;12 tomorrow. The idea of waiting 1 day for an extra 2 dollars seems hard to justify. However, let's say it was &#36;10 in 30 days or &#36;12 in 31 days. The choices feel different because the rewards are so far in the future that people are more willing to wait.
+
+When faced with a choice, we heavily favor what we can do right now. We tend to "discount" future rewards, viewing the future reward as less appealing than the immediate one. For example, skipping exercise today feels fine because the health benefits seem far away.
+
+<div align="center"> <img src="https://i.ibb.co/rsfMYm3/desmos-graph-1.png" alt="desmos-graph" border="0" width="300" /> </div>
+
+*This is a fun graph for the curious: \( F(t) = \frac{V_0}{1 + k \cdot t} \), where \( V_0 \) is the initial reward, \( k \) is the discount rate, and \( t \) is time.*
+
+I believe that humanity's biggest flaw is this experience. Short-term thinking plagues us, blinds us, and decreases our net prosperity. When I think about our biggest problems, they often boil down to this dark, gooey substance: short-term thinking.
+
+I told my friend that my goal in life is to surround myself with people who coax as much long-term thinking out of me as possible. To not let myself discount future rewards. To not follow this graph.
+
+To think about the bigger picture.
+
+And in thinking about the bigger picture, to think about tomorrow.
+
+Why tomorrow? Because of the people I want to see, the things I want to do. Because tomorrow is one of the many stepping stones toward the person I want to become—the person I want to be in this world, the impact I want to have.
+
+Right now, I’m in finals season. I find it especially easy during this time to get bogged down in short-term thinking.
+
+It’s nice to take a step back. To think about what’s beyond the horizon.
+
+With that in mind, lately, I’ve been feeling an incredible sense of gratitude.
+
+Grateful for my opportunities.  
+Grateful for the people around me—my family, my friends.
+- The people who make life enjoyable and exciting.
+
+Grateful for my space, my air, my privacy.  
+
+For music, art, and beauty.
+For my mind and my body.  
+
+Grateful to have experienced, and to continue to experience, transformative pain.
