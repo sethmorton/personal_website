@@ -58,7 +58,7 @@
 
 		mathDelimiters.forEach((delimiter) => {
 			const regex = createMathRegex(delimiter);
-			processedContent = processedContent.replace(regex, (match, math) => {
+			processedContent = processedContent.replace(regex, (match = '', math = '') => {
 				const placeholder = `MATH_PLACEHOLDER_${placeholderCounter++}`;
 				mathExpressions.push({
 					placeholder,
