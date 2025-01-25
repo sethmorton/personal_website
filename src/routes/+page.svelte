@@ -26,16 +26,6 @@
 
 	const projects: Project[] = [
 		{
-			title: 'Trading Algorithm Risk Classifier',
-			description:
-				'Enhanced trading strategies with ML classification to prevent false bullish signals on bearish days. Built to reduce drawdowns in leveraged ETF positions by combining traditional technical analysis with modern ML approaches for more robust market prediction.',
-			insight:
-				'Discovered that combining traditional technical analysis with ML classification could significantly reduce drawdowns while maintaining strategy returns.',
-			date: 'Dec 2024 - Present',
-			technologies: ['Python', 'XGBoost', 'Optuna', 'yfinance', 'Pandas'],
-			github: 'https://github.com/yourusername/trading-risk-classifier'
-		},
-		{
 			title: 'DigestibleText',
 			description:
 				'Born from personal struggles with ADHD and dense text, created a tool that transforms walls of text into structured, readable formats while preserving every detail. Helps users who struggle with information processing maintain comprehension without sacrificing nuance.',
@@ -46,6 +36,16 @@
 			link: 'https://digestibletext.com',
 
 			image: '/digestibletext.png'
+		},
+		{
+			title: 'Trading Algorithm Risk Classifier',
+			description:
+				'Enhanced trading strategies with ML classification to prevent false bullish signals on bearish days. Built to reduce drawdowns in leveraged ETF positions by combining traditional technical analysis with modern ML approaches for more robust market prediction.',
+			insight:
+				'Discovered that combining traditional technical analysis with ML classification could significantly reduce drawdowns while maintaining strategy returns.',
+			date: 'Dec 2024 - Present',
+			technologies: ['Python', 'XGBoost', 'Optuna', 'yfinance', 'Pandas'],
+			image: '/tradingriskclassifier.png'
 		},
 		{
 			title: 'Backtest Extender',
