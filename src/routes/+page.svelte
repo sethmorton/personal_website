@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Hackathons from '$lib/components/Hackathons.svelte';
 	import {
 		Github,
 		ExternalLink,
@@ -12,7 +13,7 @@
 		Trophy,
 		Lightbulb
 	} from 'lucide-svelte';
-
+	import WorkExperience from '$lib/components/WorkExperience.svelte';
 	interface Project {
 		title: string;
 		description: string;
@@ -107,7 +108,7 @@
 			image: '/racketformatter.png'
 		},
 		{
-			title: 'Volta',
+			title: 'Volta | Berkeley AI Hackathon 2024',
 			description:
 				'Power consumption analysis tool for the Pacific Grid that uses ML to predict energy usage and environmental impact. Built to help organizations optimize their energy consumption patterns and reduce environmental footprint.',
 			insight:
@@ -115,6 +116,16 @@
 			date: 'May 2024',
 			technologies: ['SvelteKit', 'AWS Lambda', 'scikit-learn', 'Python'],
 			github: 'https://github.com/sethmorton/volta'
+		},
+		{
+			title: 'SolarUp | Second Place in HackHarvard 2023 Earth & Space Track',
+			description:
+				'Developed a platform that helps businesses transform their parking lots into solar power generators. Built using real-time solar data to calculate potential earnings from solar panel installations, making sustainable energy decisions more accessible for property owners.',
+			insight:
+				'Integrating multiple energy APIs and handling complex calculations taught me about making technical data accessible to non-technical users.',
+			date: 'October 2023',
+			technologies: ['React', 'Python', 'FastAPI', 'NREL API', '1Build API'],
+			github: 'https://github.com/sethmorton/solarup'
 		}
 	];
 
@@ -125,6 +136,8 @@
 <div class="flex min-h-screen flex-col">
 	<nav class="flex justify-center gap-5 border-b border-gray-100 bg-white/80 py-4 backdrop-blur">
 		<a href="#about" class="cursor-pointer p-2.5 hover:text-gray-500">about</a>
+		<a href="#experience" class="cursor-pointer p-2.5 hover:text-gray-500">experience</a>
+		<a href="#hackathons" class="cursor-pointer p-2.5 hover:text-gray-500">hackathons</a>
 		<a href="#projects" class="cursor-pointer p-2.5 hover:text-gray-500">projects</a>
 		<a href="/blog" class="cursor-pointer p-2.5 hover:text-gray-500">blog</a>
 	</nav>
@@ -217,10 +230,11 @@
 					</p>
 				</div>
 			</section>
-
+			<WorkExperience />
+			<Hackathons />
 			<!-- Projects Section -->
 			<section id="projects" class="py-16">
-				<h2 class="mb-8 text-2xl font-bold">Personal Projects</h2>
+				<h2 class="mb-8 text-2xl font-bold">Favorite Personal Projects</h2>
 				<div class="flex flex-col gap-8">
 					{#each projects.sort((a, b) => {
 						// Helper function to parse dates, handling "Present"
