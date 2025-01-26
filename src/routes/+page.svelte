@@ -11,7 +11,9 @@
 		Book,
 		Code,
 		Trophy,
-		Lightbulb
+		Lightbulb,
+		X,
+		Menu
 	} from 'lucide-svelte';
 	import WorkExperience from '$lib/components/WorkExperience.svelte';
 	interface Project {
@@ -131,15 +133,41 @@
 
 	let hoveredIcon = $state(null as string | null);
 	let hoveredProject = $state(null as number | null);
+	let isOpen = $state(false);
 </script>
 
 <div class="flex min-h-screen flex-col">
-	<nav class="flex justify-center gap-5 border-b border-gray-100 bg-white/80 py-4 backdrop-blur">
-		<a href="#about" class="cursor-pointer p-2.5 hover:text-gray-500">about</a>
-		<a href="#experience" class="cursor-pointer p-2.5 hover:text-gray-500">experience</a>
-		<a href="#hackathons" class="cursor-pointer p-2.5 hover:text-gray-500">hackathons</a>
-		<a href="#projects" class="cursor-pointer p-2.5 hover:text-gray-500">projects</a>
-		<a href="/blog" class="cursor-pointer p-2.5 hover:text-gray-500">blog</a>
+	<nav class="border-b border-gray-100 bg-white/80 backdrop-blur">
+		<!-- Mobile menu button -->
+		<div class="flex justify-between px-4 py-4 md:hidden">
+			<button onclick={() => (isOpen = !isOpen)} class="p-2">
+				{#if isOpen}
+					<X size={24} />
+				{:else}
+					<Menu size={24} />
+				{/if}
+			</button>
+		</div>
+
+		<!-- Desktop nav -->
+		<div class="hidden justify-center gap-5 py-4 md:flex">
+			<a href="#about" class="p-2.5 hover:text-gray-500">about</a>
+			<a href="#experience" class="p-2.5 hover:text-gray-500">experience</a>
+			<a href="#hackathons" class="p-2.5 hover:text-gray-500">hackathons</a>
+			<a href="#projects" class="p-2.5 hover:text-gray-500">projects</a>
+			<a href="/blog" class="p-2.5 hover:text-gray-500">blog</a>
+		</div>
+
+		<!-- Mobile menu -->
+		{#if isOpen}
+			<div class="px-4 py-2 md:hidden">
+				<a href="#about" class="block py-2 hover:text-gray-500">about</a>
+				<a href="#experience" class="block py-2 hover:text-gray-500">experience</a>
+				<a href="#hackathons" class="block py-2 hover:text-gray-500">hackathons</a>
+				<a href="#projects" class="block py-2 hover:text-gray-500">projects</a>
+				<a href="/blog" class="block py-2 hover:text-gray-500">blog</a>
+			</div>
+		{/if}
 	</nav>
 
 	<main class="flex flex-1 flex-col items-center px-4">
