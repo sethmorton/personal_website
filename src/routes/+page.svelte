@@ -173,64 +173,71 @@
 	<main class="flex flex-1 flex-col items-center px-4">
 		<div class="w-full max-w-4xl">
 			<!-- Hero Section -->
-			<section class="flex min-h-[80vh] flex-col items-center justify-center py-16">
-				<div class="flex flex-col items-center space-y-6">
+			<section
+				class="flex min-h-[80vh] flex-col items-center justify-center px-4 py-8 md:px-0 md:py-16"
+			>
+				<div class="flex flex-col items-center space-y-4 md:space-y-6">
 					<!-- Profile Image -->
-					<div class="mb-6 overflow-hidden rounded-full border-4 border-gray-100 shadow-lg">
-						<img src="/seth_image.webp" alt="Seth Morton" class="h-32 w-32 object-cover" />
+					<div class="mb-4 overflow-hidden rounded-full border-4 border-gray-100 shadow-lg md:mb-6">
+						<img
+							src="/seth_image.webp"
+							alt="Seth Morton"
+							class="h-24 w-24 object-cover md:h-32 md:w-32"
+						/>
 					</div>
 
 					<!-- Main Text -->
 					<div class="text-center">
 						<h1
-							class="bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-5xl font-bold text-transparent"
+							class="bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-3xl font-bold text-transparent md:text-5xl"
 						>
 							hi, i'm seth morton
 						</h1>
-						<div class="mt-6 space-y-3">
-							<p class="text-lg font-medium text-gray-800">
+						<div class="mt-4 space-y-2 md:mt-6 md:space-y-3">
+							<p class="text-base font-medium text-gray-800 md:text-lg">
 								Software Engineer with 5+ years of professional expertise in Full Stack Development
-								and Machine Learning. Currently working at <a
+								and Machine Learning. Currently working at
+								<a
 									href="https://www.renavestapp.com/"
 									target="_blank"
 									rel="noopener noreferrer"
 									class="text-purple-600 transition-colors hover:text-black">Renavest</a
 								>.
 							</p>
-							<p class="text-lg text-gray-600">
+							<p class="text-base text-gray-600 md:text-lg">
 								Majoring in Philosophy at Tufts, minoring in 3 tech startups.
 							</p>
 						</div>
 					</div>
 
 					<!-- Social Links -->
-					<div class="mt-8 flex items-center gap-6">
+					<div class="mt-6 flex flex-wrap items-center justify-center gap-3 md:mt-8 md:gap-6">
 						<a
 							href="mailto:seth.morton@tufts.edu"
-							class="group flex items-center gap-2 rounded-full bg-gray-50 px-5 py-2 text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-gray-900"
+							class="group flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-gray-900 md:px-5"
 							onmouseenter={() => (hoveredIcon = 'mail')}
 							onmouseleave={() => (hoveredIcon = null)}
 						>
 							<Mail size={20} />
-							<span class="text-sm font-medium">Email</span>
+							<span class="text-xs font-medium md:text-sm">Email</span>
 						</a>
 						<a
 							href="https://github.com/sethmorton"
-							class="group flex items-center gap-2 rounded-full bg-gray-50 px-5 py-2 text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-gray-900"
+							class="group flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-gray-900 md:px-5"
 							onmouseenter={() => (hoveredIcon = 'github')}
 							onmouseleave={() => (hoveredIcon = null)}
 						>
 							<Github size={20} />
-							<span class="text-sm font-medium">GitHub</span>
+							<span class="text-xs font-medium md:text-sm">GitHub</span>
 						</a>
 						<a
 							href="https://www.linkedin.com/in/seth-morton-118574242/"
-							class="group flex items-center gap-2 rounded-full bg-gray-50 px-5 py-2 text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-gray-900"
+							class="group flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-gray-900 md:px-5"
 							onmouseenter={() => (hoveredIcon = 'linkedin')}
 							onmouseleave={() => (hoveredIcon = null)}
 						>
 							<Linkedin size={20} />
-							<span class="text-sm font-medium">LinkedIn</span>
+							<span class="text-xs font-medium md:text-sm">LinkedIn</span>
 						</a>
 					</div>
 				</div>

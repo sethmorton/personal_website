@@ -97,14 +97,12 @@
 
 	let observer: IntersectionObserver;
 	let visibleSections = new Set();
-
 	onMount(() => {
-		observer = new IntersectionObserver(
+		const observer = new IntersectionObserver(
 			(entries) => {
 				entries.forEach((entry) => {
 					if (entry.isIntersecting) {
-						visibleSections.add(entry.target.id);
-						visibleSections = visibleSections;
+						visibleSections = new Set([...visibleSections, entry.target.id]);
 					}
 				});
 			},
@@ -122,36 +120,36 @@
 	});
 </script>
 
-<h2 class="text-2xl font-bold" id="experience">Work Experience</h2>
-<div class="relative mx-auto max-w-7xl">
-	<!-- Timeline Line -->
+<h2 class="px-4 text-xl font-bold md:px-0 md:text-2xl" id="experience">Work Experience</h2>
+<div class="relative mx-auto max-w-7xl px-4 md:px-6">
+	<!-- Timeline Line - Hidden on mobile, shown on larger screens -->
 	<div
-		class="absolute left-[7.5rem] top-0 h-full w-[2px] bg-[linear-gradient(to_bottom,transparent,rgb(229,231,235),transparent)]"
+		class="absolute left-0 top-0 hidden h-full w-[2px] bg-[linear-gradient(to_bottom,transparent,rgb(229,231,235),transparent)] md:left-[7.5rem] md:block"
 	></div>
 
 	<!-- Timeline Entries -->
 	{#each experiences as exp, i}
 		<div
-			class="timeline-entry relative flex gap-16 py-16"
+			class="timeline-entry relative flex flex-col py-8 md:flex-row md:gap-16 md:py-16"
 			id={`entry-${i}`}
 			in:fade={{ duration: 500, delay: i * 200 }}
 		>
-			<!-- Year -->
-			<div class="sticky top-24 flex h-16 w-28">
-				<span class="text-5xl font-bold text-gray-300">{exp.year}</span>
+			<!-- Year - Repositioned for mobile -->
+			<div class="mb-4 flex h-12 w-full md:sticky md:top-24 md:mb-0 md:h-16 md:w-28">
+				<span class="text-3xl font-bold text-gray-300 md:text-5xl">{exp.year}</span>
 			</div>
 
 			<!-- Content -->
 			<div
-				class="flex-1 rounded-xl border border-gray-100 bg-white p-8 shadow-sm transition-shadow hover:shadow-md"
+				class="flex-1 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md md:p-8"
 				class:visible={visibleSections.has(`entry-${i}`)}
 			>
-				<div class="mb-6 flex justify-between">
+				<div class="mb-6 flex flex-col gap-2 md:flex-row md:justify-between md:gap-0">
 					<div>
-						<h3 class="text-2xl font-bold text-gray-900">{exp.title}</h3>
-						<p class="text-lg text-purple-600">{exp.company}</p>
+						<h3 class="text-xl font-bold text-gray-900 md:text-2xl">{exp.title}</h3>
+						<p class="text-base text-purple-600 md:text-lg">{exp.company}</p>
 					</div>
-					<div class="text-right">
+					<div class="md:text-right">
 						<p class="text-sm text-gray-600">{exp.date}</p>
 						<p class="text-sm text-gray-500">{exp.location} · {exp.type}</p>
 					</div>
@@ -160,23 +158,23 @@
 				<div class="mb-6 space-y-4">
 					<div>
 						<h4 class="mb-2 font-medium text-gray-700">Why</h4>
-						<p class="text-gray-600">{exp.why}</p>
+						<p class="text-sm text-gray-600 md:text-base">{exp.why}</p>
 					</div>
 					<div>
 						<h4 class="mb-2 font-medium text-gray-700">What I Did</h4>
-						<p class="text-gray-600">{exp.what}</p>
+						<p class="text-sm text-gray-600 md:text-base">{exp.what}</p>
 					</div>
 					<div>
 						<h4 class="mb-2 font-medium text-gray-700">Impact</h4>
-						<p class="text-gray-600">{exp.impact}</p>
+						<p class="text-sm text-gray-600 md:text-base">{exp.impact}</p>
 					</div>
 					<div>
 						<h4 class="mb-2 font-medium text-gray-700">Technical</h4>
-						<p class="mb-3 text-gray-600">{exp.technical.description}</p>
+						<p class="mb-3 text-sm text-gray-600 md:text-base">{exp.technical.description}</p>
 						<div class="flex flex-wrap gap-2">
 							{#each exp.technical.technologies as tech}
 								<span
-									class="rounded-full bg-purple-50 px-3 py-1 text-sm font-medium text-purple-600"
+									class="rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-600 md:px-3 md:text-sm"
 								>
 									{tech}
 								</span>
@@ -188,7 +186,9 @@
 					<h4 class="font-medium text-gray-700">Skills</h4>
 					<div class="mt-6 flex flex-wrap gap-2">
 						{#each exp.skills as skill}
-							<span class="rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-600">
+							<span
+								class="rounded-full bg-gray-50 px-2 py-1 text-xs text-gray-600 md:px-3 md:text-sm"
+							>
 								{skill}
 							</span>
 						{/each}
