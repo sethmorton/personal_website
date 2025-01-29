@@ -195,17 +195,11 @@
 						</h1>
 						<div class="mt-4 space-y-2 md:mt-6 md:space-y-3">
 							<p class="text-base font-medium text-gray-800 md:text-lg">
-								Software Engineer with 5+ years of professional expertise in Full Stack Development
-								and Machine Learning. Currently working at
-								<a
-									href="https://www.renavestapp.com/"
-									target="_blank"
-									rel="noopener noreferrer"
-									class="text-purple-600 transition-colors hover:text-black">Renavest</a
-								>.
+								TypeScript & AWS Expert | Full Stack Engineer
 							</p>
 							<p class="text-base text-gray-600 md:text-lg">
-								Majoring in Philosophy at Tufts, minoring in 3 tech startups.
+								5+ years building high-impact, large-scale applications. Proven experience in
+								creating full-stack web applications, databases, and product leadership.
 							</p>
 						</div>
 					</div>
@@ -238,6 +232,293 @@
 						>
 							<Linkedin size={20} />
 							<span class="text-xs font-medium md:text-sm">LinkedIn</span>
+						</a>
+					</div>
+				</div>
+			</section>
+
+			<section id="glance" class="py-16">
+				<h2 class="mb-12 text-center text-3xl font-bold">What I've Shipped at a Glance</h2>
+				<div class="space-y-8">
+					<a
+						href="https://renavestapp.com"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="group block rounded-lg border border-gray-200 bg-white p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+					>
+						<div class="mb-4 flex items-center justify-between">
+							<div class="flex items-center">
+								<img src="renavest-logo.png" alt="Renavest Logo" class="mr-4 h-8 w-8" />
+								<h3 class="text-xl font-semibold group-hover:text-indigo-600">
+									Leading Product @ Renavest
+								</h3>
+							</div>
+							<span class="text-sm text-gray-500">May 2024 - Present</span>
+						</div>
+						<p class="mb-4 text-gray-600">
+							Led a team of 3 developers to create a mobile application using React Native and AWS,
+							pivoted the company to a web application using Next.js and AWS, securing 5 contracts
+							and $100k+ projected revenue.
+						</p>
+						<div class="flex flex-wrap gap-2">
+							<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+								>React Native</span
+							>
+							<span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800"
+								>Next.js</span
+							>
+							<span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800"
+								>AWS</span
+							>
+						</div>
+						<div class="mt-4 flex items-center space-x-2 text-indigo-600">
+							<span class="text-sm font-medium">View Website</span>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								class="h-4 w-4 transition duration-300 ease-in-out group-hover:translate-x-1"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+									clip-rule="evenodd"
+								></path>
+							</svg>
+						</div>
+					</a>
+					<a
+						href="https://bajabound.com"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="group block rounded-lg border border-gray-200 bg-white p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+					>
+						<div class="mb-4 flex items-center justify-between">
+							<div class="flex items-center">
+								<img src="bajabound-logo.png" alt="BajaBound Logo" class="mr-4 h-6 w-6" />
+								<h3 class="text-xl font-semibold group-hover:text-indigo-600">
+									SWE @ BajaBound Insurance
+								</h3>
+							</div>
+							<span class="text-sm text-gray-500">Jan 2020 - Aug 2023</span>
+						</div>
+						<p class="mb-4 text-gray-600">
+							Built and shipped a TypeScript/GCP/PostgreSQL analytics platform handling 150,000+
+							monthly visits. Created automated testing framework for update pipeline, cutting QA
+							cycle time from 3 weeks to 1 week.
+						</p>
+						<div class="flex flex-wrap gap-2">
+							<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+								>TypeScript</span
+							>
+							<span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800"
+								>GCP</span
+							>
+							<span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800"
+								>PostgreSQL</span
+							>
+							<span class="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-800"
+								>Automated Testing</span
+							>
+						</div>
+						<div class="mt-4 flex items-center space-x-2 text-indigo-600">
+							<span class="text-sm font-medium">View Website</span>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								class="h-4 w-4 transition duration-300 ease-in-out group-hover:translate-x-1"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+									clip-rule="evenodd"
+								></path>
+							</svg>
+						</div>
+					</a>
+					<a
+						href="https://www.smartbordercoalition.com/"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="group block rounded-lg border border-gray-200 bg-white p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+					>
+						<div class="mb-4 flex items-center justify-between">
+							<div class="flex items-center">
+								<img src="cbp-logo.png" alt="CBP Logo" class="mr-4 h-8 w-8" />
+								<h3 class="text-xl font-semibold group-hover:text-indigo-600">
+									Data Scientist @ Smart Border Coalition
+								</h3>
+							</div>
+							<span class="text-sm text-gray-500">Mar 2020 - Jul 2023</span>
+						</div>
+						<p class="mb-4 text-gray-600">
+							Created first ever PostgreSQL database of USA/Mexico border wait times scraping data
+							from the CBP, Google Maps, and Apple Maps, collecting over 15,000 entries per month.
+							Presented never before seen data-driven insights to the regional head of US CBP.
+						</p>
+						<div class="flex flex-wrap gap-2">
+							<span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800"
+								>PostgreSQL</span
+							>
+							<span class="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-800"
+								>Web Scraping</span
+							>
+							<span class="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800"
+								>Data Analysis</span
+							>
+							<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+								>AWS</span
+							>
+						</div>
+						<div class="mt-4 flex items-center space-x-2 text-indigo-600">
+							<span class="text-sm font-medium">View Website</span>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								class="h-4 w-4 transition duration-300 ease-in-out group-hover:translate-x-1"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+									clip-rule="evenodd"
+								></path>
+							</svg>
+						</div>
+					</a>
+					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+						<a
+							href="https://digestibletext.com"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="group block rounded-lg border border-gray-200 bg-white p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+						>
+							<div class="mb-4 flex items-center justify-between">
+								<h3 class="text-xl font-semibold group-hover:text-indigo-600">DigestibleText</h3>
+								<span class="text-sm text-gray-500">Sep 2024 - Present</span>
+							</div>
+							<p class="mb-4 text-gray-600">
+								Text restructuring tool with 30+ users, solving reading comprehension needs.
+							</p>
+							<div class="flex flex-wrap gap-2">
+								<span class="rounded-full bg-pink-100 px-3 py-1 text-sm font-medium text-pink-800"
+									>Tesseract</span
+								>
+								<span
+									class="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800"
+									>Clerk</span
+								>
+
+								<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+									>PostgreSQL</span
+								>
+							</div>
+							<div class="mt-4 flex items-center space-x-2 text-indigo-600">
+								<span class="text-sm font-medium">View Website</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="h-4 w-4 transition duration-300 ease-in-out group-hover:translate-x-1"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+										clip-rule="evenodd"
+									></path>
+								</svg>
+							</div>
+						</a>
+						<a
+							href="https://embeddit.vercel.app"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="group block rounded-lg border border-gray-200 bg-white p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg"
+						>
+							<div class="mb-4 flex items-center justify-between">
+								<h3 class="text-xl font-semibold group-hover:text-indigo-600">Embeddit</h3>
+								<span class="text-sm text-gray-500">Oct 2024, HackHarvard Winner</span>
+							</div>
+							<p class="mb-4 text-gray-600">
+								HackHarvard-winning AI-powered Reddit analyzer, making community insights
+								accessible.
+							</p>
+							<div class="flex flex-wrap gap-2">
+								<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+									>TypeScript</span
+								>
+								<span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800"
+									>Next.js</span
+								>
+								<span
+									class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800"
+									>PineconeDB</span
+								>
+							</div>
+							<div class="mt-4 flex items-center space-x-2 text-indigo-600">
+								<span class="text-sm font-medium">View Website</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="h-4 w-4 transition duration-300 ease-in-out group-hover:translate-x-1"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+										clip-rule="evenodd"
+									></path>
+								</svg>
+							</div>
+						</a>
+						<a
+							href="https://backtestextend.xyz"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="group block rounded-lg border border-gray-200 bg-white p-6 shadow-md transition-shadow duration-300 hover:shadow-lg sm:col-span-2"
+						>
+							<div class="mb-4 flex items-center justify-between">
+								<h3 class="text-xl font-semibold group-hover:text-indigo-600">Backtest Extender</h3>
+								<span class="text-sm text-gray-500">Jul 2024 - Present</span>
+							</div>
+							<p class="mb-4 text-gray-600">
+								ETF analytics tool for 50+ algorithmic traders, eliminating manual research.
+							</p>
+							<div class="flex flex-wrap gap-2">
+								<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
+									>TypeScript</span
+								>
+								<span class="rounded-full bg-pink-100 px-3 py-1 text-sm font-medium text-pink-800"
+									>SvelteKit</span
+								>
+								<span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800"
+									>Financial Data Analysis</span
+								>
+							</div>
+							<div class="mt-4 flex items-center space-x-2 text-indigo-600">
+								<span class="text-sm font-medium">View Website</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="h-4 w-4 transition duration-300 ease-in-out group-hover:translate-x-1"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+										clip-rule="evenodd"
+									></path>
+								</svg>
+							</div>
+						</a>
+					</div>
+					<div class="mt-12 text-center">
+						<a
+							href="#experience"
+							class="inline-block rounded-full bg-indigo-600 px-6 py-3 text-sm font-semibold leading-5 text-white shadow-md transition duration-150 ease-in-out hover:bg-indigo-500 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+						>
+							Read on to learn more about each experience
 						</a>
 					</div>
 				</div>
