@@ -257,8 +257,8 @@
 						</div>
 						<p class="mb-4 text-gray-600">
 							Led a team of 3 developers to create a mobile application using React Native and AWS,
-							pivoted the company to a web application using Next.js and AWS, securing 5 contracts
-							and $100k+ projected revenue.
+							pivoted the company to a web application using Next.js and AWS, securing 5 enterprise
+							contracts and $100k+ projected ARR.
 						</p>
 						<div class="flex flex-wrap gap-2">
 							<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
@@ -303,9 +303,9 @@
 							<span class="text-sm text-gray-500">Jan 2020 - Aug 2023</span>
 						</div>
 						<p class="mb-4 text-gray-600">
-							Built and shipped a TypeScript/GCP/PostgreSQL analytics platform handling 150,000+
-							monthly visits. Created automated testing framework for update pipeline, cutting QA
-							cycle time from 3 weeks to 1 week.
+							Built and shipped a TypeScript/GCP/PostgreSQL analytics platform for BajaBound,
+							handling 150,000+ monthly visits. Created automated selenium testing framework for
+							update pipeline, cutting QA cycle time from 3 weeks to 1 week.
 						</p>
 						<div class="flex flex-wrap gap-2">
 							<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
@@ -355,7 +355,8 @@
 						<p class="mb-4 text-gray-600">
 							Created first ever PostgreSQL database of USA/Mexico border wait times scraping data
 							from the CBP, Google Maps, and Apple Maps, collecting over 15,000 entries per month.
-							Presented never before seen data-driven insights to the regional head of US CBP.
+							Presented never before seen data-driven insights to the regional head of US CBP and
+							created a public analytics dashboard.
 						</p>
 						<div class="flex flex-wrap gap-2">
 							<span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-800"
@@ -399,7 +400,8 @@
 								<span class="text-sm text-gray-500">Sep 2024 - Present</span>
 							</div>
 							<p class="mb-4 text-gray-600">
-								Text restructuring tool with 30+ users, solving reading comprehension needs.
+								Text restructuring tool with 30+ users, solving reading comprehension needs for
+								philosophy students.
 							</p>
 							<div class="flex flex-wrap gap-2">
 								<span class="rounded-full bg-pink-100 px-3 py-1 text-sm font-medium text-pink-800"
@@ -483,7 +485,8 @@
 								<span class="text-sm text-gray-500">Jul 2024 - Present</span>
 							</div>
 							<p class="mb-4 text-gray-600">
-								ETF analytics tool for 50+ algorithmic traders, eliminating manual research.
+								ETF analytics tool for 50+ algorithmic traders, eliminating manual
+								backtestingresearch.
 							</p>
 							<div class="flex flex-wrap gap-2">
 								<span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800"
