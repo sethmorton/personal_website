@@ -241,7 +241,7 @@
 				<h2 class="mb-12 text-center text-3xl font-bold">What I've Shipped at a Glance</h2>
 				<div class="space-y-8">
 					<a
-						href="https://renavestapp.com"
+						href="https://www.renavestapp.com/"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="group block rounded-lg border border-gray-200 bg-white p-6 shadow-md transition duration-300 ease-in-out hover:shadow-lg"
