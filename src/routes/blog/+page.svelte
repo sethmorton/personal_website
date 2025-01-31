@@ -3,6 +3,7 @@
 	import BlogPost from '$lib/blog/components/BlogPost.svelte';
 	import balance from '$lib/blog/content/balance.txt?raw';
 	import gratitude from '$lib/blog/content/gratitude.txt?raw';
+	import serendipity from '$lib/blog/content/serendipity.txt?raw';
 	let posts = $state([
 		{
 			title: 'balance',
@@ -15,6 +16,12 @@
 			slug: 'gratitude & hyperbolic discounting',
 			date: '2024-12-18',
 			content: gratitude
+		}, 
+		{
+			title: 'serendipity & the lonely generation',
+			slug: 'serendipity & the lonely generation',
+			date: '2025-01-31',
+			content: serendipity
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);
