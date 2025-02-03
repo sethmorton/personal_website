@@ -3,7 +3,7 @@
 		title = 'Seth Morton - Full Stack',
 		description = '5+ years building high-impact, large-scale applications. Proven experience in creating full-stack web applications, databases, and product leadership.',
 		type = 'website',
-		keywords = []
+		keywords = ["Seth Morton", "Seth M", "Seth Morton Developer", "Seth Morton Personal Website"]
 	} = $props();
 </script>
 
@@ -26,3 +26,5 @@
 	<meta name="twitter:title" content={title} />
 	<meta name="twitter:description" content={description} />
 </svelte:head>
+
+
