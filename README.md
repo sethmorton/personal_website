@@ -13,7 +13,5 @@ Welcome to the repository for my personal website. This site showcases my work, 
 ## 🌟 Features
 
 - Responsive design
-- Dark mode toggle
 - Links to my projects and social profiles
 - About me section
-- Blog (coming soon)
