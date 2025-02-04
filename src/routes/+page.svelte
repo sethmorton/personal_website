@@ -26,7 +26,7 @@
 		image?: string;
 		insight?: string;
 	}
-
+	// TODO: export all data into a seperate file for better organization
 	const projects: Project[] = [
 		{
 			title: 'DigestibleText',
