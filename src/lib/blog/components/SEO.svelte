@@ -1,6 +1,6 @@
 <script lang="ts">
 	const {
-		title = 'Seth Morton - Full Stack',
+		title = 'Seth Morton',
 		description = '5+ years building high-impact, large-scale applications. Proven experience in creating full-stack web applications, databases, and product leadership.',
 		type = 'website',
 		keywords = ["Seth Morton", "Seth M", "Seth Morton Developer", "Seth Morton Personal Website"]
