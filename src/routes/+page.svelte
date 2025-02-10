@@ -4,7 +4,6 @@
 		Github,
 		ExternalLink,
 		Mail,
-		FileText,
 		Linkedin,
 		Bike,
 		Coffee,
@@ -13,7 +12,8 @@
 		Trophy,
 		Lightbulb,
 		X,
-		Menu
+		Menu,
+		FileText
 	} from 'lucide-svelte';
 	import WorkExperience from '$lib/components/WorkExperience.svelte';
 	interface Project {
@@ -233,6 +233,15 @@
 							<Linkedin size={20} />
 							<span class="text-xs font-medium md:text-sm">LinkedIn</span>
 						</a>
+						<a
+						href="https://uph7p70lhd.ufs.sh/f/PZA8aODL9FcWkx8rP4nfIU1rsvxoTEZamGp4wJyAq5DcVznS"
+						class="group flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-gray-900 md:px-5"
+						onmouseenter={() => (hoveredIcon = 'resume')}
+						onmouseleave={() => (hoveredIcon = null)}
+					>
+						<FileText size={20} />
+						<span class="text-xs font-medium md:text-sm">Resume</span>
+					</a>
 					</div>
 				</div>
 			</section>
