@@ -2,7 +2,7 @@
 	import MarkdownIt from 'markdown-it';
 	import katex from 'katex';
 	let { publishDate, content, onClose } = $props();
-
+	import EmailInput from '$lib/blog/components/EmailInput.svelte';
 	// Initialize markdown-it without the katex plugin
 	const md = new MarkdownIt({
 		html: true,
@@ -108,6 +108,9 @@
 
 		{@html renderedHTML}
 	</article>
+	<div class="mx-auto max-w-3xl px-4 py-8 text-black">
+		<EmailInput />
+	</div>
 </div>
 
 <style>

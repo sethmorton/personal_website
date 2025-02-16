@@ -4,6 +4,7 @@
 	import balance from '$lib/blog/content/balance.txt?raw';
 	import gratitude from '$lib/blog/content/gratitude.txt?raw';
 	import serendipity from '$lib/blog/content/serendipity.txt?raw';
+	import EmailInput from '$lib/blog/components/EmailInput.svelte';
 	let posts = $state([
 		{
 			title: 'balance',
@@ -47,6 +48,7 @@
 				{/each}
 			</div>
 		</div>
+
 		<!-- This is for the justify between-->
 		<div></div>
 	</div>

@@ -37,6 +37,7 @@
 		"lucide-svelte": "^0.456.0",
 		"markdown-it": "^14.1.0",
 		"markdown-it-katex": "^2.0.3",
-		"markdown-it-math": "^4.1.1"
+		"markdown-it-math": "^4.1.1",
+		"resend": "^4.1.2"
 	}
 }
