@@ -1,28 +1,20 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import BlogPost from '$lib/blog/components/BlogPost.svelte';
-	import balance from '$lib/blog/content/balance.txt?raw';
-	import gratitude from '$lib/blog/content/gratitude.txt?raw';
-	import serendipity from '$lib/blog/content/serendipity.txt?raw';
-	import EmailInput from '$lib/blog/components/EmailInput.svelte';
 	let posts = $state([
 		{
 			title: 'balance',
 			slug: 'balance',
-			date: '2024-11-19',
-			content: balance
+			date: '2024-11-19'
 		},
 		{
 			title: 'gratitude & hyperbolic discounting',
-			slug: 'gratitude & hyperbolic discounting',
-			date: '2024-12-18',
-			content: gratitude
-		}, 
+			slug: 'gratitude_&_hyperbolic_discounting',
+			date: '2024-12-18'
+		},
 		{
 			title: 'serendipity & the lonely generation',
-			slug: 'serendipity & the lonely generation',
-			date: '2025-01-31',
-			content: serendipity
+			slug: 'serendipity_&_the_lonely_generation',
+			date: '2025-01-31'
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);
@@ -39,7 +31,7 @@
 			<div class="flex flex-col items-center space-y-4">
 				{#each posts as post}
 					<button
-						onclick={() => (activePost = post)}
+						onclick={() => goto(`/blog/${post.slug}`)}
 						class="group flex flex-col items-center text-center transition-colors"
 					>
 						<h2 class="text-lg group-hover:text-gray-500">{post.title}</h2>
@@ -52,11 +44,4 @@
 		<!-- This is for the justify between-->
 		<div></div>
 	</div>
-{/if}
-{#if activePost !== null}
-	<BlogPost
-		content={activePost.content}
-		publishDate={activePost.date}
-		onClose={() => (activePost = null)}
-	/>
 {/if}
