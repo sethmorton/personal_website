@@ -36,7 +36,7 @@
 		}
 	];
 
-	let hoveredProject = $state(null);
+	let hoveredProject = $state(0);
 </script>
 
 <svelte:head>
@@ -59,9 +59,13 @@
 		<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
 			{#each projects as project, i}
 				<div
+					role="article"
+					aria-label={project.title}
+					aria-relevant="text"
+					aria-live="polite"
 					class="group flex flex-col overflow-hidden rounded-lg border border-gray-200 transition-all duration-300 hover:shadow-lg"
-					on:mouseenter={() => (hoveredProject = i)}
-					on:mouseleave={() => (hoveredProject = null)}
+					onmouseenter={() => (hoveredProject = i)}
+					onmouseleave={() => (hoveredProject = 0)}
 				>
 					{#if project.image}
 						<div class="aspect-video w-full overflow-hidden">
