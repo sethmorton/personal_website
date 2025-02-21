@@ -26,6 +26,7 @@
 		}
 	]);
 	// $props returns { data : { slug: string }}
+	// @ts-ignore
 	const { data }: PageData = $props();
 	let slug = data.slug;
 	const findBlogPostBySlug = (
