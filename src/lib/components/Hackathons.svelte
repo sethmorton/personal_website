@@ -11,6 +11,20 @@
 
 	const hackathons: Hackathon[] = [
 		{
+			name: 'JumboHack',
+			logo: '/jumbohack.png',
+			date: 'February 2024',
+			project: 'TrueCaption - Extremely accurate captions for STEM lectures',
+			achievement: 'Best Overall Hack'
+		},
+		{
+			name: 'Hack@Brown',
+			logo: '/hackbrown.png',
+			date: 'February 2024',
+			project: 'Signify - Instant ASL interpretation for all your video content',
+			achievement: 'Best of AWS'
+		},
+		{
 			name: 'HackHarvard',
 			logo: '/hackharvard.png',
 			date: 'October 2024',

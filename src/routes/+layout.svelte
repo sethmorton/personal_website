@@ -3,5 +3,7 @@
 	import '../app.css';
 	let { children } = $props();
 </script>
+
 <SEO />
+
 {@render children()}
