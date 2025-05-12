@@ -1,0 +1,64 @@
+I spend a lot of time thinking about the future.
+
+Maybe a little too much.
+
+Lately, I’ve been wondering: what role will humans play once LLMs (large language models) can continuously read and understand the entire body of human knowledge? Where’s the space for our brains in that picture?
+
+Right now, there seems to be an incredible amount of pushback to the usage of AI in my generation, a general "doomerism" around the technology. I've spoken with many software engineers who look down upon 'vibe-coders,' and others who frequently point out AI's failures in contextualizing information, its hallucinatory outputs, and so on. I know people who subscribe by the law: "if you use AI, you're losing your brain." All of these criticisms **do** have merit - _for now_. However, I believe these voices will sound completely outdated soon.
+
+Imagine a world where an LLM writes _and_ continuously re-evaluates what it's written, where "agentic flows" make output deterministic (i.e., reliable). Picture an LLM with unlimited context—one that’s constantly updated with the latest human knowledge, that learns from itself, refines its outputs, and tailors its suggestions to the precise needs of your system—even ones you didn’t fully understand.
+
+In this world, when you rely on an LLM to create a complex system, it creates one that is more robust than even the most senior dev could create in a lifetime.
+
+This is the future I foresee - the development of these models is becoming a race to the bottom, which is great for the consumer. However, where does that leave us? How should I be training my brain for this shift? What should I be learning/doing?
+
+Let’s say an LLM has access to everything on the internet. But an employee at your company struggles every day with a recurring issue—one they assume is unfixable, so they never speak up. That pain point is invisible to the LLM. The only way to uncover it is by listening. By talking to people. By caring.
+
+This ties into a theme I've been sitting with over the past year: the profound difference between _lived_ experience and _learned_ experience.
+
+I can read all the books and listen to all the podcasts in the world—but the knowledge makes a true mark comes from living through it. Knowledge alone is not sufficient for understanding.
+
+LLMs can _learn_ how the world works. But they can’t _live_ in it. At the end of the day, they’re just matrix multiplications running on a server—not entities. They reflect the data they were trained on and the logic behind their retrieval.
+
+Here’s an example.
+
+In 2000, Google signed a deal to power Yahoo’s search engine. Their systems kept failing—and another failure could collapse the entire deal. The pain of that moment drove Jeff Dean and Sanjay Ghemawat to create a fundamentally new way of thinking about distributed computing. They didn’t just patch a bug. They invented Bigtable—a system that could treat thousands of machines like a single database.
+
+An LLM couldn’t have done that. Not because it lacked the technical information, but because it hadn’t _felt_ the urgency. It hadn’t faced the stakes. LLMs don’t synthesize new paradigms in the face of risk—they generate based on pattern recognition.
+
+<div align="center"> <img src="https://i.ibb.co/4w8VGCzJ/D0315988-061-C-4-FBF-97-EB-E98-FD460066-A.jpg" alt="Big Table" border="0" width="400" /> </div>
+
+Another example, closer to home.
+
+I’m building a company called Renavest that connects employees with licensed financial therapists. We’ve been following Aura Finance, one of the leaders in this new frontier of financial wellness benefits. A few days ago, we realized one of their key value props wasn’t just the therapy—it was the _data_. They help employers get a real-time pulse on their workforce’s financial well-being.
+
+But that insight only exists because someone at Aura stepped into the shoes of a benefits manager. They talked to people. They found the pain. They didn’t just ask, “What can we build?” They asked, “What does this person wish they had but hasn’t said out loud?”
+
+That’s not something an LLM can do on its own, because LLMs are only as good as the words people say out loud.
+
+And the more I use LLMs in my business—and I use them everywhere I can—the more I realize that the most valuable skills of the future aren’t technical. They’re human.
+
+Understanding pain. Seeing what others miss. Shaping culture. Building trust. Synthesizing ideas across messy, emotional, human systems.
+
+In short: _systemic thinking and empathy_ will be the defining skills of the LLM era.
+
+And how does this relate to my field of coding?
+
+The same way it relates to any other STEM field. You still need to understand the structure. If Jeff and Sanjay hadn’t understood the architecture of the systems they were working with, they couldn’t have reinvented it. For me, this means using an LLM to write code, but reading and understanding the flow of the code, how it works, why it works, etc. The question goes from "How do I build an analytics system?" to "What kind of analytics system should I build?"
+
+LLMs and AI don't eliminate the need for deep understanding—they demand a new kind of it.
+
+That’s why I’m so incredibly excited:
+
+Building is no longer the bottleneck. The bottleneck is knowing what to build—and _why_.
+
+That’s where us humans come in.
+
+We need to ask better questions:
+
+- What’s the overall goal of this system?
+- How does it work?
+- Is this the optimal architecture?
+- Does it serve a want/need?
+
+These are the questions that matter now. They’re philosophical questions (props to my ongoing philosophy degree). And they require the most human capacities we have.

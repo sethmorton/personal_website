@@ -15,6 +15,11 @@
 			title: 'serendipity & the lonely generation',
 			slug: 'serendipity_&_the_lonely_generation',
 			date: '2025-01-31'
+		},
+		{
+			title: 'where we fit into the future of AI',
+			slug: 'where_we_fit_into_the_future_of_ai',
+			date: '2025-05-12'
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);

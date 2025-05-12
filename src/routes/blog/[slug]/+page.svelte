@@ -5,6 +5,7 @@
 	import balanceContent from '$lib/blog/content/balance.txt?raw';
 	import gratitudeContent from '$lib/blog/content/gratitude.txt?raw';
 	import serendipityContent from '$lib/blog/content/serendipity.txt?raw';
+	import futureAiContent from '$lib/blog/content/future_ai.txt?raw';
 	const blogPosts = $state([
 		{
 			title: 'balance',
@@ -23,6 +24,12 @@
 			slug: 'serendipity_&_the_lonely_generation',
 			date: '2025-01-31',
 			content: serendipityContent
+		},
+		{
+			title: 'where we fit into the future of AI',
+			slug: 'where_we_fit_into_the_future_of_ai',
+			date: '2025-05-12',
+			content: futureAiContent
 		}
 	]);
 	// $props returns { data : { slug: string }}
