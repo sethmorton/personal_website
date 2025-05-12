@@ -26,11 +26,12 @@ In 2000, Google signed a deal to power Yahoo’s search engine. Their systems ke
 
 An LLM couldn’t have done that. Not because it lacked the technical information, but because it hadn’t _felt_ the urgency. It hadn’t faced the stakes. LLMs don’t synthesize new paradigms in the face of risk—they generate based on pattern recognition.
 
+*Bigtable Architecture*
 <div align="center"> <img src="https://i.ibb.co/4w8VGCzJ/D0315988-061-C-4-FBF-97-EB-E98-FD460066-A.jpg" alt="Big Table" border="0" width="400" /> </div>
 
 Another example, closer to home.
 
-I’m building a company called Renavest that connects employees with licensed financial therapists. We’ve been following Aura Finance, one of the leaders in this new frontier of financial wellness benefits. A few days ago, we realized one of their key value props wasn’t just the therapy—it was the _data_. They help employers get a real-time pulse on their workforce’s financial well-being.
+I’m building a company called Renavest that connects employees with licensed financial therapists. We’ve been following Aura Finance, one of the leaders in this new frontier of financial wellness benefits. A few days ago, we realized one of their key value props wasn’t just the benefits for employees—it was the _data_. They help employers get a real-time pulse on their workforce’s financial well-being.
 
 But that insight only exists because someone at Aura stepped into the shoes of a benefits manager. They talked to people. They found the pain. They didn’t just ask, “What can we build?” They asked, “What does this person wish they had but hasn’t said out loud?”
 
