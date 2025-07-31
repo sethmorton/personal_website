@@ -31,7 +31,14 @@
 			</p>
 			
 			<p class="text-lg text-gray-700 leading-relaxed">
-				In the past, I've enjoyed working on government tech, AI/ML, fintech, edtech, and cleantech. I studied CS and Math at various places but dropped out to focus on building.
+				In the past, I've enjoyed working on government tech, AI/ML, fintech, edtech, and cleantech. I studied CS and Philosophy at various places but dropped out to focus on building.
+			</p>
+			
+			<p class="text-lg text-gray-700 leading-relaxed">
+				I also write about my experiences and thoughts on my 
+				<a href="/blog" class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2">
+					blog
+				</a>.
 			</p>
 		</div>
 
@@ -44,24 +51,56 @@
 						<div class="font-medium">Medical AI agent</div>
 						<div class="text-sm text-gray-600">Solved a 4-year health issue when doctors couldn't</div>
 					</div>
+					<a
+						href="https://lifelogic.sethmorton.xyz/"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+					>
+						<ExternalLink size={16} />
+					</a>
 				</div>
 				<div class="flex justify-between items-start">
 					<div>
 						<div class="font-medium">FinTech platform</div>
 						<div class="text-sm text-gray-600">Led engineering team, 8 paying businesses</div>
 					</div>
+					<a
+						href="https://renavestapp.com"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+					>
+						<ExternalLink size={16} />
+					</a>
 				</div>
 				<div class="flex justify-between items-start">
 					<div>
 						<div class="font-medium">Border analytics dashboard</div>
 						<div class="text-sm text-gray-600">Policy tool for CBP operations</div>
 					</div>
+					<a
+						href="https://borderdashboard.com"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+					>
+						<ExternalLink size={16} />
+					</a>
 				</div>
 				<div class="flex justify-between items-start">
 					<div>
 						<div class="font-medium">Trading algorithms</div>
 						<div class="text-sm text-gray-600">Quantitative tools for retail community</div>
 					</div>
+					<a
+						href="https://66ec9beaa642520009159636--splendorous-basbousa-4eb04f.netlify.app/"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+					>
+						<ExternalLink size={16} />
+					</a>
 				</div>
 			</div>
 		</div>
