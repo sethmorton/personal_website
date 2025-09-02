@@ -52,7 +52,7 @@
 						<div class="text-sm text-gray-600">Solved a 4-year health issue when doctors couldn't</div>
 					</div>
 					<a
-						href="https://lifelogic.sethmorton.xyz/"
+						href="https://lifelogic-git-main-seths-projects-9d8cfc69.vercel.app/"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
