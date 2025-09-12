@@ -8,7 +8,7 @@
 		<div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-8 sm:mb-16 text-center sm:text-left animate-fade-in-up">
 			<div class="overflow-hidden rounded-full flex-shrink-0">
 				<img
-					src="/seth_image.webp"
+					src="/seth_image.jpg"
 					alt="Seth Morton"
 					class="h-16 w-16 sm:h-20 sm:w-20 object-cover"
 				/>
