@@ -7,7 +7,8 @@
 	const md = new MarkdownIt({
 		html: true,
 		linkify: true,
-		typographer: true
+		typographer: true,
+		breaks: false
 	});
 
 	// Define the delimiters for math expressions
@@ -68,6 +69,7 @@
 				return placeholder;
 			});
 		});
+
 
 		// Second pass: Render markdown
 		let html = md.render(processedContent);
