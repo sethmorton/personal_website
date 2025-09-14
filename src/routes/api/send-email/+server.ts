@@ -17,9 +17,10 @@ export const POST: RequestHandler = async ({ request }) => {
 		return new Response(JSON.stringify({ success: true, response }), {
 			status: 200
 		});
-	} catch (error) {
-		console.error('Error sending email:', error);
-		return new Response(JSON.stringify({ success: false, error: error.message }), {
+	} catch (err) {
+		const message = err instanceof Error ? err.message : String(err);
+		console.error('Error sending email:', message);
+		return new Response(JSON.stringify({ success: false, error: message }), {
 			status: 500
 		});
 	}

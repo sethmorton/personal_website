@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { Mail, ExternalLink } from 'lucide-svelte';
+  import SEO from '$lib/blog/components/SEO.svelte';
 </script>
+
+<SEO
+  title="Seth Morton — CTO @ GeneLoop"
+  description="I build reliable, scalable systems and tools for scientists. Currently CTO at GeneLoop, automating synthetic biology."
+  type="website"
+  twitterCard="summary_large_image"
+/>
 
 <div class="min-h-screen bg-stone-50 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-0">
 	<div class="max-w-3xl w-full">

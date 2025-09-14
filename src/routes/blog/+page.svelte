@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+  import SEO from '$lib/blog/components/SEO.svelte';
 	let posts = $state([
 		{
 			title: 'balance',
@@ -29,6 +30,13 @@
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);
 </script>
+
+<SEO
+  title="Blog – Seth Morton"
+  description="Essays on engineering, systems, and building tools that scale."
+  type="website"
+  twitterCard="summary_large_image"
+/>
 
 {#if activePost === null}
 	<div class="flex h-screen w-screen flex-col justify-between">
