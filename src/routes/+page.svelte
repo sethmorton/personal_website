@@ -15,7 +15,7 @@
 			</div>
 			<div>
 				<h1 class="text-2xl sm:text-4xl font-bold text-gray-900">Seth Morton</h1>
-				<p class="text-gray-600 mt-1">CTO @ Geneloop</p>
+				<p class="text-gray-600 mt-1">CTO @ GeneLoop</p>
 			</div>
 		</div>
 

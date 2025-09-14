@@ -6,6 +6,7 @@
 	import gratitudeContent from '$lib/blog/content/gratitude.txt?raw';
 	import serendipityContent from '$lib/blog/content/serendipity.txt?raw';
 	import futureAiContent from '$lib/blog/content/future_ai.txt?raw';
+	import onGrowthContent from '$lib/blog/content/on_growth_low_hanging_fruit_immortality.txt?raw';
 	const blogPosts = $state([
 		{
 			title: 'balance',
@@ -30,6 +31,12 @@
 			slug: 'where_we_fit_into_the_future_of_ai',
 			date: '2025-05-12',
 			content: futureAiContent
+		},
+		{
+			title: 'on growth and the low-hanging fruit of immortality',
+			slug: 'on_growth_and_the_low_hanging_fruit_of_immortality',
+			date: '2025-09-13',
+			content: onGrowthContent
 		}
 	]);
 	// $props returns { data : { slug: string }}

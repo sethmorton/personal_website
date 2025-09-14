@@ -20,6 +20,11 @@
 			title: 'where we fit into the future of AI',
 			slug: 'where_we_fit_into_the_future_of_ai',
 			date: '2025-05-12'
+		},
+		{
+			title: 'on growth and the low-hanging fruit of immortality',
+			slug: 'on_growth_and_the_low_hanging_fruit_of_immortality',
+			date: '2025-09-13'
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);
