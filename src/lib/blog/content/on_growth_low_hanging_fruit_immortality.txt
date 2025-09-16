@@ -1,20 +1,17 @@
 
 ### On Growth and The Low-Hanging Fruit of Immortality
 
-
-<br>
-
-
-> "It is not that we have a short time to live, but that we waste much of it."
-> 
+> "It is not that we have a short time to live, but that we waste much of it."  
 > _– Seneca_
 
+<br> 
 
 If life is short because we waste it, what happens when we unlock the ability to extend it?
 
 <br>
 
-In the 1900s, humanity unlocked two civilizational catalysts that made such a question possible: [the code of life](https://www.nobelprize.org/prizes/medicine/1962/summary) and [the code of silicon](https://www.nobelprize.org/prizes/physics/1956/summary/).
+
+In the 1900s, humanity unlocked two civilizational catalysts that made such a question possible: [the code of life](https://www.nature.com/articles/171737a0) and [the code of silicon](https://www.nobelprize.org/prizes/physics/1956/summary/).
 
 For much of my journey, I've devoted myself to the code of the transistor - expressing ideas on the web page, architecting systems, etc... This has been a source of incredible joy (and frustration sometimes :).
 
@@ -26,7 +23,6 @@ In the 2020s, we've made significant progress in using artificial intelligence i
 
 Why can’t we program life (yet) with the same fluency we program machines?
 
-
 The answer lies in biology's deep and beautiful complexity. Living systems have been shaped by millions of years of evolution, producing networks far richer than anything we’ve built in silicon. Progress has been incredibly slow for various reasons: the relatively small amount of data we have is decentralized and hidden behind walls of IP. Furthermore, every design must be rigorously validated in a lab instead of simply run on a computer. Experiments stretch into months, burdened by material sourcing and regulatory hurdles - and unlike software, where a bug is trivial, in living systems failure can be [fatal](https://www.nejm.org/doi/full/10.1056/NEJMoa2307798).
 
 When I think about this genetic lottery and the frustrating gap of potential and reality in the biotech space, I often talk with my co-founder about evolution.
@@ -35,7 +31,7 @@ Why are our genes so imperfect? Why don't we live longer, why aren't we smarter,
 
 The answer is surprisingly simple: Evolution doesn't optimize for perfection, it optimizes for reproduction. For the last hundreds of thousands of years, the key optimizing metric of evolution for _Homo sapiens_ has been infectious disease and survival to reproductive age. If a virus kills you at 25, there’s no evolutionary incentive for genes that would allow you to live till you're 200.
 
-Thus, evolution hasn't attempted to encode for long lifespans. Had it tried and failed, we could assume the problem was nearly impossible - but because it never optimized for it at all, the possibility remains wide open. Furthermore, in 2006, scientists discovered the [Yamanaka factors](https://www.cell.com/fulltext/S0092-8674%2806%2900976-7) - a set of genes capable of turning back a cell’s biological clock. In theory, these factors, when expressed correctly, could create functional immortality (with plenty of [caveats](https://pmc.ncbi.nlm.nih.gov/articles/PMC10768945/))
+Thus, evolution hasn't attempted to encode for long lifespans. Had it tried and failed, we could assume the problem was nearly impossible - but because it never optimized for it at all, the possibility remains wide open. Furthermore, in 2006, scientists discovered the [Yamanaka factors](https://www.cell.com/fulltext/S0092-8674%2806%2900976-7) - a set of genes capable of turning back a cell’s biological clock. In theory, these factors, when expressed correctly, could create functional immortality (with plenty of [caveats](https://pmc.ncbi.nlm.nih.gov/articles/PMC10768945/) and other factors in the aging process).
 
 Achieving this will take trillions of genetic designs (there will be a multitude for each person). Moreover, each of these designs need to be validated in the lab - and right now, it can take months, and hundreds of thousands of dollars to design and validate a single construct. Worse, around [**50%** of designs currently fail in the lab](https://academic.oup.com/nar/article/53/14/gkaf697/8222435). There’s no “spell-check” for DNA, just slow iteration.
 
@@ -43,7 +39,7 @@ My co-founder and I are building software to fix this bottleneck, automating the
 
 I believe the future of human life will be defined by AI accelerating biotechnology. My calling is to bridge the worlds of silicon and carbon to get us there.
 
-As these two domains converge, they will unlock possibilities once thought unreachable. The complete integration of AI and biotech **will** bring functional immortality - and with it, various ethical conundrums. Such a possibility forces us to rethink what it means to be human - to seek meaning, to create, and above all, to grow.
+The complete integration of AI and biotech will bring functional immortality - and with it, various ethical conundrums. Such a possibility forces us to rethink what it means to be human - to seek meaning, to create, and above all, to grow.
 
 I used to think of growth in simpler terms - learning more about myself, maturing, and gaining  deeper perspective. Growth has always felt urgent, fueled by the scarcity of our time on earth.
 
@@ -64,3 +60,5 @@ I create to experience each phase of life more deeply, and to carry its imprint 
 I used to believe these ambitions needed a prelude: that I first had to build something big, then use the resources from it to help people. Now I see that bridging silicon and carbon will be the path towards achieving all of my goals at once.
 
 This bridge will carry us beyond our limits, toward [exoplanets](https://science.nasa.gov/exoplanets/immersive/strange-new-worlds/) and deeper into the unknown - and keep us alive to experience it.
+
+
