@@ -62,6 +62,7 @@
 {#if selectedBlogPost === null}
 	<p>Not found</p>
 {:else}
+  <div class="min-h-screen bg-stone-50">
   {#if BLOG_META[slug]}
     <SEO
       title={BLOG_META[slug].title}
@@ -78,4 +79,5 @@
 		publishDate={selectedBlogPost.date}
 		onClose={() => goto('/blog')}
 	/>
+  </div>
 {/if}

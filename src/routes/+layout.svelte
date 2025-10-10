@@ -13,6 +13,7 @@
 	}
 </script>
 
-<SEO />
-
-{@render children()}
+<div class="min-h-screen bg-stone-50">
+  <SEO />
+  {@render children()}
+</div>

@@ -39,7 +39,7 @@
 />
 
 {#if activePost === null}
-	<div class="flex h-screen w-screen flex-col justify-between">
+	<div class="flex min-h-screen w-full flex-col justify-between bg-stone-50">
 		<div class="flex justify-start p-8">
 			<button class="text-blue-600 hover:text-blue-800" onclick={() => goto('/')}>Back</button>
 		</div>
