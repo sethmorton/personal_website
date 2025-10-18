@@ -26,6 +26,11 @@
 			title: 'on growth and the low-hanging fruit of immortality',
 			slug: 'on_growth_and_the_low_hanging_fruit_of_immortality',
 			date: '2025-09-13'
+		},
+		{
+			title: 'the black box of biology',
+			slug: 'the_black_box_of_biology',
+			date: '2025-10-18'
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);

@@ -1,0 +1,58 @@
+The other day, I had a conversation with a wet-lab scientist that stuck with me. 
+
+He described the small rituals his lab performs before running experiments. 
+He also mentioned a simple biological question he had that took ten conversations before he found someone who could give him a clear answer.
+
+That moment crystallized something for me: the deeper I go into biology, the more I realize how structurally different it is from software.
+
+In software, truth is binary.
+A program runs or it doesn’t. 
+
+You work with people you’ve never met because the system itself enforces trust.
+The compiler checks their code. The environment isolates risk.
+If something fails, you see it immediately.
+Every outcome passes through deterministic logic gates: predictable, inspectable, and repeatable.
+
+This structural determinism gives software its architecture of open collaboration and rapid iteration.  
+Experimentation is cheap, and failure is reversible.  
+You can afford to take risks because the system itself catches your mistakes.
+
+The dynamism of software scales not only through code but through trust in the systems that govern it.
+
+
+Biology doesn’t work that way. 
+It’s a field of exquisite, intricate complexity, full of contradictions that somehow all seem true at once. 
+There’s no perfect cell model to deterministically simulate every variable (at least not yet). 
+No compiler to tell you where your assumptions fail.
+
+So people build other systems of trust. 
+Your network matters. Your reputation matters. 
+You follow the scientists whose work you’ve seen hold up - the tools you’ve used before. 
+
+Of course, that’s true in software too, trust and reputation play a role there as well.  
+But in biology, they’re everything.
+
+In some ways, progress depends on relationships as much as on results. 
+Change is cautious and incremental.
+
+I think about it like this: 
+
+If you’re walking through a dark cavern, who do you follow? A stranger, or the person whose instincts you’ve learned to trust?
+
+Now AI - more specifically, LLMs - is entering both worlds, and I find the parallels incredibly interesting.
+
+In software, we call LLMs _black boxes_: models that make decisions we can’t trace, built on probabilities rather than proofs. 
+But even with that uncertainty, we still have ways to test them when writing code.
+We can run their output - the logic inside might be opaque, yet the system it lives in remains transparent.
+
+But in biology, verification itself is expensive, slow, and often ambiguous. 
+So when you introduce an AI black box into a field that already runs on partial visibility, you risk **opacity²**.
+
+The question isn’t whether AI belongs in biology.
+Of course it does - it already is, and [we’re seeing it reshape discovery itself.](https://www.nature.com/articles/s41586-021-03819-2) 
+
+The future of health **will** be built at this intersection.
+
+The question we’re building around is simple:  
+
+How do we design AI for biology that doesn’t add another layer of opacity, but helps illuminate what’s already there?

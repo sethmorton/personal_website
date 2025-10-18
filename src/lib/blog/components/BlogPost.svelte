@@ -2,13 +2,15 @@
 	import MarkdownIt from 'markdown-it';
 	import katex from 'katex';
 	let { publishDate, content, onClose } = $props();
-	// Initialize markdown-it without the katex plugin
-	const md = new MarkdownIt({
-		html: true,
-		linkify: true,
-		typographer: true,
-		breaks: false
-	});
+    // Initialize markdown-it without the katex plugin
+    // Enable `breaks: true` so single newlines in the source are
+    // converted to <br> like GitHub-flavored markdown.
+    const md = new MarkdownIt({
+        html: true,
+        linkify: true,
+        typographer: true,
+        breaks: true
+    });
 
 	// Define the delimiters for math expressions
 	const mathDelimiters = [
@@ -27,12 +29,13 @@
 	const escapeRegex = (str: string) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 
 	// Function to create regex for finding math expressions
-	const createMathRegex = (delim: { left: string; right: string }) => {
-		const left = escapeRegex(delim.left);
-		const right = escapeRegex(delim.right);
-		// For inline and display math
-		return new RegExp(`${left}(.*?)${right}`, 'g');
-	};
+    const createMathRegex = (delim: { left: string; right: string }) => {
+        const left = escapeRegex(delim.left);
+        const right = escapeRegex(delim.right);
+        // Use [\s\S]*? so the regex matches across newlines as well
+        // (the dot does not match newlines by default).
+        return new RegExp(`${left}([\\s\\S]*?)${right}`, 'g');
+    };
 
 	// Function to render math expressions
 	const renderMath = (content: string, display: boolean) => {

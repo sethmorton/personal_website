@@ -9,6 +9,7 @@
 	import serendipityContent from '$lib/blog/content/serendipity.txt?raw';
 	import futureAiContent from '$lib/blog/content/future_ai.txt?raw';
 	import onGrowthContent from '$lib/blog/content/on_growth_low_hanging_fruit_immortality.txt?raw';
+	import theBlackBoxOfBiologyContent from '$lib/blog/content/the_black_box_of_biology.txt?raw';
 	const blogPosts = $state([
 		{
 			title: 'balance',
@@ -39,6 +40,12 @@
 			slug: 'on_growth_and_the_low_hanging_fruit_of_immortality',
 			date: '2025-09-13',
 			content: onGrowthContent
+		},
+		{
+			title: 'the black box of biology',
+			slug: 'the_black_box_of_biology',
+			date: '2025-10-18',
+			content: theBlackBoxOfBiologyContent
 		}
 	]);
 	// $props returns { data : { slug: string }}
