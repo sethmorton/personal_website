@@ -31,18 +31,20 @@ Can you feed it enough high-quality data, and can you preserve that knowledge ef
 I think we're not asking enough storage questions.
 
 As models scale and training runs extend across longer timeframes, long-term storage becomes a structural problem - not just for data, but for knowledge itself.
+
 How do we store the collective memory of intelligent systems?
 
 That line of thought led me to wonder about the intersection between storage and compute.
+
 Could DNA, already so efficient at archiving data, also have a role in processing it?
 
 So I started thinking about DNA-based chips and foundries. Could we speed up current silicon-based compute through DNA?
 
 Unfortunately, while DNA is incredibly dense for storage, DNA logic gates are painfully slow.
 
-Molecular diffusion and strand displacement reactions operate on timescales of seconds to hours - roughly 10⁰ to 10⁴ seconds (~3 hrs) per operation.
+Molecular diffusion and strand displacement - the basic processes that let DNA compute — happen incredibly slowly, on the order of seconds to hours. In other words, a single DNA-based operation might take up to three hours to complete.
 
-Compare that to carbon-silicon hybrid systems, where high-mobility carriers move through carbon channels at 10⁻¹² to 10⁻¹³ seconds.
+Whereas... in carbon-silicon hybrid systems, electrons move through carbon channels in trillionths of a second (10⁻¹² to 10⁻¹³ seconds).
 
 You can't run real-time computation on DNA.
 
