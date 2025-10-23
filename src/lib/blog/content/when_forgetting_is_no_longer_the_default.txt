@@ -42,7 +42,7 @@ So I started thinking about DNA-based chips and foundries. Could we speed up cur
 
 Unfortunately, while DNA is incredibly dense for storage, DNA logic gates are painfully slow.
 
-Molecular diffusion and strand displacement - the basic processes that let DNA compute — happen incredibly slowly, on the order of seconds to hours. In other words, a single DNA-based operation might take up to three hours to complete.
+Molecular diffusion and strand displacement, the basic processes that let DNA compute, happen incredibly slowly, on the order of seconds to hours. In other words, a single DNA-based operation might take up to three hours to complete.
 
 Whereas... in carbon-silicon hybrid systems, electrons move through carbon channels in trillionths of a second (10⁻¹² to 10⁻¹³ seconds).
 
