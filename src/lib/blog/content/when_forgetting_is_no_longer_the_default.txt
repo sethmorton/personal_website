@@ -1,0 +1,100 @@
+## Why the Future of Storage Is in DNA
+
+Here’s something most people don’t think about:  
+
+DNA can store roughly 10⁶ to 10⁸ times more data per gram than conventional storage media.
+
+A few kilograms of dry synthetic DNA could hold all current cloud data centers combined - about a [zettabyte](https://en.wikipedia.org/wiki/Byte#Multiple-byte_units) of information.
+
+Or, put differently: every movie ever made could fit in a **speck of DNA dust**.
+
+Once written, DNA needs **no** energy.  
+It just sits there. Stable for millions of years (as long as it’s kept dry, cool, and dark).
+
+---
+
+Today, I had a fascinating conversation with [Abdur Rasool](https://www.linkedin.com/in/abdur-rasool-phd/) about storing data in DNA.
+
+Abdur’s work on EDS, a DNA-based storage architecture for MRI data that demonstrated impressively low retrieval error rates, made one thing clear in our discussion: the true bottlenecks to DNA data storage lie beyond error correction.
+
+We need faster sequencing to read the data back, and better synthesis to write it in the first place.
+
+That conversation sent me down a rabbit hole about data storage itself.
+
+#### The Storage Question We're Not Asking
+
+<br>
+When you have enough compute to train a trillion-parameter model, the next bottleneck becomes obvious:  
+
+Can you feed it enough high-quality data, and can you preserve that knowledge efficiently?
+
+I think we're not asking enough storage questions.
+
+As models scale and training runs extend across longer timeframes, long-term storage becomes a structural problem - not just for data, but for knowledge itself.
+How do we store the collective memory of intelligent systems?
+
+That line of thought led me to wonder about the intersection between storage and compute.
+Could DNA, already so efficient at archiving data, also have a role in processing it?
+
+So I started thinking about DNA-based chips and foundries. Could we speed up current silicon-based compute through DNA?
+
+Unfortunately, while DNA is incredibly dense for storage, DNA logic gates are painfully slow.
+
+Molecular diffusion and strand displacement reactions operate on timescales of seconds to hours - roughly 10⁰ to 10⁴ seconds (~3 hrs) per operation.
+
+Compare that to carbon-silicon hybrid systems, where high-mobility carriers move through carbon channels at 10⁻¹² to 10⁻¹³ seconds.
+
+You can't run real-time computation on DNA.
+
+But maybe you don't need to.
+
+...
+
+#### The Future, per Seth
+<br>
+
+I think the future looks something like this:
+
+At the top, you have specialized accelerators for the hardest problems.
+
+Think quantum computers tackling physics simulations and optimization challenges that would take regular computers thousands of years - simulating how every protein folds or optimizing supply chains across millions of variables.
+
+Below that, your main digital compute layer runs on carbon-silicon hybrid logic - training neural networks, running your OS, etc...
+
+Then comes something more interesting: a molecular layer built from DNA and carbon hybrids.
+
+This wouldn't be trying to match nanosecond response times that carbon-silicon provides.
+
+Instead, imagine searching through a library of a billion documents simultaneously, all at once, by letting molecular reactions happen in parallel.
+
+Each molecule can participate in a computation simultaneously - DNA computing could offer up to **10⁹ to 10¹²** times more parallelism than current silicon hardware.
+
+Imagine biosensors that can detect **thousands of different disease markers in a single sample**.
+
+Computing through chemistry! Slow in sequential steps, but massively parallel in ways silicon can't touch.
+
+At the bottom: pure DNA storage.
+
+Archives that can sit unchanged for decades or centuries, holding more information in a test tube than entire data centers hold today.
+
+...
+
+The hard part will be building the bridges between these worlds.
+
+You need systems that can translate seamlessly between electrical signals and molecular ones, interfaces that speak both digital and biological languages fluently
+
+#### Why This Matters
+<br>
+
+The structure of computation has always shaped what we can build.
+
+In the 1950s through the 1980s, when storage was expensive, we wrote compressed code and deleted old data.
+In the 1990s and early 2000s, when bandwidth was limited, we built decentralized systems.
+In the 2000s and 2010s, when CPUs were slow, we learned to parallelize them.
+
+Each constraint created its own architecture.
+
+If DNA storage becomes practical at scale, we can think differently about what we keep, how models learn over time, and what kind of knowledge systems become possible when forgetting is no longer the default.
+
+The question isn't whether DNA belongs in computing.  
+The question is: what becomes possible when memory is no longer the limiting factor?

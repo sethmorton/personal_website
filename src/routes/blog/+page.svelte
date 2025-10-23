@@ -31,6 +31,11 @@
 			title: 'the black box of biology',
 			slug: 'the_black_box_of_biology',
 			date: '2025-10-18'
+		},
+		{
+			title: 'when forgetting is no longer the default',
+			slug: 'when_forgetting_is_no_longer_the_default',
+			date: '2025-10-22'
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);

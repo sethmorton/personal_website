@@ -10,6 +10,7 @@
 	import futureAiContent from '$lib/blog/content/future_ai.txt?raw';
 	import onGrowthContent from '$lib/blog/content/on_growth_low_hanging_fruit_immortality.txt?raw';
 	import theBlackBoxOfBiologyContent from '$lib/blog/content/the_black_box_of_biology.txt?raw';
+	import whenForgettingIsNoLongerTheDefaultContent from '$lib/blog/content/when_forgetting_is_no_longer_the_default.txt?raw';
 	const blogPosts = $state([
 		{
 			title: 'balance',
@@ -46,6 +47,12 @@
 			slug: 'the_black_box_of_biology',
 			date: '2025-10-18',
 			content: theBlackBoxOfBiologyContent
+		},
+		{
+			title: 'when forgetting is no longer the default',
+			slug: 'when_forgetting_is_no_longer_the_default',
+			date: '2025-10-22',
+			content: whenForgettingIsNoLongerTheDefaultContent
 		}
 	]);
 	// $props returns { data : { slug: string }}
