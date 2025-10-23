@@ -15,7 +15,7 @@ It just sits there. Stable for millions of years (as long as it’s kept dry, co
 
 Today, I had a fascinating conversation with [Abdur Rasool](https://www.linkedin.com/in/abdur-rasool-phd/) about storing data in DNA.
 
-Abdur’s work on EDS, a DNA-based storage architecture for MRI data that demonstrated impressively low retrieval error rates, made one thing clear in our discussion: the true bottlenecks to DNA data storage lie beyond error correction.
+Abdur’s work on [EDS](https://onlinelibrary.wiley.com/doi/full/10.1002/smtd.202301585), a DNA-based storage architecture for MRI data that demonstrated impressively low retrieval error rates, made one thing clear in our discussion: the true bottlenecks to DNA data storage lie beyond error correction.
 
 We need faster sequencing to read the data back, and better synthesis to write it in the first place.
 
