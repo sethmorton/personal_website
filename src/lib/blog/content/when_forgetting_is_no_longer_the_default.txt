@@ -98,5 +98,4 @@ Each constraint created its own architecture.
 
 If DNA storage becomes practical at scale, we can think differently about what we keep, how models learn over time, and what kind of knowledge systems become possible when forgetting is no longer the default.
 
-The question isn't whether DNA belongs in computing.  
-The question is: what becomes possible when memory is no longer the limiting factor?
+What becomes possible when memory is no longer the limiting factor?
