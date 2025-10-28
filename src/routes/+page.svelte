@@ -29,21 +29,13 @@
 
 		<!-- Main content -->
 		<div class="space-y-6 sm:space-y-8 mb-8 sm:mb-16 animate-fade-in-up animation-delay-200">
-			<p class="text-lg sm:text-xl text-gray-800 leading-relaxed">
-				I'm building 
-				<a href="https://geneloop.bio" target="_blank" rel="noopener noreferrer" 
-				   class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2">
-					Geneloop
-				</a> 
-				to automate synthetic biology.
+			
+			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
+				I enjoy learning and systems thinking, especially when it comes to problems in AI and biology. Started my first company at 12, finished Northeastern CS in year one, left for philosophy at Tufts, then dropped out to build.
 			</p>
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
-				In the past, I've enjoyed working on government tech, AI/ML, fintech, edtech, and cleantech. I studied CS and Philosophy at various places but dropped out to focus on building.
-			</p>
-			
-			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
-				I also write about my experiences and thoughts on my 
+				I write about my experiences and thoughts on my 
 				<a href="/blog" class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2">
 					blog
 				</a>.
@@ -102,7 +94,7 @@
 						<div class="text-sm text-gray-600">Quantitative tools for retail community</div>
 					</div>
 					<a
-						href="https://66ec9beaa642520009159636--splendorous-basbousa-4eb04f.netlify.app/"
+						href="backtestextender.vercel.app"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
