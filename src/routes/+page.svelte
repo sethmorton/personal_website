@@ -23,7 +23,7 @@
 			</div>
 			<div>
 				<h1 class="text-2xl sm:text-4xl font-bold text-gray-900">Seth Morton</h1>
-				<p class="text-gray-600 mt-1">CTO @ GeneLoop</p>
+				<p class="text-gray-600 mt-1"><a href="https://geneloop.bio" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2">CTO @ GeneLoop</a></p>
 			</div>
 		</div>
 
@@ -31,7 +31,7 @@
 		<div class="space-y-6 sm:space-y-8 mb-8 sm:mb-16 animate-fade-in-up animation-delay-200">
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
-				I enjoy learning and systems thinking, especially when it comes to problems in AI and biology. Started my first company at 12, finished Northeastern CS in year one, left for philosophy at Tufts, then dropped out to build.
+				I enjoy learning and systems thinking, especially when it comes to problems in AI and biology. Started my first company at 12, finished Northeastern CS in year one, left for philosophy at Tufts, then dropped out to build. Currently focused on RL environments for DNA foundational models.
 			</p>
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
@@ -48,11 +48,11 @@
 			<div class="space-y-4 text-gray-700">
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-500">
 					<div class="flex-1 min-w-0">
-						<div class="font-medium">Medical AI agent</div>
-						<div class="text-sm text-gray-600">Solved a 4-year health issue when doctors couldn't</div>
+						<div class="font-medium">DNA Tiny World</div>
+						<div class="text-sm text-gray-600">First benchmark for DNA foundational models</div>
 					</div>
 					<a
-						href="https://lifelogic-git-main-seths-projects-9d8cfc69.vercel.app/"
+						href="https://huggingface.co/datasets/sethmorton/dna-tiny-world"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
@@ -77,7 +77,7 @@
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-700">
 					<div class="flex-1 min-w-0">
 						<div class="font-medium">Border analytics dashboard</div>
-						<div class="text-sm text-gray-600">Policy tool for CBP operations</div>
+						<div class="text-sm text-gray-600">Policy tool for regional head of CBP</div>
 					</div>
 					<a
 						href="https://borderdashboard.com"
