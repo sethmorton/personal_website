@@ -23,7 +23,9 @@
 			</div>
 			<div>
 				<h1 class="text-2xl sm:text-4xl font-bold text-gray-900">Seth Morton</h1>
-			
+				<p class="text-sm text-gray-500">
+					Founder of <a href="https://strand.tools" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2">Strand</a>
+				</p>
 			</div>
 		</div>
 
@@ -31,7 +33,14 @@
 		<div class="space-y-6 sm:space-y-8 mb-8 sm:mb-16 animate-fade-in-up animation-delay-200">
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
-				I love learning and systems thinking, especially when it comes to problems in AI and biology. I started my first company at 12, finished CS at Northeastern in my first year, left to study philosophy at Tufts, then dropped out to build in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some of life’s biggest questions.
+				I love learning and systems thinking, especially when it comes to problems in AI and biology. I started my first company at 12, finished CS at Northeastern in my first year, left to study philosophy at Tufts, then dropped out to
+				<a
+					href="/built"
+					class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2"
+				>
+					build
+				</a>
+				in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some of life’s biggest questions.
 <br><br>
 I’m currently working on Strand, an experiment design layer for complex perturbation campaigns. The vision behind Strand is a platform that makes it 100 times easier to design and validate multidimensional interventions for aging and age-related disease.
 			</p>
@@ -44,17 +53,19 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 			</p>
 		</div>
 
-		<!-- Selected work -->
+		<!-- Selected writing -->
 		<div class="mb-8 sm:mb-16 animate-fade-in-up animation-delay-400">
-			<h3 class="text-lg font-medium text-gray-900 mb-4 sm:mb-6">Selected work</h3>
+			<h3 class="text-lg font-medium text-gray-900 mb-4 sm:mb-6">Selected writing</h3>
 			<div class="space-y-4 text-gray-700">
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-500">
 					<div class="flex-1 min-w-0">
-						<div class="font-medium">DNA Tiny World</div>
-						<div class="text-sm text-gray-600">First benchmark for DNA foundational models</div>
+						<div class="font-medium">On Growth and the Low-Hanging Fruit of Immortality</div>
+						<div class="text-sm text-gray-600">
+							Why achieving immortality is closer than you think, and the moral implications of doing so.
+						</div>
 					</div>
 					<a
-						href="https://huggingface.co/datasets/sethmorton/dna-tiny-world"
+						href="/blog/on_growth_and_the_low_hanging_fruit_of_immortality"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
@@ -64,11 +75,13 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 				</div>
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-600">
 					<div class="flex-1 min-w-0">
-						<div class="font-medium">FinTech platform</div>
-						<div class="text-sm text-gray-600">Led engineering team, 8 paying businesses</div>
+						<div class="font-medium">Balance</div>
+						<div class="text-sm text-gray-600">
+							Notes on balancing ambition, health, and relationships.
+						</div>
 					</div>
 					<a
-						href="https://renavestapp.com"
+						href="/blog/balance"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
@@ -78,11 +91,13 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 				</div>
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-700">
 					<div class="flex-1 min-w-0">
-						<div class="font-medium">Border analytics dashboard</div>
-						<div class="text-sm text-gray-600">Policy tool for regional head of CBP</div>
+						<div class="font-medium">The Black Box of Biology</div>
+						<div class="text-sm text-gray-600">
+							The differences in building software for biology vs everything else.
+						</div>
 					</div>
 					<a
-						href="https://borderdashboard.com"
+						href="/blog/the_black_box_of_biology"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
@@ -92,11 +107,13 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 				</div>
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-800">
 					<div class="flex-1 min-w-0">
-						<div class="font-medium">Quantitative tooling</div>
-						<div class="text-sm text-gray-600">Quantitative tools for retail quant community</div>
+						<div class="font-medium">Gratitude &amp; Hyperbolic Discounting</div>
+						<div class="text-sm text-gray-600">
+							Eescape short-termism and care about tomorrow.
+						</div>
 					</div>
 					<a
-						href="backtestextender.vercel.app"
+						href="/blog/gratitude_&_hyperbolic_discounting"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
