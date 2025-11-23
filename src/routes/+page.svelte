@@ -10,10 +10,10 @@
   twitterCard="summary_large_image"
 />
 
-<div class="min-h-screen bg-stone-50 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-0">
-	<div class="max-w-3xl w-full">
+<div class="min-h-screen bg-stone-50 flex items-center justify-center px-4 sm:px-6 py-10 sm:py-16">
+	<div class="max-w-4xl w-full">
 		<!-- Header -->
-		<div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-8 sm:mb-16 text-center sm:text-left animate-fade-in-up">
+		<div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-8 sm:mb-16 text-center sm:text-left animate-fade-in-up">
 			<div class="overflow-hidden rounded-full flex-shrink-0">
 				<img
 					src="/seth_image.jpg"
@@ -21,13 +21,19 @@
 					class="h-16 w-16 sm:h-20 sm:w-20 object-cover"
 				/>
 			</div>
+			<div>
+				<h1 class="text-2xl sm:text-4xl font-bold text-gray-900">Seth Morton</h1>
+			
+			</div>
 		</div>
 
 		<!-- Main content -->
 		<div class="space-y-6 sm:space-y-8 mb-8 sm:mb-16 animate-fade-in-up animation-delay-200">
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
-				I love learning and systems thinking, especially when it comes to problems in AI and biology. I started my first company at 12, finished CS at Northeastern in year one, left for philosophy at Tufts, then dropped out to build in SF’s biotech scene. My mission is to see exoplanets and to be a part of answering some of life's biggest questions. I'm currently working on Strand, an experiment design layer for complex perturbation campaigns. My goal is to create a platform that makes it a 100x easier to design and validate multi-dimensional interventions for aging and age related disease.
+				I love learning and systems thinking, especially when it comes to problems in AI and biology. I started my first company at 12, finished CS at Northeastern in my first year, left to study philosophy at Tufts, then dropped out to build in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some of life’s biggest questions.
+<br><br>
+I’m currently working on Strand, an experiment design layer for complex perturbation campaigns. The vision behind Strand is a platform that makes it 100 times easier to design and validate multidimensional interventions for aging and age-related disease.
 			</p>
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
@@ -172,6 +178,13 @@
 		.animate-fade-in-up {
 			animation: none;
 			opacity: 1;
+		}
+	}
+
+	/* Lock page scroll on large screens only */
+	@media (min-width: 1024px) and (min-height: 900px) {
+		:global(body) {
+			overflow-y: hidden;
 		}
 	}
 </style>
