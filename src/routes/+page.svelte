@@ -4,8 +4,8 @@
 </script>
 
 <SEO
-  title="Seth Morton — CTO @ GeneLoop"
-  description="I build reliable, scalable systems and tools for scientists. Currently CTO at GeneLoop, automating synthetic biology."
+  title="Seth Morton"
+  description="Infovore, pursuing exoplanets and eudamonia."
   type="website"
   twitterCard="summary_large_image"
 />
@@ -21,17 +21,13 @@
 					class="h-16 w-16 sm:h-20 sm:w-20 object-cover"
 				/>
 			</div>
-			<div>
-				<h1 class="text-2xl sm:text-4xl font-bold text-gray-900">Seth Morton</h1>
-				<p class="text-gray-600 mt-1"><a href="https://geneloop.bio" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2">CTO @ GeneLoop</a></p>
-			</div>
 		</div>
 
 		<!-- Main content -->
 		<div class="space-y-6 sm:space-y-8 mb-8 sm:mb-16 animate-fade-in-up animation-delay-200">
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
-				I enjoy learning and systems thinking, especially when it comes to problems in AI and biology. Started my first company at 12, finished Northeastern CS in year one, left for philosophy at Tufts, then dropped out to build. Currently focused on RL environments for DNA foundational models.
+				I love learning and systems thinking, especially when it comes to problems in AI and biology. I started my first company at 12, finished CS at Northeastern in year one, left for philosophy at Tufts, then dropped out to build in SF’s biotech scene. My mission is to see exoplanets and to be a part of answering some of life's biggest questions. I'm currently working on Strand, an experiment design layer for complex perturbation campaigns. My goal is to create a platform that makes it a 100x easier to design and validate multi-dimensional interventions for aging and age related disease.
 			</p>
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
@@ -90,8 +86,8 @@
 				</div>
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-800">
 					<div class="flex-1 min-w-0">
-						<div class="font-medium">Trading algorithms</div>
-						<div class="text-sm text-gray-600">Quantitative tools for retail community</div>
+						<div class="font-medium">Quantitative tooling</div>
+						<div class="text-sm text-gray-600">Quantitative tools for retail quant community</div>
 					</div>
 					<a
 						href="backtestextender.vercel.app"
@@ -107,12 +103,12 @@
 
 		<!-- Contact -->
 		<div class="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center animate-fade-in-up animation-delay-900">
-			<a
-				href="mailto:seth@geneloop.bio"
-				class="inline-flex items-center gap-2 text-gray-900 hover:text-blue-600 transition-colors duration-200"
+			<a href="x.com/_sethmorton"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-gray-900 hover:text-blue-600 transition-colors duration-200 text-sm sm:text-base"
 			>
-				<Mail size={18} />
-				<span class="text-sm sm:text-base">seth@geneloop.bio</span>
+				Twitter
 			</a>
 			<a
 				href="https://www.linkedin.com/in/seth-morton-118574242"
