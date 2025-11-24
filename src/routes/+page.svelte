@@ -61,7 +61,7 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 					<div class="flex-1 min-w-0">
 						<div class="font-medium">On Growth and the Low-Hanging Fruit of Immortality</div>
 						<div class="text-sm text-gray-600">
-							Why achieving immortality is closer than you think, and the moral implications of doing so.
+							Achieving immortality is closer than you might think, and what does growth mean when it's no longer constrained by time?
 						</div>
 					</div>
 					<a
@@ -77,7 +77,7 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 					<div class="flex-1 min-w-0">
 						<div class="font-medium">Balance</div>
 						<div class="text-sm text-gray-600">
-							Notes on balancing ambition, health, and relationships.
+							Why balance is a fallacy and why you should embrace the yin and yang of life.
 						</div>
 					</div>
 					<a
@@ -93,7 +93,7 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 					<div class="flex-1 min-w-0">
 						<div class="font-medium">The Black Box of Biology</div>
 						<div class="text-sm text-gray-600">
-							The differences in building software for biology vs everything else.
+							The differences in building software for biology vs software for everything else.
 						</div>
 					</div>
 					<a
@@ -109,7 +109,7 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 					<div class="flex-1 min-w-0">
 						<div class="font-medium">Gratitude &amp; Hyperbolic Discounting</div>
 						<div class="text-sm text-gray-600">
-							Eescape short-termism and care about tomorrow.
+							On escaping short-termism and caring about tomorrow.
 						</div>
 					</div>
 					<a
@@ -140,6 +140,14 @@ I’m currently working on Strand, an experiment design layer for complex pertur
 				class="text-gray-900 hover:text-blue-600 transition-colors duration-200 text-sm sm:text-base"
 			>
 				LinkedIn
+			</a>
+			<a
+				href="mailto:sethmorton05@gmail.com"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-gray-900 hover:text-blue-600 transition-colors duration-200 text-sm sm:text-base"
+			>
+				Email
 			</a>
 		</div>
 	</div>

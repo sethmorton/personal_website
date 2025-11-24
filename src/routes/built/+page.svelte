@@ -29,7 +29,7 @@
 						<div class="font-medium">Geneloop</div>
 						<div class="text-sm text-gray-600">AI-powered sequence design platform.</div>
 					</div>
-					<a
+					<a	
 						href="https://geneloop.bio"
 						target="_blank"
 						rel="noopener noreferrer"
