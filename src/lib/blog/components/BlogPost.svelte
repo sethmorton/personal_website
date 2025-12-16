@@ -103,7 +103,7 @@
 	<div class="flex justify-start p-8">
 		<button class="text-blue-600 hover:text-blue-800" onclick={() => onClose()}>Back</button>
 	</div>
-	<article class="prose prose-lg mx-auto max-w-3xl px-4 py-8 text-black">
+	<article class="prose prose-lg mx-auto max-w-5xl px-4 py-8 text-black">
 		<header class="mb-8">
 			<time class="text-sm text-gray-500">
 				{publishDate}

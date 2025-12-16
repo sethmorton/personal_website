@@ -75,13 +75,13 @@ I’m currently working on Strand, a platform for engineering scalable microbes.
 				</div>
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-600">
 					<div class="flex-1 min-w-0">
-						<div class="font-medium">Balance</div>
+						<div class="font-medium">Biotech has a Distribution Problem</div>
 						<div class="text-sm text-gray-600">
-							Why balance is a fallacy and why you should embrace the yin and yang of life.
+							Why promising biotech work doesn't spread, and how to fix the barriers keeping frontier AI talent and young people out.
 						</div>
 					</div>
 					<a
-						href="/blog/balance"
+						href="/blog/biotech_has_a_distribution_problem"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
@@ -107,13 +107,13 @@ I’m currently working on Strand, a platform for engineering scalable microbes.
 				</div>
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-800">
 					<div class="flex-1 min-w-0">
-						<div class="font-medium">Gratitude &amp; Hyperbolic Discounting</div>
+						<div class="font-medium">Balance</div>
 						<div class="text-sm text-gray-600">
-							On escaping short-termism and caring about tomorrow.
+							Why balance is a fallacy and why you should embrace the yin and yang of life.
 						</div>
 					</div>
 					<a
-						href="/blog/gratitude_&_hyperbolic_discounting"
+						href="/blog/balance"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
