@@ -6,11 +6,11 @@ My best friend, at 20 years old, has two genetic diseases with no cure.
 
 It's a big part of why I got into biotech.
 
-And the deeper I've gone, the more I've noticed something frustrating: there’s an enormous amount of promising work in biotech, but it doesn’t spread. Results get published, tools get built, and then they just… sit there. They don’t reliably reach the people who could use them, improve them, or build on top of them.
+And the deeper I've gone, the more I've noticed something frustrating: there’s an enormous amount of promising work in biotech, but it doesn’t spread. Results get published, tools get built, and then they just… sit there. They don’t reliably reach the people who could use them or build on top of them.
 
 It’s tempting to say the gap is money, regulation, or, put simply: “biology is hard.”
 
-All of these are true. But I keep coming back to something simpler:
+All of that is true. But I keep coming back to something simpler:
 
 **Biotech has a distribution problem.**
 
@@ -32,7 +32,7 @@ This matters because if people can't evaluate your work and figure out how to at
 
 When work is visible, other scientists can build on it. Adjacent fields can connect their insights to yours. Talented people can find you. Funders can understand what you're doing. In biotech, most good work just [sits there, underused](https://www.cwts.nl/TvR/documents/AvR-SlBeau-Scientom.pdf), until someone bigger rediscovers it years later.
 
-This creates a paradox: some of the most important work on Earth is functionally invisible to the people who could accelerate it. That invisibility doesn’t just slow progress... it shapes who gets the chance to participate.
+This creates a paradox: some of the most important work on Earth is functionally invisible to the people who could accelerate it. That invisibility shapes who gets the chance to participate.
 
 Everything that follows is a downstream consequence of this.
 
@@ -72,7 +72,7 @@ Delays hurt people too.
 
 If it takes a decade just to be allowed into the room, the room selects for a narrow population: people who can afford long credential marathons, tolerate years of low pay, and delay risk until their lives make it harder to take any -- i.e. you get a mortgage, have kids, and suddenly a moonshot feels incredibly irresponsible. 
 
-This is measurable: the median time from finishing a PhD to receiving a first major NIH research grant doubled from 6 years in 1990 to 12 years in [2016](https://pmc.ncbi.nlm.nih.gov/articles/PMC8011905/). That’s twelve years before most academic researchers gain real independence to pursue their own bets.
+This is measurable: the median time from finishing a PhD to receiving a first major NIH research grant doubled from 6 years in 1990 to 12 years in [2016](https://pmc.ncbi.nlm.nih.gov/articles/PMC8011905/). That’s twelve years before most academic researchers gain real independence to pursue their own directions.
 
 Historically, biotech has responded to this with: *biology is too complex for newcomers.*
 
@@ -118,7 +118,7 @@ The simplified language part matters. Biology is huge, and the "jargon surface a
 And to everyone already writing and podcasting about biotech: thank you.
 #### Default to curiosity before critique.
 
-In tech, when someone shows you a something new, the default reaction is curiosity: "If this worked, what could it unlock?" 
+In tech, when someone shows you something new, the default reaction is curiosity: "If this worked, what could it unlock?" 
 
 In biotech, the default is critique: "Here are all the reasons this won't work." 
 
