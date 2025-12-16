@@ -1,13 +1,14 @@
 
 ### Biotech has a distribution problem
 
+
 My best friend, at 20 years old, has two genetic diseases with no cure.
 
 It's a big part of why I got into biotech.
 
-And the deeper I've gone, the more I've noticed something frustrating: there's so much promising work in biotech, but it doesn't spread. Results get published, tools get built, and then they just... sit there. They don't reach the people who could actually use them or build on them.
+And the deeper I've gone, the more I've noticed something frustrating: there’s an enormous amount of promising work in biotech, but it doesn’t spread. Results get published, tools get built, and then they just… sit there. They don’t reliably reach the people who could use them, improve them, or build on top of them.
 
-It’s tempting to say the gap is money, or regulation, or, put simply: “biology is hard.”
+It’s tempting to say the gap is money, regulation, or, put simply: “biology is hard.”
 
 All of these are true. But I keep coming back to something simpler:
 
@@ -15,26 +16,13 @@ All of these are true. But I keep coming back to something simpler:
 
 I mean distribution in two senses:
 
-1. The distribution of *participation*: the pathways for outsiders to take on meaningful work in biotech are too narrow. Too credentialed, too slow-moving, too socially restricted.
-    
-2. The distribution of *work*: Biotech’s work doesn’t spread outside of insular communities. Breakthroughs and press releases don’t reliably reach people who could collaborate and build on top of them.
+1. The distribution of *participation*: the pathways for outsiders to take on meaningful work in biotech are too narrow.
 
-I want to share why biotech doesn't travel, why this matters, and why biotech needs more people pushing the frontier of AI along with more legitimate on-ramps for young people. And finally, what can we do about it?
+2. The distribution of *work*: valuable biotech research and industry progress doesn’t travel far beyond insular communities.
 
-First, why
+This post is about why biotech doesn't travel, why this matters, and how this blocks both frontier AI talent and younger contributors. Finally, what we can do about it.
 
-### Biotech Doesn’t Travel 
-
-
-I have a friend whose dream is to make it possible for anyone to do groundbreaking biological research, using intuitive software and cloud labs.
-
-It's an amazing vision. I can picture someone running experiments in their bedroom the way they can release software today.
-
-But even if they build something incredible, the hard part starts after the breakthrough.
-
-**Because biotech doesn’t travel.** 
-
-Let me explain:
+### Why Biotech Doesn’t Travel 
 
 In software, when something gains traction, distribution can compound rapidly. People try it, share it, remix it, complain about it, and recruit themselves into your orbit.
 
@@ -44,54 +32,62 @@ This matters because if people can't evaluate your work and figure out how to at
 
 When work is visible, other scientists can build on it. Adjacent fields can connect their insights to yours. Talented people can find you. Funders can understand what you're doing. In biotech, most good work just [sits there, underused](https://www.cwts.nl/TvR/documents/AvR-SlBeau-Scientom.pdf), until someone bigger rediscovers it years later.
 
-This creates a paradox: some of the most important work on Earth is functionally invisible to the people who could accelerate it. And that invisibility has downstream consequences. It's not just that good work stays hidden; it's that the people who could build on that work never see it in the first place. Which brings me to the first gap in biotech participation:
+This creates a paradox: some of the most important work on Earth is functionally invisible to the people who could accelerate it. That invisibility doesn’t just slow progress... it shapes who gets the chance to participate.
 
-### Biotech needs more frontier AI people. 
+Everything that follows is a downstream consequence of this.
 
-Biotech oscillates between [two modes](https://x.com/SynBio1/status/1998454536558575958?s=20): intuition-driven lab cycles with low-information dense signals, and what I call the “silicon maximalist” approach, which tries to simulate everything in silicon before we have the data, compute, or models to do it right.
+### Biotech Needs Frontier AI Talent
 
-The near future of biotech is closed-loop: experiments run at high throughput, designed to extract maximum useful information, paired with machine learning models that learn continuously. Models suggest the next experiments to run, labs execute them, and an inference layer converts raw experimental data into signals the model can learn from. The results feed back into the model, the model learns, and the cycle repeats. Humans guide the process by making strategic decisions about what to explore and defining constraints . If you’re familiar with [reinforcement learning](https://developer.nvidia.com/blog/deep-learning-nutshell-reinforcement-learning/), it’s a similar shape: the system improves through ongoing interaction with the real world, not just from training once on static data.
+Biotech oscillates between [two modes](https://x.com/SynBio1/status/1998454536558575958?s=20): intuition-driven lab cycles with low information density, and what I call the “silicon maximalist” approach, which tries to simulate everything in silicon before we have the data, compute, or models to do it right.
 
-I’ve noticed a lot of computational biology treats progress as getting more labels and getting better at predicting them. This has been useful, but it quietly assumes the labels we’re collecting are the right compression of reality, and that they stay meaningful across contexts. In biology, this often fails. Labels are usually proxies, and the hard part is noticing when you’re optimizing the proxy instead of what you actually care about, or when the thing that matters isn’t in your measurement set at all. This creates a big blind spot for [“unknown unknowns.”](https://sketchplanations.com/unknown-unknowns) The biggest wins will come from loops that help us discover better targets, better measurements, and better proxies, not just better labels.
+The near future of biotech is neither. It’s closed-loop:
 
-I'm a massive fan of JURA bio's approach here: [manufacturing-aware design](http://jura.bio) where AI & biology are deeply coupled. 
+High-throughput experiments are designed to extract maximal information. Machine-learning models propose the next experiments. Labs execute them. An inference layer turns raw data into learnable signal. The results feed back into the model, the model updates, and the cycle repeats. Humans guide the system by choosing objectives, constraints, and exploration strategies.
 
-This is a biology and AI problem in the same way modern robotics is a mechanical engineering and AI problem.
+If you’re familiar with [reinforcement learning](https://developer.nvidia.com/blog/deep-learning-nutshell-reinforcement-learning/), this looks like learning through interaction with the real world, not training once on a static dataset. I think of this as _natural RL_.
 
-The challenge is that most AI experts don't deeply understand biology, and most biologists don't deeply understand frontier AI. Bridging this gap requires both sides to meet in the middle, which means biotech companies need to actively recruit frontier AI talent and genuinely integrate them into the work. If biotech remains invisible and insular, these people will simply build something else instead (right now, mostly LLMs).
+I’ve noticed a lot of computational biology treats problems primarily as label problems. This has been useful, but it quietly assumes the labels we’re collecting are the right compression of reality, and that they stay meaningful across contexts. 
 
-To be clear: I'm not arguing for replacing biologists. Rather, I want biotech labs to integrate frontier AI capabilities so they can move faster than traditional wet lab cycles allow. Posts like [this](https://www.jura.bio/blog/onebillionexperiments) further exemplify why the high-information-density closed-loop approach is so impactful.
+In biology, this often fails. Labels are proxies. The hard part is noticing when you’re optimizing the proxy instead of what you actually care about, or when the thing that actually [matters](https://sketchplanations.com/unknown-unknowns) isn’t in your measurement set at all. The biggest wins will come from loops that help us discover better targets, better measurements, and better proxies, not just better labels.
 
-Once again, this is a distribution problem. The work that most needs frontier AI remains illegible to those who could contribute it. And when some do find their way in, they encounter narrow gates and an implicit message that you only matter after years of credentialing.
+**This is exactly where frontier AI skill matters.**
 
-Nowhere is that more obvious than with young people.
+Frontier AI people are trained to design feedback loops instead of static pipelines -- and to ask what signal is missing, not just how to fit what already exists.
 
-This leads me into my next point.
+The problem is distribution. 
+
+**Most frontier AI people never see this work.** And if they do, it’s often too opaque to understand how they could contribute. When some manage to enter, they encounter narrow gates and an implicit message: you matter only after years of traditional bio credentialing.
+
+So they do something else instead.
+
+*As a side note, I'm a massive fan of JURA bio's approach here: [manufacturing-aware design](http://jura.bio) where AI & biology are deeply coupled.*
 
 ### Biotech Needs More Young People
 
 Biotech has a permissioning problem.
 
-In biotech, the default filter is credentials, not output. There's a version of this that's responsible caution. Biology is hard. Mistakes can hurt people. Regulatory environments are complex. But these claims overlook opportunity cost: delays hurt people too.
+In biotech, the default filter is credentials, not output. Some of this is completely justified: Biology is hard. Mistakes can hurt people. Regulatory environments are complex. But this framing ignores opportunity cost.
 
-Let me elaborate:
+Delays hurt people too.
 
-If it takes a decade just to be allowed into the room, the room selects for a narrow kind of person: people who can afford long credential marathons, people who can tolerate long stretches of low pay, and people whose lives eventually make high-risk bets harder. This i measurable: the median time from finishing a PhD to receiving a first major NIH research grant doubled from 6 years in 1990 to 12 years in [2016](https://pmc.ncbi.nlm.nih.gov/articles/PMC8011905/). That’s twelve years before most people get real independence to pick and pursue their own bets.
+If it takes a decade just to be allowed into the room, the room selects for a narrow population: people who can afford long credential marathons, tolerate years of low pay, and delay risk until their lives make it harder to take any -- i.e. you get a mortgage, have kids, and suddenly a moonshot feels incredibly irresponsible. 
 
-Biotech has historically dismissed young people with a familiar refrain: "Biology is too complex for newcomers – you need decades of training before you can contribute meaningfully." This is partly true. But the slope has changed. Papers, textbooks, and whole subfields are now easier to digest with LLMs. More importantly, there are many ways to contribute that don’t require you to run clinical trials: building tools, automating workflows, improving measurement, mapping literature, creating better evaluation loops, etc. 
+This is measurable: the median time from finishing a PhD to receiving a first major NIH research grant doubled from 6 years in 1990 to 12 years in [2016](https://pmc.ncbi.nlm.nih.gov/articles/PMC8011905/). That’s twelve years before most academic researchers gain real independence to pursue their own bets.
 
-If we keep requiring everyone to credential for a decade before they can matter, we’ll keep selecting out the people most willing to try new approaches, early.
+Historically, biotech has responded to this with: *biology is too complex for newcomers.*
+
+This is partly true. But the learning curve has changed. Papers, textbooks, and whole subfields are now easier to digest with LLMs. More importantly, there are many ways to contribute that don’t require you to run clinical trials: tooling, automation, measurement, data infrastructure, literature mapping, evaluation loops, etc. 
+
+If we require a decade of credentialing before someone can matter, we select against the people most willing to try new approaches.
 
 ### So What Can We Do About It?
 
-Here are a couple of thoughts on how we can begin to fix this. 
-
-#### Biotech in plain English
+#### Biotech in Plain English
 
 
-Imagine a world where you can send a paper to a friend (from outside the biotech world), and they’ll be just as amazed as you are.
+Imagine sending a biotech paper to a smart friend outside the field, and they’re just as excited as you are.
 
-E.G.
+Example:
 
 Instead of:
 
@@ -102,30 +98,58 @@ Perhaps something like this:
 > During training, we intentionally add controlled random shifts and rotations to the antibody backbone and teach the model to remove that corruption one step at a time. At generation time, this learned “reverse process” lets the model start from noise and iteratively refine it into a realistic antibody structure consistent with the constraints we provide.
 
 Imagine if every paper, every product launch, every company update had two versions:
-- the real technical one      
-- and a plain English one that’s easier to understand  
+- the full technical version, and
+- a plain-English version that explains what changed, why it matters, and what it enables.
 
-When people can understand something, they can support it, join it, fund it, argue about it, and improve it. 
+When people can understand something, they can support it, join it, fund it, argue about it, and improve it.
 
-EDIT: While writing this, I realized a something should exist here - quickly spun [this](https://explain.sethmorton.com/) up. 
+EDIT: While writing this, I realized something like this should exist - quickly spun [this](https://explain.sethmorton.com/) up. 
 
-#### Build/Research in public
+#### Build/Research in Public (with Less Jargon)
 
+I really appreciated this [tweet](https://x.com/shelbynewsad/status/1991546244263489603) from [Dr. Shelby](https://x.com/shelbynewsad) on biotech’s lack of narrative. Here’s my own spin on it:
 
-I really appreciated this [tweet](https://x.com/shelbynewsad/status/1991546244263489603) from Dr. Shelby on biotech’s lack of narrative. Here’s my own spin on it:
+Biotech work is fragmented across silos. Researchers often don’t see what adjacent labs or subfields are doing.
 
-Biotech often operates in silos. Researchers work on similar problems without seeing what’s happening in adjacent labs or subfields. We need more low-friction connection points: online spaces where people share work in progress in plain English, across specialty boundaries, plus more communicators translating advances for everyone else. 
+We need more low-friction connection points: online spaces where people share work-in-progress in simplified language.
 
-The plain English part matters. Biology is huge, and the the "jargon surface area" is basically infinite.
+The simplified language part matters. Biology is huge, and the "jargon surface area" is basically infinite.
 
-And to everyone already writing and podcasting about biotech: keep going! You're making the work visible when it needs to be.
-
+And to everyone already writing and podcasting about biotech: thank you.
 #### Default to curiosity before critique.
 
-In tech, when someone shows you a something new, the default reaction is curiosity: "If this worked, what could it unlock?" In biotech, the default is critique: "Here are all the reasons this won't work." Critique is important, but it can't be the only response. We need more people asking "How could this work?" instead of just explaining why it won't. This is how you create space for the orthogonal approaches that outsiders bring.
+In tech, when someone shows you a something new, the default reaction is curiosity: "If this worked, what could it unlock?" 
+
+In biotech, the default is critique: "Here are all the reasons this won't work." 
+
+Critique is important, but it can't be the only response. Curiosity creates space for orthogonal approaches, especially from outsiders who don’t share the field’s assumptions.
+
+#### Prioritize more frontier AI
+
+Data pipelines in many labs are built to analyze results after experiments run, not to systematically decide what should happen next. 
+
+Computational biology has historically been forced into this mode because determining what should happen next was largely a biology-heavy one, dependent on intuition and slow trial-and-error in the lab.
+
+AI changes that.
+
+For the first time, we can formalize this question. We can model uncertainty explicitly, estimate information gain, and use models to propose experiments based on how much they improve downstream decisions... not just how well they explain existing data.
+
+Frontier AI people are trained to think this way: as designers of systems that learn through interaction. Systems where each experiment is chosen to make the next decision better.
+
+My goal is to bring that mindset into biotech. To help build workflows where wet labs and models are tightly coupled, uncertainty is *more* explicit, and experimentation itself is treated as something you can optimize.
+
+The shift I’m aiming for is subtle but important: moving from *“What does this data say?”* to *“What experiment would most improve our ability to act?”*
 
   ---
 
-The next era of biotech (and frankly, most industries) will come from teams that combine the frontier of different domains, make their work legible enough that the right people can find it, and build on-ramps that make those people actually want to join.
+The next era of biotech will come from teams that:
+
+- combine frontiers across domains,
+    
+- make their work legible enough to travel,
+    
+- and build real on-ramps for people who want to contribute now, not in ten years.
+    
+**Biotech doesn’t just need better science. It needs better distribution.**
 
 I want to hear what you think and what you’re building. DM me!
