@@ -42,7 +42,7 @@
 				</a>
 				in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some of life’s biggest questions.
 <br><br>
-I’m currently working on Strand, a platform for engineering scalable microbes. The vision behind Strand is a platform that makes it 100 times easier to design and validate multidimensional interventions for aging and age-related disease.
+I’m currently working on Strand, a platform for engineering scalable microbes. 
 			</p>
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">

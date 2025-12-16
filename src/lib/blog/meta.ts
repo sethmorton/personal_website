@@ -30,5 +30,10 @@ export const BLOG_META: Record<string, BlogMeta> = {
     title: 'On Growth and the Low‑Hanging Fruit of Immortality',
     description: 'Bridging silicon and carbon; why longevity is a design problem.',
     type: 'article'
+  },
+  biotech_has_a_distribution_problem: {
+    title: 'Biotech Has a Distribution Problem',
+    description: 'Why biotech needs better visibility to outsiders, why bringing in more AI talent matters, why we need real pathways for young people to contribute, and what we can do to fix these problems.',
+    type: 'article'
   }
 };

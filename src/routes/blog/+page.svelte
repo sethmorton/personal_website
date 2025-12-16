@@ -36,6 +36,11 @@
 			title: 'when forgetting is no longer the default',
 			slug: 'when_forgetting_is_no_longer_the_default',
 			date: '2025-10-22'
+		},
+		{
+			title: 'biotech has a distribution problem',
+			slug: 'biotech_has_a_distribution_problem',
+			date: '2025-12-14'
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);

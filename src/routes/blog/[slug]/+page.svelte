@@ -11,6 +11,7 @@
 	import onGrowthContent from '$lib/blog/content/on_growth_low_hanging_fruit_immortality.txt?raw';
 	import theBlackBoxOfBiologyContent from '$lib/blog/content/the_black_box_of_biology.txt?raw';
 	import whenForgettingIsNoLongerTheDefaultContent from '$lib/blog/content/when_forgetting_is_no_longer_the_default.txt?raw';
+	import biotechHasADistributionProblemContent from '$lib/blog/content/biotech_has_a_distribution_problem.txt?raw';
 	const blogPosts = $state([
 		{
 			title: 'balance',
@@ -53,6 +54,12 @@
 			slug: 'when_forgetting_is_no_longer_the_default',
 			date: '2025-10-22',
 			content: whenForgettingIsNoLongerTheDefaultContent
+		},
+		{
+			title: 'biotech has a distribution problem',
+			slug: 'biotech_has_a_distribution_problem',
+			date: '2025-12-14',
+			content: biotechHasADistributionProblemContent
 		}
 	]);
 	// $props returns { data : { slug: string }}
