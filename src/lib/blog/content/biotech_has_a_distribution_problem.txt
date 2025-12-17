@@ -6,11 +6,16 @@ My best friend, at 20 years old, has two genetic diseases with no cure.
 
 It's a big part of why I got into biotech.
 
-And the deeper I've gone, the more I've noticed something frustrating: there’s an enormous amount of promising work in biotech, but it doesn’t spread. Results get published, tools get built, and then they just… sit there. They don’t reliably reach the people who could use them or build on top of them.
+The deeper I’ve gone, the more something has frustrated me. There’s an enormous amount of promising work in biotech, but it doesn’t spread. 
 
-It’s tempting to say the gap is money, regulation, or, put simply: “biology is hard.”
+Results get published, tools get built, and then they just… sit there.
 
-All of that is true. But I keep coming back to something simpler:
+They don’t reliably reach the people who could use them, build on them, or push them further.
+
+It’s tempting to explain this away with familiar answers: funding constraints, regulation, or the fact that biology is genuinely hard.
+
+All of that is true. 
+But I keep coming back to something simpler:
 
 **Biotech has a distribution problem.**
 
@@ -20,7 +25,14 @@ I mean distribution in two senses:
 
 2. The distribution of *work*: valuable biotech research and industry progress doesn’t travel far beyond insular communities.
 
-This post is about why biotech doesn't travel, why this matters, and how this blocks both frontier AI talent and younger contributors. Finally, what we can do about it.
+This matters because progress in biotech doesn’t just depend on discovery. It depends on compounding. 
+
+When work is legible and travels, other scientists can build on it. Adjacent fields can connect their insights to it. Talented people can find it. Funders can understand it. When it doesn’t, good ideas remain underused until they’re rediscovered years later by someone bigger.
+
+For people like my friend, this isn’t an abstract inefficiency. Every failure of distribution is time. Time before the right people see the work. Time before ideas connect. Time before progress compounds. And in biotech, time shows up as years without treatment.
+
+This post is about why biotech doesn’t travel, why that matters, and how poor distribution blocks both frontier AI talent and younger contributors — and what we can do about it.
+
 
 ### Why Biotech Doesn’t Travel 
 
@@ -28,9 +40,9 @@ In software, when something gains traction, distribution can compound rapidly. P
 
 Biotech is the opposite. Results get written up for insiders. Product updates are shaped by IP concerns, and compliance requirements. News comes filtered through a handful of academic press cycles, venture capitalists making posts, or niche communities.
 
-This matters because if people can't evaluate your work and figure out how to attach to it, it can't compound as easily.
+If people can’t evaluate your work or figure out how to attach to it, they can’t build on it. Adjacent fields stay disconnected. Talent never finds an entry point. Funders struggle to distinguish signal from noise.
 
-When work is visible, other scientists can build on it. Adjacent fields can connect their insights to yours. Talented people can find you. Funders can understand what you're doing. In biotech, most good work just [sits there, underused](https://www.cwts.nl/TvR/documents/AvR-SlBeau-Scientom.pdf), until someone bigger rediscovers it years later.
+This is why so much good work just [sits there, underused](https://www.cwts.nl/TvR/documents/AvR-SlBeau-Scientom.pdf), until someone bigger rediscovers it years later.
 
 This creates a paradox: some of the most important work on Earth is functionally invisible to the people who could accelerate it. That invisibility shapes who gets the chance to participate.
 
@@ -58,7 +70,9 @@ The problem is distribution.
 
 **Most frontier AI people never see this work.** And if they do, it’s often too opaque to understand how they could contribute. When some manage to enter, they encounter narrow gates and an implicit message: you matter only after years of traditional bio credentialing.
 
-So they do something else instead.
+As a result, many never join biotech at all. They build trading systems, recommendation engines, LLMs, and defense tech - all places where tight feedback loops and fast iteration are rewarded.
+
+The opportunity cost is enormous. Biotech forfeits the people best equipped to turn experimentation into a learning system rather than a sequence of isolated studies.
 
 *As a side note, I'm a massive fan of JURA bio's approach here: [manufacturing-aware design](http://jura.bio) where AI & biology are deeply coupled.*
 
@@ -103,7 +117,7 @@ Imagine if every paper, every product launch, every company update had two versi
 
 When people can understand something, they can support it, join it, fund it, argue about it, and improve it.
 
-EDIT: While writing this, I realized something like this should exist - quickly spun [this](https://explain.sethmorton.com/) up. 
+*EDIT: While writing this, I realized something like this should exist - quickly spun [this](https://explain.sethmorton.com/) up.*
 
 #### Build/Research in Public (with Less Jargon)
 
