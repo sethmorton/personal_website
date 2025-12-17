@@ -10,7 +10,7 @@ The deeper I’ve gone, the more something has frustrated me. There’s an enorm
 
 Results get published, tools get built, and then they just… sit there.
 
-They don’t reliably reach the people who could use them, build on them, or push them further.
+They don’t reliably reach the people who could use them or push them further.
 
 It’s tempting to explain this away with familiar answers: funding constraints, regulation, or the fact that biology is genuinely hard.
 
@@ -25,13 +25,13 @@ I mean distribution in two senses:
 
 2. The distribution of *work*: valuable biotech research and industry progress doesn’t travel far beyond insular communities.
 
-This matters because progress in biotech doesn’t just depend on discovery. It depends on compounding. 
+This matters because progress in biotech doesn't just depend on discovery. It depends on compounding.
 
-When work is legible and travels, other scientists can build on it. Adjacent fields can connect their insights to it. Talented people can find it. Funders can understand it. When it doesn’t, good ideas remain underused until they’re rediscovered years later by someone bigger.
+When work is legible and travels, other scientists can build on it. Adjacent fields can connect their insights to it. Talented people can find it. Funders can understand it.
 
-For people like my friend, this isn’t an abstract inefficiency. Every failure of distribution is time. Time before the right people see the work. Time before ideas connect. Time before progress compounds. And in biotech, time shows up as years without treatment.
+For people like my friend, poor distribution isn't abstract—it's the reason promising research on his conditions might be sitting unused in a lab somewhere. It's why the AI researcher who could accelerate that work never sees it. It's why potential collaborators can't find each other. Every failure of distribution is measurable in time: time before the right people connect, time before ideas compound, time before someone gets treatment.
 
-This post is about why biotech doesn’t travel, why that matters, and how poor distribution blocks both frontier AI talent and younger contributors — and what we can do about it.
+This post is about why biotech doesn't travel, why that matters, and how poor distribution blocks both frontier AI talent and younger contributors—and what we can do about it.
 
 
 ### Why Biotech Doesn’t Travel 
@@ -39,10 +39,6 @@ This post is about why biotech doesn’t travel, why that matters, and how poor 
 In software, when something gains traction, distribution can compound rapidly. People try it, share it, remix it, complain about it, and recruit themselves into your orbit.
 
 Biotech is the opposite. Results get written up for insiders. Product updates are shaped by IP concerns, and compliance requirements. News comes filtered through a handful of academic press cycles, venture capitalists making posts, or niche communities.
-
-If people can’t evaluate your work or figure out how to attach to it, they can’t build on it. Adjacent fields stay disconnected. Talent never finds an entry point. Funders struggle to distinguish signal from noise.
-
-This is why so much good work just [sits there, underused](https://www.cwts.nl/TvR/documents/AvR-SlBeau-Scientom.pdf), until someone bigger rediscovers it years later.
 
 This creates a paradox: some of the most important work on Earth is functionally invisible to the people who could accelerate it. That invisibility shapes who gets the chance to participate.
 
