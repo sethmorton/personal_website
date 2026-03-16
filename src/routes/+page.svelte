@@ -42,7 +42,7 @@
 				</a>
 				in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some of life’s biggest questions.
 <br><br>
-I’m currently consulting for startups in biotech and researching superintelligence with thermodynamic chips.
+I’m currently consulting for startups in biotech and working on superintelligence with thermodynamic chips.
 			</p>
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
