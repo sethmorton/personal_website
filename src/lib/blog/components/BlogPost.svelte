@@ -82,9 +82,6 @@
 			html = html.replace(placeholder, renderedMath);
 		});
 
-		// Fourth pass: Add target="_blank" and rel="noopener noreferrer" to all links
-		html = html.replace(/<a\s+(?![^>]*\btarget=)([^>]*)href=/g, '<a $1target="_blank" rel="noopener noreferrer" href=');
-
 		renderedHTML = html;
 	});
 </script>

@@ -24,7 +24,7 @@
 			<div>
 				<h1 class="text-2xl sm:text-4xl font-bold text-gray-900">Seth Morton</h1>
 				<p class="text-sm text-gray-500">
-					Founder of <a href="https://strand.tools" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2">Strand</a>
+					Founder of <a href="https://onfluxlabs.com" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 font-medium underline decoration-1 underline-offset-2">Onflux</a>
 				</p>
 			</div>
 		</div>
@@ -42,7 +42,7 @@
 				</a>
 				in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some of life’s biggest questions.
 <br><br>
-I’m currently working on Strand, a platform for engineering scalable microbes. 
+I’m currently consulting for startups in biotech and researching superintelligence with thermodynamic chips.
 			</p>
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
