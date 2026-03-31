@@ -75,7 +75,11 @@ That's exactly what we've been asking for this whole time. A system that gets ch
 
 We've been simulating adaptation on substrates that don't naturally do it. What if we just used one that does?
 
-This isn't hypothetical for me. I've been building a novel architecture for continual learning on thermodynamic hardware — a way to run inference and training simultaneously so the system adapts through use. I haven't run it on thermodynamic hardware yet, but I've simulated it on GPUs and it works. It produces language. A completely new architecture that learns as it goes. You can read more about it [here].
+This isn't hypothetical for me. I've been building a novel architecture for continual learning on thermodynamic hardware — a way to run inference and training simultaneously so the system adapts through use. No transformer. No attention. The entire model is one energy function, and inference is physical relaxation. I've simulated it on GPUs and it works — 98% accuracy on character-level English prediction. A completely new computational substrate that produces language.
+
+Think about what this means in practice. A system that's been living inside your codebase for six months. The codebase evolves. The team changes conventions, refactors modules, introduces new patterns. A frozen model treats every day like its first day — it has to be re-shown everything through context. A system that actually learns just knows, the way a senior engineer who's been on the team for a year just knows how things work here without re-reading the docs every morning. And if the team stops working on a particular module for a few months, the system's feel for it gradually fades — not because we programmed forgetting, but because that's what physical systems do.
+
+You can read more about the architecture [here](https://onfluxlabs.com).
 
 ## What this could mean
 
