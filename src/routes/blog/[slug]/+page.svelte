@@ -12,6 +12,7 @@
 	import theBlackBoxOfBiologyContent from '$lib/blog/content/the_black_box_of_biology.txt?raw';
 	import whenForgettingIsNoLongerTheDefaultContent from '$lib/blog/content/when_forgetting_is_no_longer_the_default.txt?raw';
 	import biotechHasADistributionProblemContent from '$lib/blog/content/biotech_has_a_distribution_problem.txt?raw';
+	import memoryIsntLearningContent from '$lib/blog/content/memory_isnt_learning.txt?raw';
 	const blogPosts = $state([
 		{
 			title: 'balance',
@@ -60,6 +61,12 @@
 			slug: 'biotech_has_a_distribution_problem',
 			date: '2025-12-14',
 			content: biotechHasADistributionProblemContent
+		},
+		{
+			title: 'memory isn\'t learning',
+			slug: 'memory_isnt_learning',
+			date: '2026-03-31',
+			content: memoryIsntLearningContent
 		}
 	]);
 	// $props returns { data : { slug: string }}

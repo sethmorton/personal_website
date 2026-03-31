@@ -41,6 +41,11 @@
 			title: 'biotech has a distribution problem',
 			slug: 'biotech_has_a_distribution_problem',
 			date: '2025-12-14'
+		},
+		{
+			title: 'memory isn\'t learning',
+			slug: 'memory_isnt_learning',
+			date: '2026-03-31'
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);

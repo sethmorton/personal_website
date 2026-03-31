@@ -42,7 +42,7 @@
 				</a>
 				in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some of life’s biggest questions.
 <br><br>
-I’m currently consulting for startups in biotech and working on superintelligence with thermodynamic chips.
+I’m currently working on superintelligence with thermodynamic chips.
 			</p>
 			
 			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
@@ -59,6 +59,22 @@ I’m currently consulting for startups in biotech and working on superintellige
 			<div class="space-y-4 text-gray-700">
 				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-500">
 					<div class="flex-1 min-w-0">
+						<div class="font-medium">Memory Isn't Learning</div>
+						<div class="text-sm text-gray-600">
+							Why AI systems that don't change from experience can't keep up with the world. Thermodynamics and real learning.
+						</div>
+					</div>
+					<a
+						href="/blog/memory_isnt_learning"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
+					>
+						<ExternalLink size={16} />
+					</a>
+				</div>
+				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-600">
+					<div class="flex-1 min-w-0">
 						<div class="font-medium">On Growth and the Low-Hanging Fruit of Immortality</div>
 						<div class="text-sm text-gray-600">
 							Achieving immortality is closer than you might think, and what does growth mean when it's no longer constrained by time?
@@ -73,7 +89,7 @@ I’m currently consulting for startups in biotech and working on superintellige
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-600">
+				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-700">
 					<div class="flex-1 min-w-0">
 						<div class="font-medium">Biotech has a Distribution Problem</div>
 						<div class="text-sm text-gray-600">
@@ -89,7 +105,7 @@ I’m currently consulting for startups in biotech and working on superintellige
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-700">
+				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-800">
 					<div class="flex-1 min-w-0">
 						<div class="font-medium">The Black Box of Biology</div>
 						<div class="text-sm text-gray-600">
@@ -105,7 +121,7 @@ I’m currently consulting for startups in biotech and working on superintellige
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-800">
+				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-900">
 					<div class="flex-1 min-w-0">
 						<div class="font-medium">Balance</div>
 						<div class="text-sm text-gray-600">
@@ -125,7 +141,7 @@ I’m currently consulting for startups in biotech and working on superintellige
 		</div>
 
 		<!-- Contact -->
-		<div class="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center animate-fade-in-up animation-delay-900">
+		<div class="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center animate-fade-in-up animation-delay-1000">
 			<a href="x.com/_sethmorton"
 				target="_blank"
 				rel="noopener noreferrer"
@@ -196,6 +212,10 @@ I’m currently consulting for startups in biotech and working on superintellige
 
 	.animation-delay-900 {
 		animation-delay: 0.9s;
+	}
+
+	.animation-delay-1000 {
+		animation-delay: 1s;
 	}
 
 	/* Ensure animations work on mobile */

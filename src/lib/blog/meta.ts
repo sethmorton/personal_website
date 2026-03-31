@@ -35,5 +35,10 @@ export const BLOG_META: Record<string, BlogMeta> = {
     title: 'Biotech Has a Distribution Problem',
     description: 'Why biotech needs better visibility to outsiders, why bringing in more AI talent matters, why we need real pathways for young people to contribute, and what we can do to fix these problems.',
     type: 'article'
+  },
+  memory_isnt_learning: {
+    title: 'Memory Isn\'t Learning',
+    description: 'Why AI systems that don\'t change from experience can\'t keep up with the world. Thermodynamics and real learning.',
+    type: 'article'
   }
 };

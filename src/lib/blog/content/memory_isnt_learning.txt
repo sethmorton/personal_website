@@ -1,0 +1,92 @@
+# Memory Isn't Learning
+
+*"No man ever steps in the same river twice, for it's not the same river and he's not the same man."*
+*— Heraclitus*
+
+I got into biology because I wanted AI to matter where the stakes were highest.
+
+I dream of exploring exoplanets. To get there, we have to solve aging, chronic disease, and a long list of other problems that still feel absurdly open.
+
+For a while, applying more AI to biology felt like the obvious unlock. Ingest more data, reason faster, iterate faster, sequence faster, discover faster.
+
+Then I kept running into the same mismatch.
+
+I was using systems that don't change from experience to reason about things that change constantly.
+
+That realization has only gotten stronger.
+
+## Meeting the unfamiliar
+
+That same feeling came back when I saw [ARC-AGI-3](https://arcprize.org/arc-agi/3).
+
+ARC-AGI-3 is a benchmark built around novel interactive environments. You're dropped into a strange environment with hidden rules. Nobody tells you what matters. You have to poke at things, watch what changes, and build a picture from contact.
+
+What grabbed me wasn't just the score gap (the best model scored 0.37/100) but the shape of the test.
+
+It's one thing to answer questions inside a world that's already been explained to you. It's another thing to enter a strange room, flip a switch, watch one wall move, and realize the room itself is the lesson.
+
+Humans walk into a strange environment and start looking for structure almost immediately. We probe. We compress. We build a picture of what kind of world we're in. And then we update that picture every time we touch something new.
+
+Models don't do this. They bring the same fixed lens every time, regardless of what they encounter. You poke at something, it changes, and now you're looking at a different problem than the one you started with. A human adjusts. A model doesn't.
+
+That's what ARC makes obvious: humans and models meet the unfamiliar differently.
+
+And that matters, because a lot of the hardest problems in the real world have this same shape.
+
+## Biology
+
+Biology is one of them.
+
+It doesn't just sit there waiting to be described correctly. You intervene in a system. The system responds. That response changes what matters next.
+
+A model can know a lot about a cell and still miss the part that matters most, because the important part often only appears once you perturb the system.
+
+Imagine a model trained on a cell line. It's seen the pathways, the markers, the usual responses. Then you intervene. The cell compensates. The thing you're trying to understand is now different from the thing the model learned.
+
+But the model carries its old priors forward unchanged. It's reasoning over a world that no longer exists.
+
+That's not a context problem. That's not a retrieval problem. The ground shifted, and the system stayed still.
+
+## Memory is not learning
+
+Some of the things I hear when I talk about this with researchers are in-context learning and lossless context management, amongst other things.
+
+In-context learning means you give the model a few examples in the prompt and it picks up the pattern on the fly. Lossless context management means the system can store massive amounts of past experience and pull in whatever's relevant at inference time.
+
+These are real capabilities. They get models incredibly far.
+
+But they both hit a ceiling.
+
+In-context learning lets a model recombine what it already knows in new ways. It's like a translator who's fluent in every Romance language. Drop them into Spanish, Portuguese, Italian — they'll move fluidly between them. But drop them into Mandarin and they're stuck. They can't build new structure from exposure. They can only rearrange the structure they already have. The weights drew the boundaries during training, and nothing at inference moves them.
+
+Retrieval has a different problem. The more experience the system accumulates, the harder it gets to find the right thing at the right time. And even when it does, the model still has to make sense of it in context — which is just in-context learning again, with the same ceiling.
+
+This is memory. Not learning.
+
+## Why thermodynamics started to feel right
+
+So if that's memory, what does real learning actually look like? The system has to change through contact. The question is how you actually get there.
+
+A couple months ago I watched a lecture at the University of Waterloo on thermodynamic chips, and something clicked.
+
+At its core, thermodynamics describes how systems exchange energy and settle into new states. You push a system, it finds a new equilibrium. Push it again, it settles again — but differently this time, because the landscape has been reshaped by what just happened. Think of a river carving a canyon. The water's history isn't written down somewhere — it's in the shape of the rock. And the new shape changes how the water flows next. That's how thermodynamic systems work. Every interaction leaves a trace in the dynamics themselves.
+
+That's exactly what we've been asking for this whole time. A system that gets changed by contact, where the experience doesn't sit in a database or a context window but actually reshapes how the system behaves next. Thermodynamic hardware doesn't need someone to manually bake in a learning algorithm on top of it. The physics is the learning.
+
+We've been simulating adaptation on substrates that don't naturally do it. What if we just used one that does?
+
+This isn't hypothetical for me. I've been building a novel architecture for continual learning on thermodynamic hardware — a way to run inference and training simultaneously so the system adapts through use. I haven't run it on thermodynamic hardware yet, but I've simulated it on GPUs and it works. It produces language. A completely new architecture that learns as it goes. You can read more about it [here].
+
+## What this could mean
+
+I started this blog talking about biology. About how the AI systems I was working with couldn't keep up with the things they were supposed to reason about.
+
+Now I can see what the fix actually looks like.
+
+A system that actually learns from every intervention. Not by storing more context, but by becoming a different system after each encounter. The ground shifts, and the system shifts with it.
+
+Everyone's building world models right now. But the world doesn't just sit there and get modeled. It pushes back. And pretty much every domain that matters has this property — biology, drug discovery, aging, climate, robotics. They all look different when your system adapts through contact instead of consulting a bigger archive.
+
+I got into this because I wanted AI to matter where the stakes were highest. I still believe that. I just think we need systems that stay open to being changed by the world they're trying to understand.
+
+If any of this resonates, DM me. I'd love to talk.
