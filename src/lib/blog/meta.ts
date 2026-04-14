@@ -2,7 +2,7 @@ export type BlogMeta = {
 	title: string;
 	description: string;
 	image?: string;
-	type?: 'article' | 'website';
+	type?: 'article' | 'profile' | 'website';
 };
 
 export const BLOG_META: Record<string, BlogMeta> = {

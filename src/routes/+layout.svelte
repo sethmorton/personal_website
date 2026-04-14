@@ -1,5 +1,4 @@
 <script lang="ts">
-	import SEO from '$lib/blog/components/SEO.svelte';
 	import '../app.css';
 	import { browser } from '$app/environment';
 	import { beforeNavigate, afterNavigate } from '$app/navigation';
@@ -14,6 +13,5 @@
 </script>
 
 <div class="min-h-screen bg-stone-50">
-  <SEO />
-  {@render children()}
+	{@render children()}
 </div>

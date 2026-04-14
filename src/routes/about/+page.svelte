@@ -1,6 +1,14 @@
-<script>
+<script lang="ts">
 	import { goto } from '$app/navigation';
+	import SEO from '$lib/blog/components/SEO.svelte';
 </script>
+
+<SEO
+	title="About Seth Morton"
+	description="Background, work, and interests spanning software engineering, systems thinking, and frontier science."
+	type="profile"
+	twitterCard="summary_large_image"
+/>
 
 <div class="max-w-3xl p-8">
 	<div class="mb-4 flex justify-start">
