@@ -213,11 +213,6 @@
 		font-weight: 400;
 	}
 
-	.blog-prose :global(blockquote strong) {
-		color: inherit;
-		font-weight: 400;
-	}
-
 	.blog-prose :global(ul),
 	.blog-prose :global(ol) {
 		padding-left: 1.4rem;
