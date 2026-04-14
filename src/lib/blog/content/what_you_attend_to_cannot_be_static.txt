@@ -6,7 +6,7 @@ Darwin kept looking at the beaks. He didn't have a theory for why they mattered.
 
 What would it take for a machine to do something like that?
 
-> **TLDR:** What transformers attend to is frozen at training time. Continual weight updates are the obvious next step, but backpropagation is global and dense, and every workaround (TTT, LoRA, meta-learning, EWC, replay) is a concession to that. Thermodynamic computation can give you cheap, parallel, non-destructive learning natively. I'm building an architecture called HAWF that does this. If you're interested, DM me.
+**TLDR:** What transformers attend to is frozen at training time. Continual weight updates are the obvious next step, but backpropagation is global and dense, and every workaround (TTT, LoRA, meta-learning, EWC, replay) is a concession to that. Thermodynamic computation can give you cheap, parallel, non-destructive learning natively. I'm building an architecture called HAWF that does this. If you're interested, DM me.
 
 **Static attention.**
 
@@ -64,6 +64,8 @@ So what if we could harness this diffusion in computation?
 
 This is the intuition behind the [Ising model](https://en.wikipedia.org/wiki/Ising_model) -- think of a grid of magnets that can each point up or down, where every magnet influences its neighbors and nobody tells the system what to do. It just settles, with lower-energy configurations naturally showing up more often, not finding one right answer but sampling from all the possible ones.
 
+<div align="center"> <img src="https://web.stanford.edu/~peastman/statmech/_images/ising_model.svg" alt="Ising model grid" border="0" width="420" /> </div>
+
 The question is whether you can build something like this in silicon and make it useful for real machine learning, and [Extropic](https://extropic.ai/hardware) has started doing exactly that. Their [Denoising Thermodynamic Model](https://arxiv.org/abs/2510.23972), a diffusion-style generative model built for their thermodynamic sampling units, matched GPU-based diffusion on standard benchmarks at roughly 10,000x less energy per generated sample because the hardware isn't fighting the computation anymore. Their Z1 chip is built on standard CMOS transistors using standard processes, no exotic fabrication, which means it can scale on existing infrastructure. I watched a [lecture by their CTO](https://firstprinciples.fm/episodes/3-extropic-why-thermodynamic-computing-is-the-future-of-ai-public-debut) last year and it provoked a lot of thought about what happens when the substrate is no longer static.
 
 **HAWF.**
@@ -80,4 +82,4 @@ Right now I'm testing this hypothesis by simulating on GPUs through Langevin dyn
 
 I believe the future of AI will be event-driven, continuous data streams spiked into thermodynamic relaxation systems and then projected out. I think we can build machines that learn the way biology learns, and I think the path runs through thermodynamic computation.
 
-If you want to build it with me, or if you think I'm wrong, [DM me](https://x.com/sethbhamilton).
+If you want to build it with me, or if you think I'm wrong, [DM me](https://x.com/_sethmorton).
