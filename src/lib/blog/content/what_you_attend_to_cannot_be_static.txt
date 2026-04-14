@@ -6,7 +6,7 @@ Darwin kept looking at the beaks. He didn't have a theory for why they mattered.
 
 What would it take for a machine to do something like that?
 
-> **TLDR:** What transformers attend to is frozen at training time. Continual weight updates are the obvious next step, but backpropagation is global and dense, and every workaround (TTT, LoRA, meta-learning, EWC, replay) is a concession to that. Thermodynamic computation can give you cheap, parallel, non-destructive learning natively. I'm building an architecture called HAWF that does this. If you're interested, DM me.
+> **TLDR:** What transformers attend to is frozen at training time. Continual weight updates are the obvious next step, but backpropagation is global and dense, and every workaround ([TTT](https://arxiv.org/abs/2407.04620), [LoRA](https://arxiv.org/abs/2106.09685), meta-learning, [EWC](https://arxiv.org/abs/1612.00796), [replay](https://arxiv.org/abs/1811.11682)) is a concession to that. Thermodynamic computation can give you cheap, parallel, non-destructive learning natively. I'm building an architecture called HAWF that does this. If you're interested, DM me.
 
 **Static attention.**
 
@@ -16,7 +16,7 @@ There is an enormous amount of information packed into these projections. Give a
 
 But the projections don't change. You can loop reasoning indefinitely, extend the context window, build [recursive language models](https://www.primeintellect.ai/blog/rlm), scaffold retrieval and tool use on top. The model gets more to work with, but what it considers relevant stays the same. You could put Darwin's finch data in the context window and the model would attend to it the way its training says to, classify it, match to the nearest known pattern, and move on. That kind of reweighting, choosing to care about something the system currently thinks is unimportant, is something transformers can't do without human intervention.
 
-> Sidenote: many conversations in SF and on podcasts are all focused on maximizing in-context learning with RAG-like solutions, along with an incredibly large amount of spend on human data to scale the amount of data in-distribution in the model. It's a good time to be a human data company!
+> Sidenote: many conversations in SF and on podcasts are all focused on maximizing in-context learning with [RAG](https://arxiv.org/abs/2005.11401)-like solutions, along with an incredibly large amount of spend on human data to scale the amount of data in-distribution in the model. It's a good time to be a human data company!
 
 **Backprop.**
 
@@ -61,6 +61,8 @@ A protein folds into its correct structure in microseconds, with no backprop and
 The brain does something analogous. Local learning happens at the synapse through [spike-timing-dependent plasticity (STDP)](https://en.wikipedia.org/wiki/Spike-timing-dependent_plasticity), where two neurons strengthen or weaken their connection based on the relative timing of their firing. Global modulation happens through chemical floods -- primarily dopamine -- that tell large populations of neurons how much to learn from what just happened. This global signal diffuses in parallel and each synapse updates locally, with no sequential backward pass. Imagine a water droplet on paper: the effect ripples out in a wave rather than a sequence. In the brain, free energy minimization is roughly minimizing loss, but it happens thermodynamically across the entire system at once.
 
 So what if we could harness this diffusion in computation?
+
+The common thread is systems that compute by settling rather than by sequential instruction: local interactions define the dynamics, and the useful state emerges from relaxation.
 
 This is the intuition behind the [Ising model](https://en.wikipedia.org/wiki/Ising_model) -- think of a grid of magnets that can each point up or down, where every magnet influences its neighbors and nobody tells the system what to do. It just settles, with lower-energy configurations naturally showing up more often, not finding one right answer but sampling from all the possible ones.
 
