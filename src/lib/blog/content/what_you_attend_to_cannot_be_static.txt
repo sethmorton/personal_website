@@ -1,0 +1,83 @@
+# What You Attend To Cannot Be Static
+
+In 1835, Darwin collected birds across the Galapagos Islands. Other naturalists looked at the same birds, saw finches, classified them, and moved on. The beaks were slightly different across islands, but nobody cared. The prevailing framework had no room for beak variation to mean anything.
+
+Darwin kept looking at the beaks. He didn't have a theory for why they mattered. He just couldn't stop noticing that they did. He held onto an observation that didn't fit his framework and, over time, let it restructure everything else he believed about biology.
+
+What would it take for a machine to do something like that?
+
+> **TLDR:** What transformers attend to is frozen at training time. Continual weight updates are the obvious next step, but backpropagation is global and dense, and every workaround (TTT, LoRA, meta-learning, EWC, replay) is a concession to that. Thermodynamic computation can give you cheap, parallel, non-destructive learning natively. I'm building an architecture called HAWF that does this. If you're interested, DM me.
+
+**Static attention.**
+
+At the core of a transformer is a set of learned projections that determine what counts as relevant. When a new token comes in, the model uses those projections to score every previous token by how relevant it is to the new one. These projections are fixed at training time. If something requires a different way of looking at the data, the model will process new tokens through its existing projections regardless.
+
+There is an enormous amount of information packed into these projections. Give a model enough parameters and compute and you get structures that emerge at scales no human could hold in working memory at once. If the training data contains the general shape of a pattern, deep enough reasoning can find specific instances nobody has found yet. For example, [Claude Mythos](https://red.anthropic.com/2026/mythos-preview/) -- a [looped language model](https://arxiv.org/abs/2510.25741) that iterates over its own reasoning to mine deeper into that structure with each pass -- has recently been finding [zero-day vulnerabilities](https://en.wikipedia.org/wiki/Zero-day_vulnerability) across major operating systems. I think vulnerability search is a perfect example of this: we have existing patterns for vulnerabilities, we just need a model to recognize those patterns across systems we haven't audited.
+
+But the projections don't change. You can loop reasoning indefinitely, extend the context window, build [recursive language models](https://www.primeintellect.ai/blog/rlm), scaffold retrieval and tool use on top. The model gets more to work with, but what it considers relevant stays the same. You could put Darwin's finch data in the context window and the model would attend to it the way its training says to, classify it, match to the nearest known pattern, and move on. That kind of reweighting, choosing to care about something the system currently thinks is unimportant, is something transformers can't do without human intervention.
+
+> Sidenote: many conversations in SF and on podcasts are all focused on maximizing in-context learning with RAG-like solutions, along with an incredibly large amount of spend on human data to scale the amount of data in-distribution in the model. It's a good time to be a human data company!
+
+**Backprop.**
+
+The natural follow-up thought here is something like: okay, so change the projections. Train on new data. Let the model learn continuously.
+
+I recently read a piece by Ilija Lichkovski that I thought laid out the [requirements](https://x.com/carnot_cyclist/status/2041479655035679163) for what this would look like really well: a model that efficiently learns new capabilities from out-of-distribution data while preserving what it already knows. [Silver and Sutton](https://storage.googleapis.com/deepmind-media/Era-of-Experience%20/The%20Era%20of%20Experience%20Paper.pdf) make a related argument, that the knowledge from human data is approaching a limit and agents need to learn from their own experience.
+
+The problem is backpropagation.
+
+More specifically, two problems:
+
+1. *Efficiency*
+
+When you compute the loss of a model's prediction vs the correct output, you propagate that error backward through the entire computational graph. The update touches everything, not just the parts responsible for the error. The algorithm is sequential across layers even when the hardware can parallelize within them: forward pass, backward pass, one layer at a time, touching everything. For a billion-parameter network, that means a billion parameters get adjusted every time you learn anything.
+
+Moreover, gradient descent requires constant sampling and global synchronization just to find a direction. It's an iterative, energetically expensive search - kinda like [running a heater inside a freezer](https://firstprinciples.fm/episodes/3-extropic-why-thermodynamic-computing-is-the-future-of-ai-public-debut). You want to update the model's understanding of one thing, and the algorithm forces you to propagate through everything to get there.
+
+2. *Catastrophic forgetting*
+
+Learning through backprop is also destructive. When you train on new data, the weights that encoded previous knowledge get shifted, so the new thing improves while everything else degrades. When you train sequentially on tasks, the loss function only evaluates performance on the current task -- you need to create very general, robust loss functions such that the network is penalized for forgetting a previous concept. This is called [catastrophic forgetting](https://arxiv.org/abs/2404.16789), and it happens during both in-context learning and during actual weight updates. [Irie et al.](https://arxiv.org/abs/2312.00276) demonstrate this clearly: even in-context learning suffers from "in-context catastrophic forgetting" when tasks are presented sequentially.
+
+**Current maximalist solutions**
+
+With these challenges in mind, I've seen many approaches towards achieving some sort of continual learning system. Some interesting ideas:
+
+[Metalearning sequence learners](https://arxiv.org/abs/2312.00276): I really enjoyed this paper. The gist is instead of hand-crafting learning algorithms, you train a self-referential neural network to meta-learn its own in-context learning algorithms -- so they learn how to learn. The problem is the process of generating meta-training episodes requires human engineering, and meta-learning still relies on in-distribution generalization.
+
+I believe [test-time training](https://arxiv.org/abs/2407.04620) is probably the closest anyone has gotten to dynamic weight updates during inference. I've seen approaches where the weights change via gradient descent on a small inner model per layer, but the adaptation resets every sequence and the rest of the network stays frozen.
+
+[LoRA](https://arxiv.org/abs/2106.09685) and [EWC](https://arxiv.org/abs/1612.00796) comes at it from the training side by penalizing changes to important weights. [Experience replay](https://arxiv.org/abs/1811.11682) re-teaches the model things it already knew.
+
+These approaches all work to varying degrees, but they're all concessions to the same constraint: sequential backprop is too slow, too global, and too destructive to support the kind of learning that would let a model reweight what it cares about in real time.
+
+> Another sidenote: I'm aware of AnySphere's batched continual RL -- a really amazing implementation, but this doesn't meet the maximalist criteria of continual learning I think we need to hit. A checkpoint every 5 hours is fantastic, but what about a system like biology where interactions happen in fractions of a second and you need to adapt to them?
+
+**Thermodynamics.**
+
+So how does the brain learn in real time?
+
+A protein folds into its correct structure in microseconds, with no backprop and no sequential computation. Thermodynamic forces drive it down an energy funnel into a minimum-energy configuration where all the molecular interactions happen in parallel.
+
+The brain does something analogous. Local learning happens at the synapse through [spike-timing-dependent plasticity (STDP)](https://en.wikipedia.org/wiki/Spike-timing-dependent_plasticity), where two neurons strengthen or weaken their connection based on the relative timing of their firing. Global modulation happens through chemical floods -- primarily dopamine -- that tell large populations of neurons how much to learn from what just happened. This global signal diffuses in parallel and each synapse updates locally, with no sequential backward pass. Imagine a water droplet on paper: the effect ripples out in a wave rather than a sequence. In the brain, free energy minimization is roughly minimizing loss, but it happens thermodynamically across the entire system at once.
+
+So what if we could harness this diffusion in computation?
+
+This is the intuition behind the [Ising model](https://en.wikipedia.org/wiki/Ising_model) -- think of a grid of magnets that can each point up or down, where every magnet influences its neighbors and nobody tells the system what to do. It just settles, with lower-energy configurations naturally showing up more often, not finding one right answer but sampling from all the possible ones.
+
+The question is whether you can build something like this in silicon and make it useful for real machine learning, and [Extropic](https://extropic.ai/hardware) has started doing exactly that. Their [Denoising Thermodynamic Model](https://arxiv.org/abs/2510.23972), a diffusion-style generative model built for their thermodynamic sampling units, matched GPU-based diffusion on standard benchmarks at roughly 10,000x less energy per generated sample because the hardware isn't fighting the computation anymore. Their Z1 chip is built on standard CMOS transistors using standard processes, no exotic fabrication, which means it can scale on existing infrastructure. I watched a [lecture by their CTO](https://firstprinciples.fm/episodes/3-extropic-why-thermodynamic-computing-is-the-future-of-ai-public-debut) last year and it provoked a lot of thought about what happens when the substrate is no longer static.
+
+**HAWF.**
+
+This is what led me to HAWF, which stands for Hierarchical Associative Wave Fields.
+
+The core idea is one global energy function that defines multiple energy landscapes at different scales. You clamp tokens onto the system and it thermodynamically relaxes into a configuration, the same way a protein folds. Learning and inference are the same physical process; the system settles, and the settling is the computation.
+
+HAWF takes a fundamentally different position on continual learning. The combination of hysteretic learning and relaxation forgetting makes continual adaptation an intrinsic physical property rather than something you need to meta-learn or adapter-hack. Hysteretic learning means the energy landscape retains path-dependent structure from past inputs, so new data doesn't overwrite old representations the way stochastic gradient descent on a standard network does. Relaxation forgetting means that when the system isn't being driven by relevant input, those traces decay naturally through the dynamics rather than persisting indefinitely or being explicitly pruned. The memory layer isn't a learned delta rule or something injected via an adapter -- it's a thermodynamic state that resists overwriting through path-dependence.
+
+The question with HAWF becomes: can a physical energy landscape be expressive enough for rich representation?
+
+Right now I'm testing this hypothesis by simulating on GPUs through Langevin dynamics and relaxing via Euler-Maruyama, injecting noise to approximate thermodynamic behavior. Of course, this architecture is meant for hardware like Extropic's Z1, and simulating thermodynamics on digital hardware is the wrong substrate. But even in simulation it produces 98% character-level accuracy at 0.6 loss, with no transformer, no attention mechanism, and no feedforward layers. I'm scaling to 1.1 billion parameters now and looking for compute to get there.
+
+I believe the future of AI will be event-driven, continuous data streams spiked into thermodynamic relaxation systems and then projected out. I think we can build machines that learn the way biology learns, and I think the path runs through thermodynamic computation.
+
+If you want to build it with me, or if you think I'm wrong, [DM me](https://x.com/sethbhamilton).
