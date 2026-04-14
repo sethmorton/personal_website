@@ -218,6 +218,14 @@
 		padding-left: 1.4rem;
 	}
 
+	.blog-prose :global(ul) {
+		list-style-type: disc;
+	}
+
+	.blog-prose :global(ol) {
+		list-style-type: decimal;
+	}
+
 	.blog-prose :global(li + li) {
 		margin-top: 0.75rem;
 	}

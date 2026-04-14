@@ -6,7 +6,7 @@ Darwin kept looking at the beaks. He didn't have a theory for why they mattered.
 
 What would it take for a machine to do something like that?
 
-> **TLDR:** What transformers attend to is frozen at training time. Continual weight updates are the obvious next step, but backpropagation is global and dense, and every workaround ([TTT](https://arxiv.org/abs/2407.04620), [LoRA](https://arxiv.org/abs/2106.09685), meta-learning, [EWC](https://arxiv.org/abs/1612.00796), [replay](https://arxiv.org/abs/1811.11682)) is a concession to that. Thermodynamic computation can give you cheap, parallel, non-destructive learning natively. I'm building an architecture called HAWF that does this. If you're interested, DM me.
+> **TLDR:** What transformers attend to is frozen at training time. Continual weight updates are the obvious next step, but backpropagation is global and dense, and every workaround ([TTT](https://arxiv.org/abs/2407.04620), [LoRA](https://arxiv.org/abs/2106.09685), meta-learning, [EWC](https://arxiv.org/abs/1612.00796), [replay](https://arxiv.org/abs/1811.11682), etc.) is a concession to that. Thermodynamic computation can give you cheap, parallel, non-destructive learning natively. I'm building an architecture called HAWF that does this. If you're interested, DM me.
 
 **Static attention.**
 
