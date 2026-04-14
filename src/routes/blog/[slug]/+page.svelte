@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import BlogPost from '$lib/blog/components/BlogPost.svelte';
-  import SEO from '$lib/blog/components/SEO.svelte';
-  import { BLOG_META } from '$lib/blog/meta';
+	import SEO from '$lib/blog/components/SEO.svelte';
+	import { BLOG_META } from '$lib/blog/meta';
 	import type { PageData } from './$types';
 	import balanceContent from '$lib/blog/content/balance.txt?raw';
 	import gratitudeContent from '$lib/blog/content/gratitude.txt?raw';
@@ -13,6 +13,7 @@
 	import whenForgettingIsNoLongerTheDefaultContent from '$lib/blog/content/when_forgetting_is_no_longer_the_default.txt?raw';
 	import biotechHasADistributionProblemContent from '$lib/blog/content/biotech_has_a_distribution_problem.txt?raw';
 	import memoryIsntLearningContent from '$lib/blog/content/memory_isnt_learning.txt?raw';
+	import whatYouAttendToCannotBeStaticContent from '$lib/blog/content/what_you_attend_to_cannot_be_static.txt?raw';
 	const blogPosts = $state([
 		{
 			title: 'balance',
@@ -63,10 +64,16 @@
 			content: biotechHasADistributionProblemContent
 		},
 		{
-			title: 'memory isn\'t learning',
+			title: "memory isn't learning",
 			slug: 'memory_isnt_learning',
 			date: '2026-03-31',
 			content: memoryIsntLearningContent
+		},
+		{
+			title: 'what you attend to cannot be static',
+			slug: 'what_you_attend_to_cannot_be_static',
+			date: '2026-04-13',
+			content: whatYouAttendToCannotBeStaticContent
 		}
 	]);
 	// $props returns { data : { slug: string }}
@@ -90,22 +97,22 @@
 {#if selectedBlogPost === null}
 	<p>Not found</p>
 {:else}
-  <div class="min-h-screen bg-stone-50">
-  {#if BLOG_META[slug]}
-    <SEO
-      title={BLOG_META[slug].title}
-      description={BLOG_META[slug].description}
-      type={BLOG_META[slug].type ?? 'article'}
-      image={BLOG_META[slug].image}
-      twitterCard="summary_large_image"
-    />
-  {:else}
-    <SEO title={selectedBlogPost.title} type="article" />
-  {/if}
-	<BlogPost
-		content={selectedBlogPost.content}
-		publishDate={selectedBlogPost.date}
-		onClose={() => goto('/blog')}
-	/>
-  </div>
+	<div class="min-h-screen bg-stone-50">
+		{#if BLOG_META[slug]}
+			<SEO
+				title={BLOG_META[slug].title}
+				description={BLOG_META[slug].description}
+				type={BLOG_META[slug].type ?? 'article'}
+				image={BLOG_META[slug].image}
+				twitterCard="summary_large_image"
+			/>
+		{:else}
+			<SEO title={selectedBlogPost.title} type="article" />
+		{/if}
+		<BlogPost
+			content={selectedBlogPost.content}
+			publishDate={selectedBlogPost.date}
+			onClose={() => goto('/blog')}
+		/>
+	</div>
 {/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-  import SEO from '$lib/blog/components/SEO.svelte';
+	import SEO from '$lib/blog/components/SEO.svelte';
 	let posts = $state([
 		{
 			title: 'balance',
@@ -43,19 +43,24 @@
 			date: '2025-12-14'
 		},
 		{
-			title: 'memory isn\'t learning',
+			title: "memory isn't learning",
 			slug: 'memory_isnt_learning',
 			date: '2026-03-31'
+		},
+		{
+			title: 'what you attend to cannot be static',
+			slug: 'what_you_attend_to_cannot_be_static',
+			date: '2026-04-13'
 		}
 	]);
 	let activePost: (typeof posts)[0] | null = $state(null);
 </script>
 
 <SEO
-  title="Blog – Seth Morton"
-  description="Essays on engineering, systems, and building tools that scale."
-  type="website"
-  twitterCard="summary_large_image"
+	title="Blog – Seth Morton"
+	description="Essays on engineering, systems, and building tools that scale."
+	type="website"
+	twitterCard="summary_large_image"
 />
 
 {#if activePost === null}
