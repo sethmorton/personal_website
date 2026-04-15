@@ -53,6 +53,7 @@
 			date: '2026-04-13'
 		}
 	]);
+	const sortedPosts = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 	let activePost: (typeof posts)[0] | null = $state(null);
 </script>
 
@@ -72,7 +73,7 @@
 		<div class="flex flex-col items-center justify-center space-y-8">
 			<h1 class="text-2xl font-bold">blog</h1>
 			<div class="flex flex-col items-center space-y-4">
-				{#each posts as post}
+				{#each sortedPosts as post}
 					<button
 						onclick={() => goto(`/blog/${post.slug}`)}
 						class="group flex flex-col items-center text-center transition-colors"
