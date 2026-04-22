@@ -1,58 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import SEO from '$lib/blog/components/SEO.svelte';
-	let posts = $state([
-		{
-			title: 'balance',
-			slug: 'balance',
-			date: '2024-11-19'
-		},
-		{
-			title: 'gratitude & hyperbolic discounting',
-			slug: 'gratitude_&_hyperbolic_discounting',
-			date: '2024-12-18'
-		},
-		{
-			title: 'serendipity & the lonely generation',
-			slug: 'serendipity_&_the_lonely_generation',
-			date: '2025-01-31'
-		},
-		{
-			title: 'where we fit into the future of AI',
-			slug: 'where_we_fit_into_the_future_of_ai',
-			date: '2025-05-12'
-		},
-		{
-			title: 'on growth and the low-hanging fruit of immortality',
-			slug: 'on_growth_and_the_low_hanging_fruit_of_immortality',
-			date: '2025-09-13'
-		},
-		{
-			title: 'the black box of biology',
-			slug: 'the_black_box_of_biology',
-			date: '2025-10-18'
-		},
-		{
-			title: 'when forgetting is no longer the default',
-			slug: 'when_forgetting_is_no_longer_the_default',
-			date: '2025-10-22'
-		},
-		{
-			title: 'biotech has a distribution problem',
-			slug: 'biotech_has_a_distribution_problem',
-			date: '2025-12-14'
-		},
-		{
-			title: "memory isn't learning",
-			slug: 'memory_isnt_learning',
-			date: '2026-03-31'
-		},
-		{
-			title: 'what you attend to cannot be static',
-			slug: 'what_you_attend_to_cannot_be_static',
-			date: '2026-04-13'
-		}
-	]);
+	import { publishedBlogPosts } from '$lib/blog/posts';
+
+	const posts = publishedBlogPosts.map(({ title, slug, date }) => ({ title, slug, date }));
 	const sortedPosts = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 	let activePost: (typeof posts)[0] | null = $state(null);
 </script>
@@ -83,6 +34,12 @@
 					</button>
 				{/each}
 			</div>
+			<button
+				class="text-sm font-medium uppercase tracking-[0.16em] text-stone-500 transition-colors hover:text-stone-800"
+				onclick={() => goto('/blog/drafts')}
+			>
+				drafts
+			</button>
 		</div>
 
 		<!-- This is for the justify between-->

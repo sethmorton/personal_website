@@ -4,42 +4,42 @@
 </script>
 
 <SEO
-  title="Things I've Built – Seth Morton"
-  description="A few of the products, tools, and systems I've shipped."
-  type="website"
-  twitterCard="summary_large_image"
+	title="Things I've Built – Seth Morton"
+	description="A few of the products, tools, and systems I've shipped."
+	type="website"
+	twitterCard="summary_large_image"
 />
 
-<div class="min-h-screen bg-stone-50 flex items-center justify-center px-4 sm:px-6 py-10 sm:py-16">
-	<div class="max-w-4xl w-full">
+<div class="flex min-h-screen items-center justify-center bg-stone-50 px-4 py-10 sm:px-6 sm:py-16">
+	<div class="w-full max-w-4xl">
 		<!-- Header -->
-		<div class="mb-8 sm:mb-12 animate-fade-in-up">
-			<h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Things I've built</h1>
-			<p class="text-base sm:text-lg text-gray-700 leading-relaxed">
+		<div class="animate-fade-in-up mb-8 sm:mb-12">
+			<h1 class="mb-3 text-2xl font-bold text-gray-900 sm:text-3xl">Things I've built</h1>
+			<p class="text-base leading-relaxed text-gray-700 sm:text-lg">
 				A snapshot of some products and tools I've worked on recently.
 			</p>
 		</div>
 
 		<!-- Selected work -->
-		<div class="mb-8 sm:mb-16 animate-fade-in-up animation-delay-200">
-			<h2 class="text-lg font-medium text-gray-900 mb-4 sm:mb-6">Selected work</h2>
+		<div class="animate-fade-in-up animation-delay-200 mb-8 sm:mb-16">
+			<h2 class="mb-4 text-lg font-medium text-gray-900 sm:mb-6">Selected work</h2>
 			<div class="space-y-4 text-gray-700">
-				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-300">
-					<div class="flex-1 min-w-0">
+				<div class="animate-fade-in-up animation-delay-300 flex items-start justify-between gap-4">
+					<div class="min-w-0 flex-1">
 						<div class="font-medium">Geneloop</div>
 						<div class="text-sm text-gray-600">AI-powered sequence design platform.</div>
 					</div>
-					<a	
+					<a
 						href="https://geneloop.bio"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
+						class="flex-shrink-0 text-blue-600 transition-colors duration-200 hover:text-blue-800"
 					>
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-400">
-					<div class="flex-1 min-w-0">
+				<div class="animate-fade-in-up animation-delay-400 flex items-start justify-between gap-4">
+					<div class="min-w-0 flex-1">
 						<div class="font-medium">DNA Tiny World</div>
 						<div class="text-sm text-gray-600">First benchmark for DNA foundational models</div>
 					</div>
@@ -47,13 +47,13 @@
 						href="https://huggingface.co/datasets/sethmorton/dna-tiny-world"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
+						class="flex-shrink-0 text-blue-600 transition-colors duration-200 hover:text-blue-800"
 					>
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-500">
-					<div class="flex-1 min-w-0">
+				<div class="animate-fade-in-up animation-delay-500 flex items-start justify-between gap-4">
+					<div class="min-w-0 flex-1">
 						<div class="font-medium">FinTech platform</div>
 						<div class="text-sm text-gray-600">Led engineering team, 8 paying businesses</div>
 					</div>
@@ -61,13 +61,13 @@
 						href="https://renavestapp.com"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
+						class="flex-shrink-0 text-blue-600 transition-colors duration-200 hover:text-blue-800"
 					>
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-600">
-					<div class="flex-1 min-w-0">
+				<div class="animate-fade-in-up animation-delay-600 flex items-start justify-between gap-4">
+					<div class="min-w-0 flex-1">
 						<div class="font-medium">Border analytics dashboard</div>
 						<div class="text-sm text-gray-600">Policy tool for regional head of CBP</div>
 					</div>
@@ -75,13 +75,13 @@
 						href="https://borderdashboard.com"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
+						class="flex-shrink-0 text-blue-600 transition-colors duration-200 hover:text-blue-800"
 					>
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="flex justify-between items-start gap-4 animate-fade-in-up animation-delay-700">
-					<div class="flex-1 min-w-0">
+				<div class="animate-fade-in-up animation-delay-700 flex items-start justify-between gap-4">
+					<div class="min-w-0 flex-1">
 						<div class="font-medium">Quantitative tooling</div>
 						<div class="text-sm text-gray-600">Quantitative tools for retail quant community</div>
 					</div>
@@ -89,7 +89,7 @@
 						href="https://backtestextender.vercel.app"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-blue-600 hover:text-blue-800 transition-colors duration-200 flex-shrink-0"
+						class="flex-shrink-0 text-blue-600 transition-colors duration-200 hover:text-blue-800"
 					>
 						<ExternalLink size={16} />
 					</a>
@@ -99,12 +99,12 @@
 
 		<!-- Back link -->
 		<div class="animate-fade-in-up animation-delay-400">
-			<p class="text-sm text-gray-500 mb-3">
+			<p class="mb-3 text-sm text-gray-500">
 				I've built over 50 projects; this is just a small sample.
 			</p>
 			<a
 				href="/"
-				class="text-blue-600 hover:text-blue-800 text-sm sm:text-base underline decoration-1 underline-offset-2"
+				class="text-sm text-blue-600 underline decoration-1 underline-offset-2 hover:text-blue-800 sm:text-base"
 			>
 				← Back to home
 			</a>
