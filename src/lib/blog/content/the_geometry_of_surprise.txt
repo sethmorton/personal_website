@@ -1,0 +1,143 @@
+# The geometry of surprise
+
+In 1867, a young [Hermann von Helmholtz](https://plato.stanford.edu/entries/hermann-helmholtz/) walked past the garrison chapel in Potsdam and looked up at the belfry. He saw a row of small figures standing in the tower and asked his mom to reach up and grab one. He thought they were dolls. Turns out, they were adults just standing far away.
+
+Decades later, he'd use that memory to make a deeper point about [how perception actually works](https://en.wikipedia.org/wiki/Unconscious_inference). The brain guesses what's out there and checks the guess against incoming data. When the guess is wrong, it uses the mismatch to update its model.
+
+Most of the time it guesses right. Sometimes it guesses dolls.
+
+[Schmidhuber](https://people.idsia.ch/~juergen/ieeecreative.pdf) formalized this idea for artificial systems in 1991. [Friston](https://www.nature.com/articles/nrn2787) generalized it in 2010.
+
+The general theory? A system learns by noticing where its expectations break. Biological systems turn prediction failure into a learning signal without anyone standing outside telling them what went wrong, and the brain somehow knows which errors matter, which parts of the model to update, and by how much.
+
+The question is: how?
+
+More specifically: How should surprise propagate into the system once you have it?
+
+> **TLDR:** Current systems ask "how surprised was I?" I think the better question is "what shape did the surprise have?" For continual learning, extrinsic reward doesn't scale because the reward model is trained on a snapshot of the world and the world keeps changing. Intrinsic reward via prediction error is the obvious next idea, but every implementation collapses it into a scalar before asking what should change. I call this the scalar collapse. A settling-based substrate can expose the full structure of the surprise, and I'm building [HAWF](https://www.sethmorton.com/blog/what_you_attend_to_cannot_be_static) around this idea. If you're interested, DM me.
+
+**Why extrinsic doesn't work.**
+
+I'm building energy-based models that continually learn. In my [last post](https://www.sethmorton.com/blog/what_you_attend_to_cannot_be_static), I wrote about what continual learning actually requires: a system that adapts in real time, learns from out-of-distribution data, and preserves what it already knows.
+
+Let's say you have a system that can do all of that. The next question is: what should it adapt toward?
+
+Something has to tell the system what counts as progress, and that something is the reward signal. For a system that's continuously adapting, the reward signal has to be at least as dynamic as the world the system operates in. If the reward was designed before deployment, the system is adapting toward a picture of the world that no longer exists, and the gap between that picture and reality grows with every moment.
+
+I don't mean that external feedback is useless. I mean that a fixed external reward signal can't be the whole learning engine for a system that keeps adapting after deployment. Every version of this has the same shelf life problem.
+
+Right now, the frontier AI labs still lean heavily on external feedback: reward models, preference data, benchmarks, human-designed tasks. A lot of recent work is on scaling RL environments - bigger human-designed worlds with more sophisticated hand-designed reward signals.
+
+But the system is still chasing what a human decided in advance was worth learning.
+
+The world keeps changing, and at some point the system will need to generate its own learning signal - just like we do.
+
+**Why surprise.**
+
+Children don't need a hand-designed task reward for everything they learn. They self-organize toward things at the edge of what they can currently understand, slightly novel but structured enough to learn from. Developmental psychologists call this the [Goldilocks zone](http://www.pyoudeyer.com/oudeyerGottliebLopesPBR16.pdf), and children navigate toward it without anyone designing a curriculum. This is the original continual learning system, and it runs on prediction error.
+
+Prediction error is the most direct signal a system can generate internally about where its model is wrong, and it's available the moment inference completes without requiring any external input.
+
+The brain runs on this signal. But the argument for prediction error as a continual learning signal is really about information theory: you can intuit it from first principles without ever looking at a neuron.
+
+So why hasn't it worked in practice?
+
+**The noisy TV.**
+
+In 2018, [a team at OpenAI](https://pathak22.github.io/large-scale-curiosity/) built an agent driven entirely by prediction error and dropped it into a set of 3D environments. The agent tried to predict what it would see next, and whenever the prediction was wrong, that wrongness became reward. In many environments this worked beautifully, with the agent exploring rooms, solving mazes, even discovering [secrets in Super Mario Bros](https://openai.com/index/reinforcement-learning-with-prediction-based-rewards/)!
+
+Then the researchers put a TV in one of the rooms, playing random static.
+
+The agent stopped exploring. It just sat there, glued to the screen.
+
+Random pixels are impossible to predict, so prediction error stays high forever. The agent had found an infinite jackpot: something that looked maximally interesting while teaching it absolutely nothing. This became known as the [noisy TV problem](https://openai.com/index/reinforcement-learning-with-prediction-based-rewards/), and it's not an edge case.
+
+The problem wasn't curiosity itself but that the agent treated all prediction error as the same kind of signal.
+
+**The fixes.**
+
+Most fixes attack the problem upstream: they try to make the input representation less noisy. That helps, but it leaves the output format untouched, and surprise still becomes one number. Here are some of the ones I find most interesting.
+
+[Pathak et al.](https://arxiv.org/abs/1705.05363) proposed the [Intrinsic Curiosity Module](https://pathak22.github.io/noreward-rl/) in 2017, which changed what the agent predicts. Instead of predicting raw pixels, it learns a compressed representation that only captures things the agent can influence - focus on the door handle and the light switch, ignore the shadows on the wall.
+
+This helps, but in stochastic enough environments noise still leaks through. Think of an agent pressing the "next channel" button on a remote that controls that noisy TV. Pressing the button clearly changes the screen, but each channel shows random noise the forward model can never predict.
+
+The same OpenAI team that worked on the noisy TV problem proposed [Random Network Distillation](https://arxiv.org/abs/1810.12894), which rewards the agent for encountering unfamiliar states rather than unpredictable ones.
+
+This sidestepped the noisy TV in deterministic environments, but when the randomness depends on the agent's own actions it breaks down. Think of an agent in a room with a snow globe: the agent picks it up and shakes it. Every shake produces a unique swirl of flakes. Pixel-wise, no two configurations ever match. RND's novelty detector looks at each post-shake state and says "never seen exactly this before" and hands out reward. The agent proceeds to shake forever.
+
+[Oudeyer](http://www.pyoudeyer.com/) and colleagues developed [learning progress](http://www.pyoudeyer.com/oudeyerGottliebLopesPBR16.pdf), which asks not "what is surprising?" but "what am I getting better at predicting?" I think this makes intuitive sense.
+
+But when error spikes on something new, the agent can't tell in the moment whether it's looking at learnable structure or noise - it has to wait and watch whether its predictions improve. How long it waits is a design choice, and both directions fail: too short and you abandon something learnable before the pattern clicks, too long and you keep grinding on noise convinced the breakthrough is one more step away.
+
+Since then, methods like [NovelD](https://arxiv.org/abs/2106.00300), [BYOL-Explore](https://arxiv.org/abs/2206.08332), and [Curiosity in Hindsight](https://proceedings.mlr.press/v202/jarrett23a.html) have made real progress on the engineering, but the underlying pattern is the same: every one of these systems is being smarter about the input without questioning the output. The criterion that decides whether an experience is worth learning from always gets compressed into a single number, and a single number can tell you how wrong you were but it can't tell you what kind of wrong.
+
+**Scalar collapse.**
+
+I call this the scalar collapse, and I think it's the part of the noisy TV problem that survives even after you improve the representation.
+
+Take the Intrinsic Curiosity Module as an example. The agent sees a new state and internally computes a prediction of what it expected versus what actually showed up. Those two representations differ in specific ways: maybe the agent got color right but spatial layout wrong, or nailed the foreground but missed the background entirely. That pattern of mismatch is information. But then ICM runs mean squared error across the whole thing, and out comes one number. Which features diverged, where, by how much relative to each other: all of it gone in a single operation.
+
+You start with a detailed picture of how the system responded, where it got stuck, what it couldn't resolve. Then you flatten all of it into one number before acting on it.
+
+There's an obvious pushback: in modern neural networks, the loss is scalar, but [backpropagation](https://en.wikipedia.org/wiki/Backpropagation) still produces high-dimensional gradients across every parameter. So hasn't the system preserved some geometry? It has, but the gradients only show up after the system has already decided this experience matters.
+
+The scalar reward decides *if* the system learns from an experience. The gradients decide *how*. The "if" comes first, and that question is answered with one number. Two experiences that score the same on that number get the same priority, even if one is noise and the other is genuine novelty. By the time the optimizer starts distributing gradients, the system has already chosen what to pay attention to, and the structure of surprise played no part in that choice.
+
+<div align="center"> <img src="/spectrogram_comparison.png" alt="Spectrogram comparison of static noise and structured audio" border="0" width="520" /> </div>
+
+I like to think about it like this: imagine static noise from a radio and a song from a station. If all you measured was total volume, they could look identical. But the signal structure is completely different - one is energy scattered randomly across all frequencies, the other has structure across frequencies, carrying actual information. You distinguish noise from music not by loudness but by pattern.
+
+The same should be true inside a learning system. Two inputs can create the same total error while disturbing the model in completely different ways.
+
+In determining which errors matter and how the error should propagate, a scalar can't help you. But the full geometry of the system's response can.
+
+**The geometry of surprise.**
+
+By geometry, I mean the shape of the error inside the system: where it appears, how long it lasts, and what pattern it takes as the system settles.
+
+Think of dropping a pebble into a calm pond versus dumping a handful of gravel. The pebble sends out clean, concentric ripples that travel far and take time to dissipate. The gravel kicks up a mess of tiny splashes everywhere that cancel each other out almost instantly. Both disturb the same amount of water, but the pebble's disturbance has shape: it's localized, coherent, and persistent. That's the difference between structured novelty and noise inside a learning system.
+
+<div align="center"> <img src="/ripple_comparison.png" alt="Ripple comparison showing coherent and diffuse disturbances" border="0" width="520" /> </div>
+
+That geometry has at least three dimensions. You can read all three off the pond.
+
+1. *Spatial*
+
+Where did the water move? The pebble disturbs a specific region, the gravel disturbs everything. Inside a learning system, spatial structure tells you which parts of the model got strained and which stayed stable.
+
+1. *Temporal*
+
+How long did the disturbance last? The pebble's ripples persist and travel outward. The gravel's splashes cancel almost immediately. Inside a learning system, temporal structure tells you how deep the disruption goes: a disturbance that washes out instantly is surface-level, one that persists through many settling steps means the model is genuinely struggling.
+
+1. *Spectral*
+
+What does the wave pattern look like? The pebble produces clean, organized waves at a few frequencies. The gravel produces chaotic interference across many frequencies at once. Inside a learning system, spectral structure tells you whether the disturbance is coherent (and therefore learnable) or scattered (and therefore noise).
+
+Spatial tells you *where* to look, temporal tells you *how deep*, and spectral tells you *what kind*.
+
+Each of these maps to a learning decision. If the disturbance is localized, update locally instead of globally. If it vanishes immediately, don't rewrite memory. If it persists across settling, treat it as deeper model mismatch. If it's diffuse and incoherent, downweight it as noise. If it's coherent and coupled to learned modes, treat it as learnable novelty.
+
+The errors that matter are the ones with coherent, localized, slow-settling geometry. They should propagate to the parts of the system that were actually strained, and the system should change in proportion to how deep the disruption went. The field has been compressing this signal into a scalar and then wondering why the system can't tell noise from novelty.
+
+**Substrate.**
+
+So why hasn't anyone used the full geometry?
+
+It comes down to the current ML paradigm. The core building block of modern neural networks is the feedforward layer, which takes an input, runs it through a set of learned weights, and produces an output. Stack enough of these and you get a transformer, a diffusion model, or any other architecture in wide deployment. There may be intermediate activations along the way, but nobody looks at them to decide what the system should learn next.
+
+Some architectures do have dynamics: [recurrent networks](https://direct.mit.edu/neco/article/9/8/1735/6109/Long-Short-Term-Memory) have temporal trajectories, [diffusion models](https://arxiv.org/abs/2006.11239) relax toward solutions, energy-based models settle into attractors. But in all of these, the trajectory is a means to produce an output. You read the generated image, not the path it took to get there.
+
+What continual learning needs is a substrate where the settling trajectory itself is the thing you measure and act on. A thermodynamic substrate gives you this - not because thermodynamics is special, but because physical settling naturally produces the variables this argument needs: where energy moved, how long it persisted, and which modes carried it. The spatial, temporal, and spectral signatures are readable as the system does its ordinary work.
+
+**HAWF.**
+
+This is what I'm building. HAWF stands for Hierarchical Associative Wave Fields. I wrote about the architecture in my [last post](https://www.sethmorton.com/blog/what_you_attend_to_cannot_be_static), but the core idea is that learning and inference come from the same physical process: the system gets perturbed, it settles, and the settling is the computation.
+
+This doesn't solve continual learning by itself. It changes what the system gets to measure.
+
+HAWF's bet is that once the settling trajectory is measurable, learning can be routed by the geometry of surprise rather than by one scalar magnitude. The geometry of surprise is a native observable in this substrate, not something you bolt on after the fact. Of course you'll still need learning rules that know what to do with those measurements, but the measurements will be there.
+
+A scalar can tell you that the system was wrong. The geometry tells you how it was wrong. That's where continual learning begins.
+
+If you're interested or if you think I'm wrong, [DM me](https://x.com/_sethmorton).

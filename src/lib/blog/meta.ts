@@ -43,10 +43,10 @@ export const BLOG_META: Record<string, BlogMeta> = {
 			"Why AI systems that don't change from experience can't keep up with the world. Thermodynamics and real learning.",
 		type: 'article'
 	},
-	surprise_has_shape: {
-		title: 'Surprise Has Shape',
+	the_geometry_of_surprise: {
+		title: 'The Geometry of Surprise',
 		description:
-			'Why scalar prediction error keeps failing as a curiosity signal, and why the geometry of surprise may matter more.',
+			'Why curiosity methods collapse prediction error into one number, what that costs for continual learning, and how a settling substrate could preserve the shape of surprise.',
 		type: 'article'
 	},
 	what_you_attend_to_cannot_be_static: {

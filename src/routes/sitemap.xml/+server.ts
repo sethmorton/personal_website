@@ -15,7 +15,8 @@ const routes = [
 	'/blog/when_forgetting_is_no_longer_the_default',
 	'/blog/biotech_has_a_distribution_problem',
 	'/blog/memory_isnt_learning',
-	'/blog/what_you_attend_to_cannot_be_static'
+	'/blog/what_you_attend_to_cannot_be_static',
+	'/blog/the_geometry_of_surprise'
 ];
 
 const escapeXml = (value: string) =>

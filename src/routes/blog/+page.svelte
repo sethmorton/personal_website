@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import SEO from '$lib/blog/components/SEO.svelte';
-	import { publishedBlogPosts } from '$lib/blog/posts';
+	import { draftBlogPosts, publishedBlogPosts } from '$lib/blog/posts';
 
 	const posts = publishedBlogPosts.map(({ title, slug, date }) => ({ title, slug, date }));
 	const sortedPosts = [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -34,12 +34,14 @@
 					</button>
 				{/each}
 			</div>
-			<button
-				class="text-sm font-medium uppercase tracking-[0.16em] text-stone-500 transition-colors hover:text-stone-800"
-				onclick={() => goto('/blog/drafts')}
-			>
-				drafts
-			</button>
+			{#if draftBlogPosts.length > 0}
+				<button
+					class="text-sm font-medium uppercase tracking-[0.16em] text-stone-500 transition-colors hover:text-stone-800"
+					onclick={() => goto('/blog/drafts')}
+				>
+					drafts
+				</button>
+			{/if}
 		</div>
 
 		<!-- This is for the justify between-->

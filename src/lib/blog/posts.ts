@@ -8,7 +8,7 @@ import whenForgettingIsNoLongerTheDefaultContent from '$lib/blog/content/when_fo
 import biotechHasADistributionProblemContent from '$lib/blog/content/biotech_has_a_distribution_problem.txt?raw';
 import memoryIsntLearningContent from '$lib/blog/content/memory_isnt_learning.txt?raw';
 import whatYouAttendToCannotBeStaticContent from '$lib/blog/content/what_you_attend_to_cannot_be_static.txt?raw';
-import surpriseHasShapeContent from '$lib/blog/content/drafts/surprise_has_shape.txt?raw';
+import theGeometryOfSurpriseContent from '$lib/blog/content/the_geometry_of_surprise.txt?raw';
 
 export type BlogPostEntry = {
 	title: string;
@@ -77,17 +77,16 @@ export const publishedBlogPosts: BlogPostEntry[] = [
 		slug: 'what_you_attend_to_cannot_be_static',
 		date: '2026-04-13',
 		content: whatYouAttendToCannotBeStaticContent
+	},
+	{
+		title: 'the geometry of surprise',
+		slug: 'the_geometry_of_surprise',
+		date: '2026-04-23',
+		content: theGeometryOfSurpriseContent
 	}
 ];
 
-export const draftBlogPosts: BlogPostEntry[] = [
-	{
-		title: 'surprise has shape',
-		slug: 'surprise_has_shape',
-		date: '2026-04-22',
-		content: surpriseHasShapeContent
-	}
-];
+export const draftBlogPosts: BlogPostEntry[] = [];
 
 export const getBlogPostBySlug = (posts: BlogPostEntry[], slug: string) =>
 	posts.find((blogPost) => blogPost.slug === slug) ?? null;

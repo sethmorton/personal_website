@@ -72,14 +72,14 @@
 			<div class="space-y-4 text-gray-700">
 				<div class="animate-fade-in-up animation-delay-500 flex items-start justify-between gap-4">
 					<div class="min-w-0 flex-1">
-						<div class="font-medium">Memory Isn't Learning</div>
+						<div class="font-medium">The Geometry of Surprise</div>
 						<div class="text-sm text-gray-600">
-							Why AI systems that don't change from experience can't keep up with the world.
-							Thermodynamics and real learning.
+							Why curiosity methods collapse prediction error into one number, what that costs for
+							continual learning, and how a settling substrate could preserve the shape of surprise.
 						</div>
 					</div>
 					<a
-						href="/blog/memory_isnt_learning"
+						href="/blog/the_geometry_of_surprise"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="flex-shrink-0 text-blue-600 transition-colors duration-200 hover:text-blue-800"
