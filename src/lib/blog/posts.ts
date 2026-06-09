@@ -15,6 +15,8 @@ export type BlogPostEntry = {
 	slug: string;
 	date: string;
 	content: string;
+	/** Hero illustration. Defaults to `/blog/<slug>.webp` when omitted. */
+	image?: string;
 };
 
 export const publishedBlogPosts: BlogPostEntry[] = [

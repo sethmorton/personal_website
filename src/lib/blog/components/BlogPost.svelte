@@ -1,7 +1,28 @@
 <script lang="ts">
 	import MarkdownIt from 'markdown-it';
 	import katex from 'katex';
-	let { publishDate, content, onClose } = $props();
+	let { publishDate, content, onClose, title = '', image = '' } = $props();
+
+	// If the post opens with a markdown heading, use it as the hero title (so the
+	// casing stays in the author's voice) and strip that line from the body so it
+	// is not rendered twice. Anchored to the start: posts that open with prose
+	// keep their full body and fall back to the passed-in title.
+	const headingMatch = $derived(content.match(/^\s*#{1,6}\s+(.+?)\s*#*\s*(?:\r?\n|$)/));
+	const heroTitle = $derived(headingMatch ? headingMatch[1].trim() : (title ?? ''));
+	const bodyContent = $derived(
+		headingMatch ? content.slice(headingMatch[0].length).replace(/^\s+/, '') : content
+	);
+
+	const MONTHS = [
+		'January', 'February', 'March', 'April', 'May', 'June',
+		'July', 'August', 'September', 'October', 'November', 'December'
+	];
+	const formatDate = (value: string) => {
+		const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value ?? '');
+		if (!m) return value ?? '';
+		return `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}`;
+	};
+	const formattedDate = $derived(formatDate(publishDate));
 	// Initialize markdown-it without the katex plugin
 	// Enable `breaks: true` so single newlines in the source are
 	// converted to <br> like GitHub-flavored markdown.
@@ -55,7 +76,7 @@
 
 	$effect(() => {
 		// First pass: Replace math expressions with placeholders
-		let processedContent = content;
+		let processedContent = bodyContent;
 		const mathExpressions: Array<{ placeholder: string; math: string; display: boolean }> = [];
 		let placeholderCounter = 0;
 
@@ -96,6 +117,12 @@
 		rel="stylesheet"
 		href="https://cdn.jsdelivr.net/npm/computer-modern-font@1.0.1/fonts/Serif/cmun-serif.css"
 	/>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+	<link
+		rel="stylesheet"
+		href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+	/>
 </svelte:head>
 
 <div class="h-full overflow-y-auto">
@@ -108,19 +135,96 @@
 		</button>
 	</div>
 	<article class="mx-auto w-full max-w-[42rem] px-6 pb-24 pt-4 sm:px-8">
-		<div class="blog-prose">
-			<header class="mb-10 border-b border-stone-200/80 pb-6">
-				<time class="text-sm font-medium uppercase tracking-[0.18em] text-stone-500">
-					{publishDate}
-				</time>
-			</header>
+		<header class="blog-hero">
+			{#if image}
+				<div class="hero-figure">
+					<img src={image} alt="" />
+				</div>
+			{/if}
+			<span class="hero-rule" aria-hidden="true"></span>
+			<h1 class="hero-title">{heroTitle}</h1>
+			<p class="hero-meta"><time>{formattedDate}</time></p>
+			<span class="hero-rule" aria-hidden="true"></span>
+		</header>
 
+		<div class="blog-prose">
 			{@html renderedHTML}
 		</div>
 	</article>
 </div>
 
 <style>
+	/* Centered, airy hero header: specimen image, gold rule, serif title, date. */
+	.blog-hero {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		margin: 1.5rem 0 4.5rem;
+	}
+
+	.hero-figure {
+		margin: 0 0 3rem;
+		display: flex;
+		justify-content: center;
+	}
+
+	.hero-figure img {
+		display: block;
+		width: auto;
+		max-width: 70%;
+		max-height: 300px;
+		/* Images are pre-processed to a transparent-background indigo duotone, so
+		   the specimen floats on the page with no frame and needs no filtering. */
+	}
+
+	.hero-rule {
+		display: block;
+		width: 60px;
+		height: 1px;
+		background: #c2a877;
+		opacity: 0.9;
+	}
+
+	.hero-title {
+		margin: 2.5rem 0 0;
+		font-family: 'Cormorant Garamond', 'Computer Modern Serif', Georgia, serif;
+		font-weight: 500;
+		font-size: clamp(2.1rem, 5.2vw, 3.15rem);
+		line-height: 1.12;
+		letter-spacing: 0.005em;
+		color: #1c1a17;
+		text-wrap: balance;
+	}
+
+	.hero-meta {
+		margin: 1.85rem 0 2.5rem;
+		font-family: 'Cormorant Garamond', 'Computer Modern Serif', Georgia, serif;
+		font-size: 1.05rem;
+		letter-spacing: 0.24em;
+		text-transform: lowercase;
+		color: #8a8276;
+	}
+
+	@media (max-width: 640px) {
+		.blog-hero {
+			margin-bottom: 3.5rem;
+		}
+
+		.hero-figure {
+			margin-bottom: 2.25rem;
+		}
+
+		.hero-figure img {
+			max-height: 230px;
+			max-width: 70%;
+		}
+
+		.hero-meta {
+			margin: 1.5rem 0 2rem;
+		}
+	}
+
 	:global(.katex) {
 		font-size: 1.1em;
 	}

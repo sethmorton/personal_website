@@ -30,6 +30,8 @@
 		<BlogPost
 			content={selectedBlogPost.content}
 			publishDate={selectedBlogPost.date}
+			title={selectedBlogPost.title}
+			image={selectedBlogPost.image ?? `/blog/${slug}.webp`}
 			onClose={() => goto('/blog')}
 		/>
 	</div>
