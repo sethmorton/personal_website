@@ -247,7 +247,7 @@
 	}
 
 	.blog-prose {
-		color: #2b2620;
+		color: #15120f;
 		font-size: 1.125rem;
 		line-height: 1.9;
 		font-weight: 400;
