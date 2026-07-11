@@ -9,6 +9,7 @@ import biotechHasADistributionProblemContent from '$lib/blog/content/biotech_has
 import memoryIsntLearningContent from '$lib/blog/content/memory_isnt_learning.txt?raw';
 import whatYouAttendToCannotBeStaticContent from '$lib/blog/content/what_you_attend_to_cannot_be_static.txt?raw';
 import theGeometryOfSurpriseContent from '$lib/blog/content/the_geometry_of_surprise.txt?raw';
+import pathsNotPointsContent from '$lib/blog/content/paths_not_points.txt?raw';
 
 export type BlogPostEntry = {
 	title: string;
@@ -88,7 +89,14 @@ export const publishedBlogPosts: BlogPostEntry[] = [
 	}
 ];
 
-export const draftBlogPosts: BlogPostEntry[] = [];
+export const draftBlogPosts: BlogPostEntry[] = [
+	{
+		title: 'Paths, Not Points',
+		slug: 'paths_not_points',
+		date: '2026-06-27',
+		content: pathsNotPointsContent
+	}
+];
 
 export const getBlogPostBySlug = (posts: BlogPostEntry[], slug: string) =>
 	posts.find((blogPost) => blogPost.slug === slug) ?? null;

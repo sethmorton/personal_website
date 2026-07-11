@@ -49,6 +49,12 @@ export const BLOG_META: Record<string, BlogMeta> = {
 			'Why curiosity methods collapse prediction error into one number, what that costs for continual learning, and how a settling substrate could preserve the shape of surprise.',
 		type: 'article'
 	},
+	paths_not_points: {
+		title: 'Paths, Not Points',
+		description:
+			'We train models to score the move and never to track what the move leaves reachable. Why that gap separates generating from discovering, and what it would take to train a model that thinks in paths.',
+		type: 'article'
+	},
 	what_you_attend_to_cannot_be_static: {
 		title: 'What You Attend To Cannot Be Static',
 		description:
