@@ -16,14 +16,14 @@
 		<div
 			class="animate-fade-in-up mb-8 flex flex-col items-center gap-4 text-center sm:mb-16 sm:flex-row sm:gap-6 sm:text-left"
 		>
-			<div class="profile-image flex-shrink-0 overflow-hidden rounded-full">
+			<div class="flex-shrink-0 overflow-hidden rounded-full">
 				<img
 					src="/seth_image.jpg"
 					alt="Seth Morton"
 					class="h-16 w-16 object-cover sm:h-20 sm:w-20"
 				/>
 			</div>
-			<div class="name-lockup">
+			<div>
 				<h1 class="text-2xl font-bold text-gray-900 sm:text-4xl">Seth Morton</h1>
 			</div>
 		</div>
@@ -36,7 +36,7 @@
 				left to study philosophy at Tufts, then dropped out to
 				<a
 					href="/built"
-					class="animated-link font-medium text-blue-600 underline decoration-1 underline-offset-2"
+					class="font-medium text-blue-600 underline decoration-1 underline-offset-2 transition-colors duration-150 hover:text-blue-800"
 				>
 					build
 				</a>
@@ -48,7 +48,7 @@
 					href="https://extropic.ai"
 					target="_blank"
 					rel="noopener noreferrer"
-					class="animated-link font-medium text-blue-600 underline decoration-1 underline-offset-2"
+					class="font-medium text-blue-600 underline decoration-1 underline-offset-2 transition-colors duration-150 hover:text-blue-800"
 				>
 					thermodynamic chips
 				</a>.
@@ -58,7 +58,7 @@
 				I write about my experiences and thoughts on my
 				<a
 					href="/blog"
-					class="animated-link font-medium text-blue-600 underline decoration-1 underline-offset-2"
+					class="font-medium text-blue-600 underline decoration-1 underline-offset-2 transition-colors duration-150 hover:text-blue-800"
 				>
 					blog
 				</a>.
@@ -69,9 +69,13 @@
 		<div class="animate-fade-in-up animation-delay-400 mb-8 sm:mb-16">
 			<h3 class="mb-4 text-lg font-medium text-gray-900 sm:mb-6">Selected writing</h3>
 			<div class="space-y-4 text-gray-700">
-				<div class="writing-item animate-fade-in-up animation-delay-500 flex items-start justify-between gap-4">
+				<div
+					class="animate-fade-in-up animation-delay-500 group flex items-start justify-between gap-4"
+				>
 					<div class="min-w-0 flex-1">
-						<div class="writing-title font-medium">The Geometry of Surprise</div>
+						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
+							The Geometry of Surprise
+						</div>
 						<div class="text-sm text-gray-600">
 							Why curiosity methods collapse prediction error into one number, what that costs for
 							continual learning, and how a settling substrate could preserve the shape of surprise.
@@ -81,15 +85,19 @@
 						href="/blog/the_geometry_of_surprise"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="writing-link flex-shrink-0 text-blue-600"
+						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
 						aria-label="Read The Geometry of Surprise"
 					>
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="writing-item animate-fade-in-up animation-delay-600 flex items-start justify-between gap-4">
+				<div
+					class="animate-fade-in-up animation-delay-600 group flex items-start justify-between gap-4"
+				>
 					<div class="min-w-0 flex-1">
-						<div class="writing-title font-medium">On Growth and the Low-Hanging Fruit of Immortality</div>
+						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
+							On Growth and the Low-Hanging Fruit of Immortality
+						</div>
 						<div class="text-sm text-gray-600">
 							Achieving immortality is closer than you might think, and what does growth mean when
 							it's no longer constrained by time?
@@ -99,15 +107,19 @@
 						href="/blog/on_growth_and_the_low_hanging_fruit_of_immortality"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="writing-link flex-shrink-0 text-blue-600"
+						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
 						aria-label="Read On Growth and the Low-Hanging Fruit of Immortality"
 					>
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="writing-item animate-fade-in-up animation-delay-700 flex items-start justify-between gap-4">
+				<div
+					class="animate-fade-in-up animation-delay-700 group flex items-start justify-between gap-4"
+				>
 					<div class="min-w-0 flex-1">
-						<div class="writing-title font-medium">What You Attend To Cannot Be Static</div>
+						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
+							What You Attend To Cannot Be Static
+						</div>
 						<div class="text-sm text-gray-600">
 							Why fixed attention keeps models from learning continuously, and how thermodynamic
 							computing could let them adapt in real time.
@@ -117,15 +129,19 @@
 						href="/blog/what_you_attend_to_cannot_be_static"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="writing-link flex-shrink-0 text-blue-600"
+						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
 						aria-label="Read What You Attend To Cannot Be Static"
 					>
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="writing-item animate-fade-in-up animation-delay-800 flex items-start justify-between gap-4">
+				<div
+					class="animate-fade-in-up animation-delay-800 group flex items-start justify-between gap-4"
+				>
 					<div class="min-w-0 flex-1">
-						<div class="writing-title font-medium">The Black Box of Biology</div>
+						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
+							The Black Box of Biology
+						</div>
 						<div class="text-sm text-gray-600">
 							The differences in building software for biology vs software for everything else.
 						</div>
@@ -134,15 +150,19 @@
 						href="/blog/the_black_box_of_biology"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="writing-link flex-shrink-0 text-blue-600"
+						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
 						aria-label="Read The Black Box of Biology"
 					>
 						<ExternalLink size={16} />
 					</a>
 				</div>
-				<div class="writing-item animate-fade-in-up animation-delay-900 flex items-start justify-between gap-4">
+				<div
+					class="animate-fade-in-up animation-delay-900 group flex items-start justify-between gap-4"
+				>
 					<div class="min-w-0 flex-1">
-						<div class="writing-title font-medium">Balance</div>
+						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
+							Balance
+						</div>
 						<div class="text-sm text-gray-600">
 							Why balance is a fallacy and why you should embrace the yin and yang of life.
 						</div>
@@ -151,7 +171,7 @@
 						href="/blog/balance"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="writing-link flex-shrink-0 text-blue-600"
+						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
 						aria-label="Read Balance"
 					>
 						<ExternalLink size={16} />
@@ -168,7 +188,7 @@
 				href="https://x.com/_sethmorton"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="contact-link text-sm text-gray-900 sm:text-base"
+				class="text-sm text-gray-900 transition-colors duration-150 hover:text-blue-600 sm:text-base"
 			>
 				Twitter
 			</a>
@@ -176,7 +196,7 @@
 				href="https://www.linkedin.com/in/seth-morton-118574242"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="contact-link text-sm text-gray-900 sm:text-base"
+				class="text-sm text-gray-900 transition-colors duration-150 hover:text-blue-600 sm:text-base"
 			>
 				LinkedIn
 			</a>
@@ -184,7 +204,7 @@
 				href="mailto:sethmorton05@gmail.com"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="contact-link text-sm text-gray-900 sm:text-base"
+				class="text-sm text-gray-900 transition-colors duration-150 hover:text-blue-600 sm:text-base"
 			>
 				Email
 			</a>
@@ -208,106 +228,6 @@
 		animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 		opacity: 0;
 	}
-
-	.profile-image {
-		box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
-		transition:
-			transform 400ms cubic-bezier(0.22, 1, 0.36, 1),
-			box-shadow 400ms ease;
-	}
-
-	.profile-image:hover {
-		box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
-		transform: scale(1.035) rotate(-1deg);
-	}
-
-	.name-lockup {
-		transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	.profile-image:hover + .name-lockup {
-		transform: translateX(3px);
-	}
-
-	.animated-link {
-		text-decoration-color: rgba(37, 99, 235, 0.45);
-		transition:
-			color 180ms ease,
-			text-decoration-color 180ms ease,
-			text-underline-offset 180ms ease;
-	}
-
-	.animated-link:hover {
-		color: rgb(30 64 175);
-		text-decoration-color: currentColor;
-		text-underline-offset: 4px;
-	}
-
-	.writing-item {
-		border-radius: 0.375rem;
-		margin: -0.35rem -0.5rem;
-		padding: 0.35rem 0.5rem;
-		transition:
-			background-color 220ms ease,
-			transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	.writing-item:hover {
-		background-color: rgba(255, 255, 255, 0.65);
-		transform: translateX(4px);
-	}
-
-	.writing-title {
-		transition: color 200ms ease;
-	}
-
-	.writing-item:hover .writing-title {
-		color: rgb(37 99 235);
-	}
-
-	.writing-link {
-		transition:
-			color 200ms ease,
-			transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	.writing-link:hover {
-		color: rgb(30 64 175);
-	}
-
-	.writing-item:hover .writing-link {
-		transform: translate(2px, -2px);
-	}
-
-	.contact-link {
-		position: relative;
-		transition:
-			color 200ms ease,
-			transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
-	}
-
-	.contact-link::after {
-		background: currentColor;
-		bottom: -3px;
-		content: '';
-		height: 1px;
-		left: 0;
-		position: absolute;
-		transform: scaleX(0);
-		transform-origin: left;
-		transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
-		width: 100%;
-	}
-
-	.contact-link:hover {
-		color: rgb(37 99 235);
-		transform: translateY(-2px);
-	}
-
-	.contact-link:hover::after {
-		transform: scaleX(1);
-	}
-
 
 	.animation-delay-200 {
 		animation-delay: 0.2s;
@@ -346,17 +266,6 @@
 		.animate-fade-in-up {
 			animation: none;
 			opacity: 1;
-		}
-
-		.profile-image,
-		.name-lockup,
-		.animated-link,
-		.writing-item,
-		.writing-title,
-		.writing-link,
-		.contact-link,
-		.contact-link::after {
-			transition: none;
 		}
 	}
 
