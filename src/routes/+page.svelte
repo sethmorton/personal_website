@@ -16,7 +16,7 @@
 	<div class="w-full max-w-4xl">
 		<!-- Header -->
 		<div
-			class="animate-fade-in-up mb-8 flex flex-col items-center gap-4 text-center sm:mb-12 sm:flex-row sm:gap-6 sm:text-left"
+			class="home-block animate-fade-in-up mb-8 flex flex-col items-center gap-4 text-center sm:mb-12 sm:flex-row sm:gap-6 sm:text-left"
 		>
 			<div class="flex-shrink-0 overflow-hidden rounded-full">
 				<img
@@ -35,7 +35,9 @@
 		</div>
 
 		<!-- Main content -->
-		<div class="animate-fade-in-up animation-delay-200 mb-8 space-y-6 sm:mb-12 sm:space-y-6">
+		<div
+			class="home-block animate-fade-in-up animation-delay-200 mb-8 space-y-6 sm:mb-12 sm:space-y-6"
+		>
 			<p class="text-base leading-relaxed text-gray-700 sm:text-lg">
 				I love learning and systems thinking, especially when it comes to problems in AI and
 				biology. I started my first company at 12, finished CS at Northeastern in my first year,
@@ -72,7 +74,7 @@
 		</div>
 
 		<!-- Selected writing -->
-		<div class="animate-fade-in-up animation-delay-400 mb-8 sm:mb-12">
+		<div class="home-block animate-fade-in-up animation-delay-400 mb-8 sm:mb-12">
 			<h3 class="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-stone-500 sm:mb-6">
 				Selected writing
 			</h3>
@@ -209,7 +211,7 @@
 				LinkedIn
 			</a>
 			<a
-				href="mailto:sethmorton05@gmail.com"
+				href="https://mail.google.com/mail/?view=cm&fs=1&to=sethmorton05@gmail.com"
 				target="_blank"
 				rel="noopener noreferrer"
 				class="text-sm text-gray-900 transition-colors duration-150 hover:text-blue-600 sm:text-base"
@@ -279,11 +281,21 @@
 
 	/* Lock page scroll on large screens only. Scoped to this page's root element:
 	   a :global(body) rule here leaks to every route after client-side navigation
-	   (SvelteKit keeps route CSS loaded), which froze scrolling on blog pages. */
-	@media (min-width: 1024px) and (min-height: 1000px) {
+	   (SvelteKit keeps route CSS loaded), which froze scrolling on blog pages.
+	   The lock guarantees the page is exactly one viewport tall, so the vertical
+	   rhythm goes fluid here: padding and section gaps compress on short windows
+	   and open up on tall ones. Below ~790px of real window height the content
+	   cannot fit, so the page falls back to normal flow instead of clipping. */
+	@media (min-width: 1024px) and (min-height: 790px) {
 		.home-shell {
 			height: 100vh;
 			overflow: hidden;
+			padding-top: clamp(1.25rem, 6vh, 5rem);
+			padding-bottom: clamp(1.25rem, 6vh, 5rem);
+		}
+
+		.home-shell .home-block {
+			margin-bottom: clamp(1.25rem, 4vh, 3rem);
 		}
 	}
 </style>
