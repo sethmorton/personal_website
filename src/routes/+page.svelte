@@ -10,11 +10,13 @@
 	twitterCard="summary_large_image"
 />
 
-<div class="flex min-h-screen items-center justify-center bg-stone-50 px-4 py-10 sm:px-6 sm:py-16">
+<div
+	class="home-shell flex min-h-screen items-center justify-center bg-stone-50 px-4 py-14 sm:px-6 sm:py-20"
+>
 	<div class="w-full max-w-4xl">
 		<!-- Header -->
 		<div
-			class="animate-fade-in-up mb-8 flex flex-col items-center gap-4 text-center sm:mb-16 sm:flex-row sm:gap-6 sm:text-left"
+			class="animate-fade-in-up mb-8 flex flex-col items-center gap-4 text-center sm:mb-12 sm:flex-row sm:gap-6 sm:text-left"
 		>
 			<div class="flex-shrink-0 overflow-hidden rounded-full">
 				<img
@@ -24,12 +26,16 @@
 				/>
 			</div>
 			<div>
-				<h1 class="text-2xl font-bold text-gray-900 sm:text-4xl">Seth Morton</h1>
+				<h1
+					class="font-display text-3xl font-semibold tracking-[-0.005em] text-gray-900 sm:text-5xl"
+				>
+					Seth Morton
+				</h1>
 			</div>
 		</div>
 
 		<!-- Main content -->
-		<div class="animate-fade-in-up animation-delay-200 mb-8 space-y-6 sm:mb-16 sm:space-y-8">
+		<div class="animate-fade-in-up animation-delay-200 mb-8 space-y-6 sm:mb-12 sm:space-y-6">
 			<p class="text-base leading-relaxed text-gray-700 sm:text-lg">
 				I love learning and systems thinking, especially when it comes to problems in AI and
 				biology. I started my first company at 12, finished CS at Northeastern in my first year,
@@ -66,8 +72,10 @@
 		</div>
 
 		<!-- Selected writing -->
-		<div class="animate-fade-in-up animation-delay-400 mb-8 sm:mb-16">
-			<h3 class="mb-4 text-lg font-medium text-gray-900 sm:mb-6">Selected writing</h3>
+		<div class="animate-fade-in-up animation-delay-400 mb-8 sm:mb-12">
+			<h3 class="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-stone-500 sm:mb-6">
+				Selected writing
+			</h3>
 			<div class="space-y-4 text-gray-700">
 				<div
 					class="animate-fade-in-up animation-delay-500 group flex items-start justify-between gap-4"
@@ -269,10 +277,13 @@
 		}
 	}
 
-	/* Lock page scroll on large screens only */
-	@media (min-width: 1024px) and (min-height: 900px) {
-		:global(body) {
-			overflow-y: hidden;
+	/* Lock page scroll on large screens only. Scoped to this page's root element:
+	   a :global(body) rule here leaks to every route after client-side navigation
+	   (SvelteKit keeps route CSS loaded), which froze scrolling on blog pages. */
+	@media (min-width: 1024px) and (min-height: 1000px) {
+		.home-shell {
+			height: 100vh;
+			overflow: hidden;
 		}
 	}
 </style>

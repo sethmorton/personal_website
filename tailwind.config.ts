@@ -8,6 +8,11 @@ export default {
 
 	theme: {
 		extend: {
+			fontFamily: {
+				serif: ['Literata', 'Georgia', 'Times New Roman', 'serif'],
+				display: ['Archivo', 'system-ui', 'sans-serif'],
+				mono: ['IBM Plex Mono', 'ui-monospace', 'monospace']
+			},
 			typography: {
 				DEFAULT: {
 					css: {
