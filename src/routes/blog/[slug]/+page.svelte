@@ -5,11 +5,9 @@
 	import { BLOG_META } from '$lib/blog/meta';
 	import { getBlogPostBySlug, publishedBlogPosts } from '$lib/blog/posts';
 	import type { PageData } from './$types';
-	// $props returns { data : { slug: string }}
-	// @ts-ignore
-	const { data }: PageData = $props();
-	const slug = data.slug;
-	const selectedBlogPost = getBlogPostBySlug(publishedBlogPosts, slug);
+	let { data }: { data: PageData } = $props();
+	let slug = $derived(data.slug);
+	let selectedBlogPost = $derived(getBlogPostBySlug(publishedBlogPosts, slug));
 </script>
 
 {#if selectedBlogPost === null}
