@@ -1,0 +1,250 @@
+# The Shape of Inference
+
+In 1964, two radio astronomers in Holmdel, New Jersey were losing a war with pigeons.
+
+Arno Penzias and Robert Wilson had inherited a giant [horn antenna](https://www.aps.org/funding-recognition/historic-sites/holmdel-horn-antenna) - basically a fifty-foot ear - and everywhere they pointed it, the ear picked up a loud hiss. So they did what any good experimentalists would do: they started debugging.
+
+They taped over the riveted seams. They checked all the cables (again). They re-oriented the antenna. Nothing.
+
+Then they noticed the pigeons.
+
+A pair of pigeons had moved into the antenna and coated it in what Penzias would later describe as ["a white dielectric material"](https://time.com/archive/6845966/science-an-echo-from-the-creation/) (pigeon poop). This seemed promising! They trapped the pigeons, drove them off, scrubbed the horn, and turned the antenna back on.
+
+The noise persisted. And [the pigeons came back](https://www.lindau-nobel.org/pigeon-waste-cosmic-melodies-and-noise-in-scientific-communication/)...
+
+What eventually resolved the problem was a phone call: a colleague mentioned offhandedly that [a group at Princeton](https://adsabs.harvard.edu/full/1965ApJ...142..414D) had been building a detector for a faint microwave glow predicted to be left over from the early universe.
+
+The hiss turned out to be the [cosmic microwave background](https://ui.adsabs.harvard.edu/abs/1965ApJ...142..419P/abstract) - the first direct evidence of the Big Bang.
+
+Fourteen years later, Penzias and Wilson were in Stockholm [accepting the Nobel Prize](https://www.nobelprize.org/prizes/physics/1978/speedread/).
+
+I think a lot about this story. On the day of that phone call, Penzias and Wilson collected zero new measurements.
+
+And yet, the investigation had undergone a metamorphosis. Their goal had inverted: before, it was to eliminate the hiss. After, it was to characterize what they now considered a possible signal. Suddenly, every logbook entry that documented a failure became evidence for a new goal.
+
+How can a machine do that?
+
+Today's AI can remember more evidence, search through more possibilities, reflect for longer, and modify parts of itself while it works. But it runs into the same core problem:
+
+What happens when something you learn now should ripple backward, change what the past means, and open entirely new paths forward?
+
+Or more precisely, how do machines achieve the *omnidirectional* style of reasoning humans do?
+
+**Ideas rewrite their past.**
+
+I think the clearest way to motivate this problem is by illustrating the process of writing an essay.
+
+You start an essay with some vague idea of what you want to say. You write an introduction, make an argument, and follow it for a few paragraphs.
+
+Halfway through, you write a sentence and take a step back.
+
+You think: perhaps this sentence is more accurate to what I'm trying to say in this essay.
+
+Suddenly, the introduction you wrote ten minutes ago is wrong.
+
+A paragraph that seemed important becomes extraneous. Furthermore, because your understanding of the argument has changed, entirely new directions open up for what you can now write.
+
+Note: During this process, your thought traveled backward through the text, changing the weight, emphasis, and meaning of what came before. Suddenly a previous stumble looks like the first gesture towards a new idea. In reinterpreting the past, the thought also reorganized the space of possible futures.
+
+I find it useful to picture this as layers of blocks connected by springs, pulling and pushing on each other. Some blocks represent the thesis of the essay, others the structure, paragraphs, or individual sentences.
+
+[[anim: settling]]
+
+This process is the shape of most interesting research and creation. You begin with a hypothesis about what matters, try something, learn from that, then realize your original question, assumptions, and definition of success might have been partly or entirely wrong. I love writing as a motivating example here because I think everyone has felt this when writing - you start writing an essay and through the process, you flesh out your ideas and construct how you say them. The same idea shows up across creative work more broadly: designers co-evolve the problem and solution as they work ([Dorst & Cross, 2001](https://oro.open.ac.uk/3278/)), and scientists seesaw between hypotheses and experiments ([Klahr & Dunbar, 1988](https://www.sciencedirect.com/science/article/pii/0364021388900079)). [[sn: [Alzheimer's disease](https://pubmed.ncbi.nlm.nih.gov/12130773/), [the origin of life](https://pubmed.ncbi.nlm.nih.gov/22793875/), [high-temperature superconductivity](https://arxiv.org/abs/1409.4673), etc. - all research problems that have evolved alongside the search for an answer.]]
+
+[[anim: relight]]
+
+> Sidenote: this is by no means meant to underrate research with a fixed target. Problems with reliable verifiers, like many areas of math and coding, are an incredibly strong use case for today's models. Left-to-right inference is the wrong shape for problems where the target itself moves.
+
+In other words, the answer and the problem are co-constructed.
+
+**Omnidirectional inference.**
+
+This is exactly where today's models run into an architectural problem.
+
+To motivate this problem, it helps to understand about sixty seconds of transformer internals (the model architecture that powers most of modern-day AI). Please note, there are many more wonderful, [in-depth explanations](https://www.3blue1brown.com/lessons/gpt/) elsewhere - this is just what's required for this essay.
+
+Say the LLM is processing this sentence:
+
+```text
+The cat sat on the __
+```
+
+and we're trying to predict the next token (in this case, let's say "mat").
+
+Inside a transformer, every token has a working representation that gets updated as it passes through the model. This running representation is called the *residual stream*. You can think of it as what that token currently means to the model.
+
+In a standard causal transformer, each new token incorporates information from the tokens that came before it to build its own.
+
+Take *sat*.
+
+The model can use information from *cat* to understand that *sat* is something the cat is doing. So the representation of *sat* becomes richer than the word alone.
+
+By the time it reaches the final *the* in:
+
+```text
+The cat sat on the __
+```
+
+it can use everything before it to predict that *mat* is a plausible next word.
+
+The important part is the direction of this [inference](https://cloud.google.com/discover/what-is-ai-inference) [[sn: When we run a trained model to solve a task.]]: the past helps construct the present. However, the present can't rewrite past representations. This method of inference is called autoregression (generating each next token based on the tokens that came before it).
+
+[[anim: catsat]]
+
+Now, let's imagine every token is a block connected to every other block by a spring (like the blocks in the essay above). If one block moves, we need to check how that changes the force on the other blocks.
+
+With $n$ blocks, there are roughly $n^2$ relationships to check.
+
+[[anim: cubic]]
+
+Now let's say we add a token. It may pull on an older block, which in turn changes other blocks, and so on.
+
+Then add another token and do it again.
+
+If the sequence grows to $n$ tokens, we have roughly:
+
+$$1^2 + 2^2 + 3^2 + \dots + n^2 \approx n^3$$
+
+work.
+
+This is the broad intuition behind why *omnidirectional* (in all directions) inference is so computationally expensive. [[sn: I first heard this concept on [a podcast with Adam Marblestone](https://www.dwarkesh.com/p/adam-marblestone). It was a fantastic podcast and really pivotal to me in my journey - highly recommend listening!]]
+
+Autoregression only has to build the next representation from the past. Our proposed spring system has to reopen old representations, update them, and then propagate those changes through everything connected to them. This ability matters a lot! Think back to our writing example: a new realization changes what earlier thoughts mean, which changes what becomes important, which opens up new paths forward.
+
+$n^3$ is computationally infeasible. For example, if a session uses [100,000 tokens](https://arxiv.org/abs/2605.13301), our naive dense spring system would require roughly
+
+$$333{,}338{,}333{,}350{,}000$$
+
+pairwise relationship updates.
+
+
+> Of course, $n^3$ is a maximal upper bound. Omnidirectional doesn't mean everything has to update at all times, only that past representations *can* update, and that those updates can in turn create new future paths. Most new observations disturb very little -- an observation you made about cereal doesn't need to change all of your representations of the past.
+
+So machine learning took a different route.
+
+How much more capable can we make a model while keeping inference mostly forward-moving?
+
+**More room to think.**
+
+I think there are three approaches that have historically built on each other to improve capability while moving solely forward: giving the model a scratchpad, letting it refine its internal representations, and organizing its work across multiple attempts.
+
+**1\. Chain-of-thought reasoning**
+
+The first major improvement machine learning researchers made to these autoregressive models was implementing [chain-of-thought reasoning](https://arxiv.org/abs/2201.11903) (CoT). Instead of forcing the model to go directly from a problem to an answer, we train the model on reasoning traces. [[sn: Originally, we prompted LLMs to generate these reasoning traces, but in 2022 we started [actually training on the reasoning traces themselves](https://arxiv.org/abs/2203.14465).]]
+
+Example:
+
+Instead of training a model to learn: What is 17 times 24? 408
+
+We train it to learn: What is 17 times 24? 17 times 20 is 340. 17 times 4 is 68. 340 plus 68 is 408. Answer: 408.
+
+The training objective is still just predicting the next token. And yet, it consistently outperforms non-reasoning models. The reason?
+
+Remember the *cat* and *sat* tokens from the explanation of transformers. The representation of *sat* became richer because it could use information from *cat*. Put differently, each reasoning step (like "17 times 4 is 68") adds new information to the context, which allows later tokens to form richer representations in the residual stream (look at the visual above for a refresher).
+
+Essentially, CoT gives an autoregressive model a scratchpad: you compute something, write it down, then let the next representation build on what was written.
+
+Note, the direction of inference is still forward and this still doesn't fully solve our spring problem. Think back to writing the essay: with CoT, if you realize halfway through that you've misunderstood the idea you started with, you can write a correction into that residual stream and continue from there. However, the earlier interpretation itself stays fixed.
+
+With the advent and success of CoT, a natural follow-up surfaced: as the model works through its scratchpad, could we give it more opportunities to refine the representations in its residual stream before producing each next token?
+
+**2\. Looped reasoning models**
+
+This brings us to [looped reasoning models](https://arxiv.org/abs/2502.05171), which is what most modern LLMs are converging on today.
+
+The idea behind this augmentation plays once again on enhancing the residual stream. Normally, each previous token contributes its representation once as the residual stream builds toward the next token. With loops, those representations are passed through the transformer again, giving the model another chance to refine what the stream encodes before producing the next token.
+
+So instead of *sat* getting one chance to incorporate information from *cat*, it gets another pass to notice relationships it missed the first time.
+
+This should feel like chain-of-thought reasoning but with more loops - once again, the earlier interpretations remain fixed.
+
+While CoT and looped reasoning give you a more potent residual stream, they leave us with a basic limitation: the model has no persistent workspace to preserve memory or explore another path with a fresh context (no "tainted" residual stream). This brings us to the agentic harness, which in many ways is our latest approach to externalizing a higher-level form of cognition. When you solve a problem you aren't just thinking, you're also managing your own thinking: deciding what to try, when to stop, what to check, etc.
+
+**3\. Agentic harnesses** [[sn-gray: An agent is an LLM running in a loop where it decides what next action to do, observes what happened, and continues until it accomplishes (or at least tries to) a task you give it.]]
+
+An *agentic harness* is everything wrapped around the model that decides what it sees and what happens next. The harness can give the model memory, let it use tools (like searching the web), wield subagents for multiple fresh paths, etc. On top of these new looped reasoning models, the industry is focusing largely on better harnesses.
+
+Earlier this year I went to an event hosted by [Hexo Labs](https://hexolabs.com/) where they demoed a harness called [SIA](https://arxiv.org/abs/2605.27276). Instead of one prompt and one answer, SIA runs a loop: it tries things, gathers feedback, rewrites its own harness, and even updates its own weights mid-task. The mood in the room was what I can only describe as giddy: *What will this system NOT be able to do?!*
+
+SIA is a useful example because it's the maximal version of a direction every AI lab is exploring. The modern agentic harness has roughly three layers:
+
+**Layer 1: Memory and reflection.** A model no longer has to fit everything into one context window. It can [save observations and lessons](https://arxiv.org/abs/2303.11366) in an external store, then [retrieve them later](https://arxiv.org/abs/2305.16291).
+
+**Layer 2: Search.** Instead of one serial thread, an "orchestrator agent" can spawn subagents (like a senior person hiring a bunch of junior people) with fresh contexts. In this process, we can have another agent [evaluate the branches that these subagents take](https://arxiv.org/abs/2305.10601), kill bad ones, and back up to earlier checkpoints.
+
+**Layer 3: Self-modification.** This is the most powerful layer, and the most analogous to human research: the model changes *while* it searches. We let experience from one attempt modify how it approaches the next. This update might happen through a small set of weights, like [LoRA](https://arxiv.org/abs/2106.09685), or through newer methods like [Self-Distillation Policy Optimization](https://arxiv.org/abs/2601.20802) (SDPO), where the model learns directly from its own attempts and feedback. This is called test-time training, or test-time learning. [[sn: LoRA works by changing a small set of additional weights. SDPO works by letting a model get feedback on an attempt, then using that feedback to teach the earlier version of itself which decisions helped and which hurt. Like a parent telling a child: "I made this mistake when I was your age, don't make the same mistake."]]
+
+This gets us close to what I'm looking for. Imagine writing that essay (or maybe you don't need to imagine) with a whole team of editors. Each editor is a powerful looped reasoning model like Claude Mythos or GPT Astra.
+
+One can reread paragraph two, another can resurface an old memory, another can rewrite the opening, and an orchestrator agent can compare the drafts and decide what everyone should work on next.
+
+[[anim: harness]]
+
+This embodies the capacity of SIA. It remembers, forks, retrains itself, and can rewrite its own evaluator.
+
+On paper, this feels like it should be enough.
+
+So why isn't it?
+
+> Sidenote: There is another kind of model architecture, called [diffusion](https://arxiv.org/abs/2502.09992), which offers a different approach. Instead of generating tokens from left to right, diffusion models start with an incomplete sentence and gradually refine it over steps. So for example, it might start with something like "She [MASK] the [MASK] because she [MASK]," then fill in "She missed the train because she was late," and then keep refining that. New approaches like [latent diffusion](https://arxiv.org/abs/2212.09462) also do this for the representations of those tokens. However, the refinement works solely on the latest representations and tokens. When we refine, the old interpretation is always replaced by a new one. Furthermore, the rule used to make those refinements is learned during model training and is largely fixed at inference time.
+
+**Passing notes.**
+
+Observationally, even maximal self-improving harnesses like SIA or Prime-Agent [fail to produce genuinely novel results autonomously](https://www.primeintellect.ai/blog/measuring-autonomous-research). [[sn: From [Prime Intellect's post on measuring autonomous research](https://www.primeintellect.ai/blog/measuring-autonomous-research): "We were again surprised by the lack of novelty. The models clearly understand the objects they manipulate at a deep level, and yet very few genuinely new ideas emerge."]] In the search process, even while learning, the harnesses tend to remain parochial - [concentrating in local neighborhoods of idea space](https://arxiv.org/abs/2605.27905) rather than expanding outward. This I think is really key - if the harness were the missing piece, you would think that novelty should scale with harness advancement: more memory, more branching and sophisticated searching, more self-modification should open new regions of idea space.
+
+There are two reasons why this approach isn't generating the results we might expect:
+
+**1\. Continually learning what to "attend" to.** I've argued this at length in [my last essay](https://www.sethmorton.com/blog/what_you_attend_to_cannot_be_static): a model's understanding of relevance is largely fixed at training time - while approaches like test-time training can update small parts of the system during inference, we still don't have a good way of accessing and updating different regions of the neural network as new evidence arrives in a cost- and time-efficient manner.
+
+**2\. The problem of passing notes.**
+
+Imagine you have a collection of agents writing an essay. One agent gets to paragraph three and realizes that what it's just written changes what the essay's intro should say, and more generally the structure of the essay.
+
+It can send that insight to another agent through a message. However, it can't send the entire dependency structure that made the insight important: the tone, hidden assumptions, how every paragraph should now feel. The next agent has to reconstitute why the change matters, and more importantly, every little relationship that change now modifies.
+
+This is usually fine when the correction is simple (e.g., change the spelling of a word or something). That said, novel reasoning often involves a cascade of small dependencies changing at once. A sentence becoming less important might change the framing of a paragraph, which changes what evidence matters, which changes how an earlier claim should be interpreted.
+
+This is the constitutive limitation of autoregressive systems: these consequences don't propagate automatically. Earlier states are fixed, so every downstream consequence has to be noticed again, represented again, passed forward again, and so on. Chain-of-thought and looped reasoning (mentioned above) can get you far here, but ultimately they still work around the same underlying constraint.
+
+[[anim: notes]]
+
+With springs, you change something in a system and those changes propagate until the whole thing settles into a new configuration. This is much closer to how our brain works and how we do omnidirectional inference.
+
+**Settling.**
+
+Imagine these springs pushing and pulling until they reach a stable configuration. We can call this process **settling**.
+
+Future models will rely much more on this kind of computation. Rather than producing one state and moving forward, they will maintain a persistent state whose parts can keep exerting force on one another, then decode that state into an output.
+
+This brings me to my HAWF (Hierarchical Associative Wave Field) architecture. I explain it more rigorously in [my previous blog](https://www.sethmorton.com/blog/what_you_attend_to_cannot_be_static), but the core idea is that we have an associative energy landscape that is a persistent object. New evidence pushes on some areas of the system, which in turn ripple out and affect other areas. The system relaxing in response to change IS the computation. Furthermore, different timescales handle different kinds of change: fast local settling for active problems, slower and deeper consolidation for memory, and slower still for core structural learning.
+
+[[anim: hawf]]
+
+There are two key research problems here:
+
+First, what forces should act on the springs? More precisely, what [loss functions](https://developers.google.com/machine-learning/crash-course/linear-regression/loss) should we use?
+
+If concepts are blocks connected via springs, how do we decide which forces determine the relationships the system tries to preserve, and how much a change in one block ripples through the rest of the system?
+
+Second, how easily should the structure move? More precisely, how far from equilibrium should the system remain? If every spring is too loose, one new observation can drag the entire system into a new shape. If they are too stiff, nothing important can move. We want a stable structure, but with enough leeway to let strong or surprising evidence modify parts of it.
+
+> Sidenote: I talk about this much more in depth in my blog on [the Geometry of Surprise](https://www.sethmorton.com/blog/the_geometry_of_surprise).
+
+**Hardware.**
+
+This also leads to my thesis around alternative compute.
+
+Settling is sparse and irregular, meaning: a new observation might stretch a few springs and leave everything else where it was - and then the next observation ramifies across the entire field. There's no fixed pattern to which parts of the state move, and no way to know in advance which ones will.
+
+This is close to the worst case for a matrix multiplication accelerator. Most modern AI chips are built for doing the same mathematical operation on many numbers in parallel. Critically, we can predict which numbers they will need and when, so they can carefully schedule their movement through the chip to keep as much computation running in parallel as possible.
+
+This is very much contrary to what settling-based systems need: what gets updated next, and the scope of the structural modifications, depend on a new observation that can't be scheduled.
+
+I believe the future of hardware will be built around more sparse, irregular, settling-based computation.
+
+**Conclusion.**
+
+To reach the next era of intelligence, systems will need to be capable of doing open-ended research. The era of tomorrow will involve an architectural shift toward persistent state and settling-based dynamics, and we need to start thinking about the compute and architectures that will get us there.
+
+I would love to chat more about this - if you want to, [my DMs](https://x.com/_sethmorton) are open.

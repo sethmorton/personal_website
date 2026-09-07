@@ -9,7 +9,6 @@
 		SITE_URL,
 		TWITTER_HANDLE
 	} from '$lib/seo/site';
-	import { get } from 'svelte/store';
 
 	type TwitterCard = 'summary' | 'summary_large_image';
 	type OpenGraphType = 'article' | 'profile' | 'website';
@@ -42,7 +41,7 @@
 			? value
 			: new URL(value, SITE_URL).toString();
 
-	const canonicalUrl = () => toAbsoluteUrl(url ?? get(page).url.pathname);
+	const canonicalUrl = () => toAbsoluteUrl(url ?? $page.url.pathname);
 	const imageUrl = () => (image ? toAbsoluteUrl(image) : undefined);
 </script>
 

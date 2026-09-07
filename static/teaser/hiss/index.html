@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Shape of Inference — hiss</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { position: relative; width: 1080px; height: 1080px; overflow: hidden; }
+  canvas, .card, #fade { position: absolute; left: 0; top: 0; }
+  .card { inset: 0; display: grid; place-content: center; text-align: center; opacity: 0; }
+  h1 { margin: 0; font-family: 'Literata', Georgia, serif; font-weight: 400; font-optical-sizing: auto; font-size: 64px; line-height: 1.1; color: #1f4f8f; }
+  .card p { margin: 30px 0 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 18px; letter-spacing: 0.3em; text-indent: 0.3em; color: #1f4f8f; opacity: 0; }
+  #fade { inset: 0; background: #fafaf9; opacity: 0; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="card" id="title"><h1>The Shape of Inference</h1><p>sethmorton.com</p></div>
+<div id="fade"></div>
+<script>
+// Nothing moved, everything changed. Hiss drifts over the horn; the call lands; the same grains, frozen, re-read as the sky map.
+const W = 1080, H = 1080, CX = W / 2, CY = H / 2;
+const $ = id => document.getElementById(id);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+let seed = 1965; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+
+const T = { call: 3.5, ripple: 3.7, front: 900, settle: 9.0, title: 10.0, url: 10.8, fade: 11.8, end: 12.5 };
+window.DURATION = T.end;
+const CALL = { x: 660, y: 405 }; // where the gold grain lands: the mouth of the horn
+const N = 110000;
+const PAPER = '#fafaf9', COBALT = [40, 91, 181], INK = [31, 79, 143];
+
+const c = $('c'); c.width = W; c.height = H;
+const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+const layer = () => { const l = document.createElement('canvas'); l.width = W; l.height = H; return l.getContext('2d'); };
+
+// Paper with the essay figures' own grain.
+const paper = layer();
+paper.fillStyle = PAPER; paper.fillRect(0, 0, W, H);
+paper.globalCompositeOperation = 'multiply'; paper.fillStyle = '#4a6a8f';
+for (let j = 0; j < W * H * 0.057; j++) {
+  paper.globalAlpha = (8 + rnd() * 4) / 255;
+  const r = .12 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .55;
+  paper.beginPath(); paper.arc(rnd() * W, rnd() * H, r, 0, Math.PI * 2); paper.fill();
+}
+
+// Grain field. Home is where each grain freezes at the call; before that it drifts and twinkles, arriving home exactly at T.call.
+const home = new Float32Array(N * 2), vel = new Float32Array(N * 2), jit = new Float32Array(N * 3), rad = new Float32Array(N);
+const twk = new Float32Array(N * 2), dist = new Float32Array(N), tone = new Uint8Array(N);
+for (let i = 0; i < N; i++) {
+  home[2 * i] = rnd() * W; home[2 * i + 1] = rnd() * H;
+  const a = rnd() * Math.PI * 2, s = 18 + rnd() * 34;
+  vel[2 * i] = Math.cos(a) * s; vel[2 * i + 1] = Math.sin(a) * s;
+  jit[3 * i] = .8 + rnd() * 1.6; jit[3 * i + 1] = 3 + rnd() * 6; jit[3 * i + 2] = rnd() * Math.PI * 2;
+  rad[i] = .9 + rnd() * 1.1;
+  twk[2 * i] = 4 + rnd() * 9; twk[2 * i + 1] = rnd() * Math.PI * 2;
+  dist[i] = Math.hypot(home[2 * i] - CALL.x, home[2 * i + 1] - CALL.y);
+}
+
+// Tone table: 16 ink-density levels of the sky map x 9 steps of re-reading from hiss (pale slate) to ink.
+// The map plate is stippled, so tone is local ink fraction: light blobs vanish to paper, the bulk is cobalt, dark blobs are dense ink.
+const LEVELS = 16, STEPS = 9, styles = [];
+for (let l = 0; l < LEVELS; l++) {
+  const tone = l / (LEVELS - 1);
+  const dark = clamp((tone - .5) / .5), light = clamp(1 - tone / .5);
+  const col = INK.map((v, k) => mix(COBALT[k], v, dark)), alpha = mix(mix(.6, .015, light), 1, dark);
+  styles.push(Array.from({ length: STEPS }, (_, s) => {
+    const w = s / (STEPS - 1);
+    const r = mix(182, col[0], w), gg = mix(194, col[1], w), b = mix(210, col[2], w);
+    return `rgba(${r | 0},${gg | 0},${b | 0},${mix(.48, alpha, w).toFixed(3)})`;
+  }));
+}
+
+const images = {};
+const load = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+// Cover-crop a 1600-square plate at scale s with its focus at frame centre.
+const cover = (ctx, im, s, focus) => {
+  const k = Math.max(W / im.naturalWidth, H / im.naturalHeight) * s, dw = im.naturalWidth * k, dh = im.naturalHeight * k;
+  const x = Math.min(0, Math.max(W - dw, CX - focus.x * dw)), y = Math.min(0, Math.max(H - dh, CY - focus.y * dh));
+  ctx.drawImage(im, x, y, dw, dh);
+};
+
+const plate = layer(), grains = layer();
+window.render = t => {
+  const call = t >= T.call;
+  g.globalAlpha = 1; g.drawImage(paper.canvas, 0, 0);
+
+  // Horn plate, slow push-in; inside the ripple it is rewritten to paper.
+  const R = (t - T.ripple) * T.front, front = 140;
+  const plateAlpha = 1 - ease((t - T.settle) / 1);
+  if (plateAlpha > 0 && images.horn) {
+    plate.globalCompositeOperation = 'source-over'; plate.globalAlpha = 1;
+    plate.clearRect(0, 0, W, H);
+    cover(plate, images.horn, 1 + .05 * clamp(t / 6), { x: .5, y: .42 });
+    if (R > 0) {
+      const m = plate.createRadialGradient(CALL.x, CALL.y, Math.max(0, R - front), CALL.x, CALL.y, R + 40);
+      m.addColorStop(0, 'rgba(0,0,0,1)'); m.addColorStop(1, 'rgba(0,0,0,0)');
+      plate.globalCompositeOperation = 'destination-out'; plate.fillStyle = m; plate.fillRect(0, 0, W, H);
+    }
+    g.globalAlpha = plateAlpha; g.drawImage(plate.canvas, 0, 0);
+  }
+
+  // Grains. Camera is dead still from the call through the re-read, then eases into a slow push while the map holds.
+  const gAlpha = 1 - ease((t - T.settle) / 1.1);
+  if (gAlpha > 0) {
+    grains.setTransform(1, 0, 0, 1, 0, 0); grains.clearRect(0, 0, W, H);
+    const cam = 1 + .03 * ease((t - 5.8) / 3.7);
+    grains.setTransform(cam, 0, 0, cam, CX * (1 - cam), CY * (1 - cam));
+    const dt = Math.min(0, t - T.call), tt = Math.min(t, T.call);
+    let last = null;
+    for (let i = 0; i < N; i++) {
+      const w = clamp((R - dist[i]) / front);
+      const twinkle = call ? 1 : .55 + .45 * Math.sin(twk[2 * i] * t + twk[2 * i + 1]);
+      const style = styles[tone[i]][Math.round(w * (STEPS - 1))];
+      if (style !== last) grains.fillStyle = last = style;
+      const jx = jit[3 * i] * (Math.sin(jit[3 * i + 1] * tt + jit[3 * i + 2]) - Math.sin(jit[3 * i + 1] * T.call + jit[3 * i + 2]));
+      const x = home[2 * i] + vel[2 * i] * dt + jx, y = home[2 * i + 1] + vel[2 * i + 1] * dt + jx * .6;
+      grains.globalAlpha = mix(twinkle, 1, w);
+      grains.beginPath(); grains.arc(x, y, rad[i], 0, Math.PI * 2); grains.fill();
+    }
+    grains.globalAlpha = 1;
+    // The gold grain: the phone call. Lands at T.call and stays a fixed point on the map.
+    const land = ease((t - T.call) / .35);
+    if (land > 0) {
+      grains.fillStyle = '#e6aa32'; grains.globalAlpha = land;
+      grains.beginPath(); grains.arc(CALL.x, CALL.y, mix(18, 6, land), 0, Math.PI * 2); grains.fill();
+      grains.globalAlpha = 1;
+    }
+    // Wet bleed under the grains, then the grains sharp.
+    g.globalAlpha = gAlpha * .42; g.filter = 'blur(1.4px)'; g.drawImage(grains.canvas, 0, 0); g.filter = 'none';
+    g.globalAlpha = gAlpha; g.drawImage(grains.canvas, 0, 0);
+    g.globalAlpha = 1;
+  }
+
+  const title = $('title'), tIn = ease((t - T.title) / 0.7);
+  title.style.opacity = tIn.toFixed(3);
+  title.style.transform = `translateY(${(6 * (1 - tIn)).toFixed(2)}px)`;
+  title.lastElementChild.style.opacity = ease((t - T.url) / 0.5).toFixed(3);
+  $('fade').style.opacity = ease((t - T.fade) / (T.end - T.fade)).toFixed(3);
+};
+
+window.ready = (async () => {
+  images.horn = await load('/teaser/plates/horn_ink.png');
+  const cmb = await load('/teaser/plates/cmb.png');
+  // Each grain's tone is the sky's temperature under its home: the raw WMAP oval (2:1, white outside) sits whole in frame,
+  // cold navy reads as dense ink, hot red as bare paper. Slight blur so tone is local, not one pixel.
+  const ow = W * .97, oh = ow / 2, ox = (W - ow) / 2, oy = (H - oh) / 2;
+  const s = layer(); s.fillStyle = PAPER; s.fillRect(0, 0, W, H);
+  s.filter = 'blur(3px)'; s.drawImage(cmb, ox, oy, ow, oh); s.filter = 'none';
+  const px = s.getImageData(0, 0, W, H).data;
+  for (let i = 0; i < N; i++) {
+    const x = home[2 * i], y = home[2 * i + 1];
+    if (((x - CX) / (ow / 2)) ** 2 + ((y - CY) / (oh / 2)) ** 2 > .985) { tone[i] = 0; continue; }
+    const k = 4 * ((y | 0) * W + (x | 0)), r = px[k] / 255, gg = px[k + 1] / 255, b = px[k + 2] / 255;
+    const mx = Math.max(r, gg, b), d = mx - Math.min(r, gg, b) + 1e-9;
+    const hue = 60 * (mx === r ? ((gg - b) / d + 6) % 6 : mx === gg ? (b - r) / d + 2 : (r - gg) / d + 4);
+    const f = clamp(hue / 240) * .75 + (1 - mx) * .5; // ink fraction: navy 1, cyan .64, green .48, yellow .2, red .1
+    tone[i] = Math.round(clamp((f - .45) / .55) * (LEVELS - 1));
+  }
+  await Promise.all([document.fonts.load('400 64px Literata'), document.fonts.load('18px "IBM Plex Mono"')]);
+  render(0);
+  return { duration: T.end, plates: [!!images.horn, !!cmb], fonts: [document.fonts.check('400 64px Literata'), document.fonts.check('18px "IBM Plex Mono"')] };
+})();
+</script>
+</body>
+</html>

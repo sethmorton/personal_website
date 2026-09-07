@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Shape of Inference — co-construction</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { width: 1920px; height: 1080px; overflow: hidden; }
+  body.square { width: 1080px; }
+  canvas { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<canvas id="page" role="img" aria-label="Archival discoveries resolve into a horn antenna. Its connected faces unfold, and a change at the rim travels back through its ribs to reshape the whole instrument."></canvas>
+<script type="module">
+import * as THREE from '../anim/lib/three.module.js';
+
+const SQUARE = new URLSearchParams(location.search).has('square');
+document.body.classList.toggle('square', SQUARE);
+const W = SQUARE ? 1080 : 1920, H = 1080, CX = W / 2, CY = H / 2;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+const TAU = Math.PI * 2;
+const C = { paper: '#fafaf9', ink: '#1f4f8f', blue: '#42648b', gold: '#a48750' };
+const DURATION = 18;
+const TIMELINE = 18.5;
+// Eight connected beats; see eyepiece/storyboard.md for timing and visual cause/effect.
+const ORDER = ['bell-transistor-team', 'scope-bench', 'flight-waveforms', 'telereader', 'magnetic-wave', 'differential-analyzer', 'computer-room', 'ion-cluster', 'data-plotting', 'univac', 'interferometer', 'reeves-analog', 'plasma-rig', 'ibm-team', 'ruby-laser', 'horn'];
+const plates = {};
+const page = document.getElementById('page'); page.width = W; page.height = H;
+const g = page.getContext('2d'); g.imageSmoothingQuality = 'high';
+const frame = (slug, t) => plates[slug][Math.floor(Math.max(0, t) * 10) % plates[slug].length];
+function lift(im) {
+  const canvas = document.createElement('canvas'); canvas.width = im.width; canvas.height = im.height;
+  const c = canvas.getContext('2d'); c.drawImage(im, 0, 0);
+  const data = c.getImageData(0, 0, im.width, im.height), px = data.data;
+  for (let i = 0; i < px.length; i += 4) if (px[i] + px[i + 1] + px[i + 2] > 600) px[i] = px[i + 1] = px[i + 2] = 255;
+  c.putImageData(data, 0, 0); return canvas;
+}
+let seed = 977;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const paper = document.createElement('canvas'); paper.width = W; paper.height = H;
+{
+  const p = paper.getContext('2d'); p.fillStyle = C.paper; p.fillRect(0, 0, W, H);
+  p.fillStyle = C.ink;
+  for (let i = 0; i < W * H * .035; i++) {
+    p.globalAlpha = .025 + rnd() * .02;
+    p.fillRect(rnd() * W, rnd() * H, .5 + rnd(), .5 + rnd());
+  }
+}
+function image(slug, t, x, y, side, alpha = 1, rot = 0, flat = 1) {
+  if (!plates[slug] || alpha <= 0) return;
+  const im = frame(slug, t);
+  g.save(); g.globalAlpha = alpha; g.translate(x, y); g.rotate(rot); g.scale(1, flat);
+  const trim = slug === 'notebook' ? im.width * .07 : 0;
+  g.drawImage(im, trim, trim, im.width - trim * 2, im.height - trim * 2, -side / 2, -side / 2, side, side);
+  g.restore();
+}
+
+// The same connected shell is retained from the photographic trace to the final form.
+// Orthographic projection makes the first pose coincide with the source photograph.
+const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+const camera = new THREE.OrthographicCamera(-5 * W / H, 5 * W / H, 5, -5, .1, 100);
+const model = new THREE.Group();
+const photoPoint = (x, y, z = 0) => V((x - .5) * 10, (.5 - y) * 10, z);
+const throat = [photoPoint(.222, .378), photoPoint(.287, .321, -.45), photoPoint(.252, .435, .45)];
+const mouth = [photoPoint(.725, .451), photoPoint(.547, .259, -1.1), photoPoint(.634, .616, 1.1)];
+const flare = [photoPoint(.998, .493, -.2), photoPoint(.963, .158, -1.6), photoPoint(.998, .562, 1.2)];
+let hornBackground;
+const counts = { longitudinal: 10, transverse: 18 };
+let bounds, maxSeamGap;
+
+function opening(t) { return ease((t - 6.2) / 6.2); }
+function revisionAt(u, t) { return ease((t - (11.8 + (1 - u) * 2.2)) / 1.2); }
+function shellPoint(panel, u, v, t) {
+  t += .9 * (1 - ease((t - 7) / 3));
+  const next = (panel + 1) % 3;
+  const profile = index => u < .68 ? throat[index].clone().lerp(mouth[index], u / .68) : mouth[index].clone().lerp(flare[index], (u - .68) / .32);
+  const from = profile(panel);
+  const to = profile(next);
+  const original = from.lerp(to, v);
+  // Adjacent faces use identical boundary values; folds cannot tear apart.
+  const theta = (panel + v) * TAU / 3;
+  const unfold = ease((t - 6.2 - .65 * (1 - Math.cos(theta)) - .8 * (1 - u)) / 4.2);
+  const revise = revisionAt(u, t);
+  const center = V(-2.0 + 3.5 * u - .65 * revise * (1 - u),
+    -1.25 + 1.35 * u + 1.15 * u * u + .65 * revise * (1 - u), .4 * u * u);
+  const normal = V(-(1.35 + 2.3 * u), 3.5, 0).normalize();
+  const structure = ease((t - 12) / 3.5);
+  center.lerp(V(-2.2 + 4 * u, -.8 + 2.2 * u, 0), structure);
+  normal.lerp(V(-2.2, 4, 0).normalize(), structure).normalize();
+  const angle = theta + (.9 * u + .42 * revise * u) * (1 - structure) + .35 * structure;
+  const pleats = .006 * Math.cos(theta * 36) * u * u * ease((t - 9.5) / 3);
+  const radius = .18 + 1.9 * u * u + pleats;
+  const aperture = 1 / Math.pow(Math.pow(Math.cos(angle), 8) + Math.pow(Math.sin(angle), 8), 1 / 8);
+  const lip = mix(1 + .17 * Math.cos(theta * 3) * u * u, aperture, structure);
+  const target = center.addScaledVector(normal, Math.cos(angle) * radius * lip);
+  target.z += Math.sin(angle) * radius * lip;
+  // A local change at the rim reaches the original throat later, along the ribs.
+  target.y += .30 * revise * Math.cos(theta) * u * u * (1 - structure);
+  return original.lerp(target, unfold);
+}
+function framePoint(a, t) {
+  const original = photoPoint(.665 + .104 * Math.cos(a) + .022 * Math.sin(a), .4 + .247 * Math.sin(a), -.6);
+  const turn = ((a / TAU + 1) % 1) * 3;
+  const target = shellPoint(Math.floor(turn) % 3, 1, turn % 1, t);
+  return original.lerp(target, ease((t + .9 * (1 - ease((t - 7) / 3)) - 6.2) / 5.7));
+}
+function project(p) {
+  const q = p.clone().applyMatrix4(model.matrixWorld).project(camera);
+  const point = { x: (q.x + 1) * CX, y: (1 - q.y) * CY, z: q.z };
+  bounds.minX = Math.min(bounds.minX, point.x); bounds.maxX = Math.max(bounds.maxX, point.x);
+  bounds.minY = Math.min(bounds.minY, point.y); bounds.maxY = Math.max(bounds.maxY, point.y);
+  return point;
+}
+function stroke(points, color, width, alpha) {
+  if (alpha <= 0) return;
+  g.beginPath(); points.forEach((p, i) => { const q = project(p); if (i) g.lineTo(q.x, q.y); else g.moveTo(q.x, q.y); });
+  g.strokeStyle = color; g.lineWidth = width; g.globalAlpha = alpha; g.stroke();
+}
+const samples = (count, fn) => Array.from({ length: count }, (_, n) => fn(n / (count - 1)));
+function textureTriangle(dst, src) {
+  const [a, b, c] = src, [p, q, r] = dst;
+  const det = (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
+  if (Math.abs(det) < .0001) return;
+  const xx = ((q.x - p.x) * (c.y - a.y) - (r.x - p.x) * (b.y - a.y)) / det;
+  const xy = ((r.x - p.x) * (b.x - a.x) - (q.x - p.x) * (c.x - a.x)) / det;
+  const yx = ((q.y - p.y) * (c.y - a.y) - (r.y - p.y) * (b.y - a.y)) / det;
+  const yy = ((r.y - p.y) * (b.x - a.x) - (q.y - p.y) * (c.x - a.x)) / det;
+  g.save(); g.beginPath();
+  const cx = (p.x + q.x + r.x) / 3, cy = (p.y + q.y + r.y) / 3;
+  // Subpixel overlap prevents antialiased cracks between adjoining photographic facets.
+  dst.forEach((v, i) => {
+    const length = Math.hypot(v.x - cx, v.y - cy) || 1;
+    const x = v.x + (v.x - cx) / length * .45, y = v.y + (v.y - cy) / length * .45;
+    if (i) g.lineTo(x, y); else g.moveTo(x, y);
+  });
+  g.closePath(); g.clip();
+  g.setTransform(xx, yx, xy, yy, p.x - xx * a.x - xy * a.y, p.y - yx * a.x - yy * a.y);
+  g.drawImage(plates.horn[0], 0, 0); g.restore();
+}
+function wheelPoint(a, side, t) {
+  const width = mix(.075, .012, ease((t - 7) / 5));
+  return framePoint(a, t).add(V(Math.cos(a) * width * side, -Math.sin(a) * width * side, 0));
+}
+function spokePoint(a, u, side, t) {
+  const revise = ease((t - 6.2) / 5.7);
+  const hub = photoPoint(.684, .337, -.6).lerp(shellPoint(0, .85, .35, t), revise);
+  const end = framePoint(a, t);
+  const point = hub.clone().lerp(end, u);
+  const direction = end.clone().sub(hub);
+  return point.add(V(-direction.y, direction.x, 0).normalize().multiplyScalar(side * .022 * (1 - revise)));
+}
+function hornLayout(t) {
+  const elapsed = Math.max(0, t - 2.25);
+  const push = (.994 + .18 * (1 - Math.exp(-elapsed / 1.5)) - 1) * (1 - ease((t - 5.5) / 3));
+  const pass = 1.5 * ease((t - 3) / 1.7) * (1 - ease((t - 5) / 2.5));
+  // Approach the panel beside the wheel, then reveal the evolving instrument.
+  return { side: H * (1 + push + pass), x: CX - 150 * push - .14 * H * pass, y: CY + 35 * push + .10 * H * pass };
+}
+function prepareHornBackground() {
+  const im = plates.horn[0];
+  hornBackground = document.createElement('canvas'); hornBackground.width = im.width; hornBackground.height = im.height;
+  const c = hornBackground.getContext('2d'); c.drawImage(im, 0, 0); c.globalCompositeOperation = 'destination-out';
+  const remove = points => {
+    c.beginPath(); points.forEach((p, i) => { const x = (p.x / 10 + .5) * im.width, y = (.5 - p.y / 10) * im.height; if (i) c.lineTo(x, y); else c.moveTo(x, y); }); c.closePath(); c.fill();
+  };
+  for (let panel = 0; panel < 3; panel++) for (const [a, b] of [[0, .68], [.68, 1]]) remove([[a, 0], [b, 0], [b, 1], [a, 1]].map(([u, v]) => shellPoint(panel, u, v, 0)));
+  for (let j = 0; j < 180; j++) remove([wheelPoint(j / 180 * TAU, -1, 0), wheelPoint((j + 1) / 180 * TAU, -1, 0), wheelPoint((j + 1) / 180 * TAU, 1, 0), wheelPoint(j / 180 * TAU, 1, 0)]);
+  for (let j = 0; j < 12; j++) remove([[0, -1], [1, -1], [1, 1], [0, 1]].map(([u, side]) => spokePoint(j / 12 * TAU, u, side, 0)));
+}
+function drawArchive(t) {
+  g.globalCompositeOperation = 'multiply';
+  if (t < 2.25) {
+    const i = Math.min(14, Math.floor(t / .15)), u = t / .15 - i;
+    if (t >= 1.8) {
+      const push = .94 + .12 * (t - 1.8) - 1;
+      image(ORDER[i], t, CX - 150 * push, CY + 35 * push, H * (1 + push));
+    } else image(ORDER[i], t, CX + 14 * Math.sin(t * 1.1), CY - 9 * Math.cos(t), H * (1.03 - .12 * u), 1, .015 * Math.sin(t));
+  } else {
+    const { side, x, y } = hornLayout(t);
+    if (t < 3) image('horn', 0, x, y, side);
+    else {
+      g.globalAlpha = 1 - ease((t - 3.9) / 1.2);
+      g.drawImage(hornBackground, x - side / 2, y - side / 2, side, side);
+      g.globalAlpha = 1;
+    }
+  }
+  g.globalCompositeOperation = 'source-over';
+}
+function drawHorn(t) {
+  const shotTime = t;
+  // Give the source horn a moving recognition beat before the original transformation.
+  t += 1.5;
+  bounds = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+  const reveal = ease((shotTime - 3.3) / 1.2);
+  const close = clamp((t - 14.5) / 5.5);
+  const orbit = .30 * close + .42 * ease((t - 4.5) / 4.3) + .20 * ease((t - 9) / 10);
+  camera.position.set(20 * Math.sin(orbit), 1.5 * ease((t - 4.5) / 5.8), 20 * Math.cos(orbit));
+  camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
+  const layout = hornLayout(shotTime);
+  model.position.set((layout.x - CX) * 10 / H - .9 * ease((t - 14) / 3), -(layout.y - CY) * 10 / H - .5 * ease((t - 14) / 3), 0);
+  model.rotation.z = -.20 * ease((t - 4.5) / 8) + .12 * ease((t - 13) / 7) - .12 * close;
+  model.scale.setScalar(layout.side / H * (1 + .48 * ease((t - 4.5) / 5.8) + .03 * ease((t - 15) / 3)));
+  model.updateMatrixWorld(true);
+  // Photographic coordinates remain attached to the shell throughout its deformation.
+  // Depth-sorted, textured facets preserve the source's actual printed grain and metal seams.
+  const faces = [], rows = 50, columns = 96;
+  for (let panel = 0; panel < 3; panel++) for (let i = 0; i < rows; i++) for (let j = 0; j < columns; j++) {
+    const uv = [[i / rows, j / columns], [(i + 1) / rows, j / columns], [(i + 1) / rows, (j + 1) / columns], [i / rows, (j + 1) / columns]];
+    const world = uv.map(([u, v]) => shellPoint(panel, u, v, t));
+    const corners = world.map(project);
+    const normal = world[1].clone().sub(world[0]).cross(world[3].clone().sub(world[0])).normalize();
+    const shade = (1 - Math.abs(normal.dot(V(-.35, .65, .67).normalize()))) * .22 * ease((t - 6) / 4);
+    const source = uv.map(([u, v]) => {
+      const q = shellPoint(panel, u, v, 0);
+      return { x: (q.x / 10 + .5) * plates.horn[0].width, y: (.5 - q.y / 10) * plates.horn[0].height };
+    });
+    faces.push({ corners, source, shade, z: corners.reduce((sum, p) => sum + p.z, 0) / 4 });
+  }
+  const addDetail = (world, original) => {
+    const corners = world.map(project);
+    faces.push({ corners, source: original.map(p => ({ x: (p.x / 10 + .5) * plates.horn[0].width, y: (.5 - p.y / 10) * plates.horn[0].height })), shade: 0, z: corners.reduce((sum, p) => sum + p.z, 0) / 4 - .0001 });
+  };
+  for (let j = 0; j < 180; j++) {
+    const points = [[j / 180 * TAU, -1], [(j + 1) / 180 * TAU, -1], [(j + 1) / 180 * TAU, 1], [j / 180 * TAU, 1]];
+    addDetail(points.map(([a, side]) => wheelPoint(a, side, t)), points.map(([a, side]) => wheelPoint(a, side, 0)));
+  }
+  if (t < 11.9) for (let j = 0; j < 12; j++) {
+    const points = [[0, -1], [1, -1], [1, 1], [0, 1]];
+    addDetail(points.map(([u, side]) => spokePoint(j / 12 * TAU, u, side, t)), points.map(([u, side]) => spokePoint(j / 12 * TAU, u, side, 0)));
+  }
+  faces.sort((a, b) => b.z - a.z);
+  const material = 1;
+  g.globalAlpha = material;
+  for (const { corners, source, shade } of faces) {
+    textureTriangle([corners[0], corners[1], corners[2]], [source[0], source[1], source[2]]);
+    textureTriangle([corners[0], corners[2], corners[3]], [source[0], source[2], source[3]]);
+    g.beginPath(); corners.forEach((p, i) => { if (i) g.lineTo(p.x, p.y); else g.moveTo(p.x, p.y); }); g.closePath();
+    g.fillStyle = C.ink; g.globalAlpha = material * shade; g.fill(); g.globalAlpha = material;
+  }
+  for (let panel = 0; panel < 3; panel++) {
+    for (let j = 0; j <= counts.longitudinal; j++) {
+      const v = j / counts.longitudinal;
+      stroke(samples(65, u => shellPoint(panel, u, v, t)), C.ink, j === 0 ? 2.1 : 1, reveal * (j === 0 ? .68 : .12));
+    }
+    for (let j = 0; j <= counts.transverse; j++) {
+      const u = j / counts.transverse;
+      stroke(samples(41, v => shellPoint(panel, u, v, t)), C.blue, j === counts.transverse ? 2 : .85, reveal * (j === counts.transverse ? .8 : .10));
+    }
+  }
+  // The support hoop from the photograph becomes the shared, reshaped mouth.
+  stroke(samples(181, u => framePoint(u * TAU, t)), C.gold, 2.2, reveal * .85);
+  const support = 1 - ease((t - 10.2) / 2.1);
+  const hub = photoPoint(.684, .337, -.6).lerp(shellPoint(0, .85, .35, t), ease((t - 6.2) / 5.7));
+  for (let j = 0; j < 12; j++) stroke([hub, framePoint(j / 12 * TAU, t)], C.blue, 1, reveal * support * .28);
+  // Reinforcing rings make the final aperture and tapered waveguide legible.
+  const frameAlpha = ease((t - 12) / 3);
+  for (const u of [.12, 1]) {
+    const ring = samples(241, a => { const turn = a * 3; return shellPoint(Math.min(2, Math.floor(turn)), u, turn === 3 ? 1 : turn % 1, t); });
+    stroke(ring, C.paper, u === 1 ? 6 : 3.5, frameAlpha * .85);
+    stroke(ring, C.gold, u === 1 ? 2.8 : 1.2, frameAlpha * .95);
+  }
+  // Highlight follows existing structure: first the rim, then back down all three seams.
+  const rimTravel = clamp((t - 10.4) / 1.5);
+  const rimAlpha = ease((t - 10.3) / .3) * (1 - ease((t - 11.9) / .4));
+  stroke(samples(45, u => framePoint((rimTravel + (u - 1) * .15) * TAU, t)), C.gold, 4.0, rimAlpha);
+  const back = clamp((t - 11.8) / 2.2);
+  const backAlpha = ease((t - 11.8) / .25) * (1 - ease((t - 14) / .6));
+  for (let panel = 0; panel < 3; panel++) stroke(samples(25, u => shellPoint(panel, clamp(1 - back + (u - .5) * .14), 0, t)), C.gold, 3.5, backAlpha);
+  maxSeamGap = 0;
+  for (let panel = 0; panel < 3; panel++) for (let j = 0; j <= 18; j++) maxSeamGap = Math.max(maxSeamGap, shellPoint(panel, j / 18, 1, t).distanceTo(shellPoint((panel + 1) % 3, j / 18, 0, t)));
+  window.filmState = { time: shotTime * DURATION / TIMELINE, opening: opening(t), camera: camera.position.toArray(), bounds, maxSeamGap,
+    throat: shellPoint(0, 0, 0, t).toArray(), rim: shellPoint(0, 1, 0, t).toArray() };
+  g.globalAlpha = 1;
+}
+// Illustrative state vectors, not measured activations or an attention matrix.
+function drawStateRevision(t) {
+  const alpha = ease((t - 10.8) / .65) * (1 - ease((t - 14.2) / .65));
+  if (!alpha) return;
+  g.save(); g.textAlign = 'center';
+  g.fillStyle = C.ink; g.globalAlpha = alpha;
+  g.font = '400 26px Georgia'; g.fillText('Persistent state', CX, 798);
+  const left = CX - 234, pitch = 56, y = 834;
+  const arrival = ease((t - 11.5) / .3);
+  for (let i = 0; i < 9; i++) {
+    const change = i === 8 ? arrival : revisionAt(i / 7, t);
+    const visible = i === 8 ? arrival : 1;
+    for (let k = 0; k < 4; k++) {
+      const before = .2 + .6 * (.5 + .5 * Math.sin(i * 1.7 + k * 2.4));
+      const after = .2 + .6 * (.5 + .5 * Math.cos(i * .8 - k * 1.9));
+      g.globalAlpha = alpha * visible * mix(before, after, change);
+      g.fillStyle = i === 8 ? C.gold : C.ink;
+      g.fillRect(left + i * pitch, y + k * 13, 20, 10);
+      g.globalAlpha = alpha * visible * change;
+      g.fillStyle = C.gold; g.fillRect(left + i * pitch - 5, y + k * 13, 2, 10);
+    }
+  }
+  // The return travels in the same direction and timing as the revision on the horn.
+  const back = clamp((t - 11.8) / 2.2);
+  g.globalAlpha = alpha * arrival * .8; g.strokeStyle = C.gold; g.lineWidth = 1.5;
+  const right = left + 8 * pitch + 10, tip = mix(right, left + 10, back);
+  g.beginPath(); g.moveTo(right, 823); g.lineTo(tip, 823); g.stroke();
+  if (back > .02) { g.beginPath(); g.moveTo(tip + 7, 819); g.lineTo(tip, 823); g.lineTo(tip + 7, 827); g.stroke(); }
+  g.restore();
+}
+window.render = t => {
+  t = Math.max(0, Math.min(DURATION, t)) * TIMELINE / DURATION;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  g.drawImage(paper, 0, 0);
+  if (t < 5.1) drawArchive(t);
+  if (t >= 3) drawHorn(t);
+  drawStateRevision(t + 1.5);
+  if (t > 15.5) {
+    const u = ease((t - 15.5) / 1.2);
+    g.globalAlpha = u; g.textAlign = 'left'; g.fillStyle = '#1c1b18';
+    g.font = '400 76px Georgia';
+    g.fillText('The Shape', CX - 430 + 40 * (1 - u), 884);
+    g.fillText('of Inference', CX - 430 + 40 * (1 - u), 974);
+    g.globalAlpha = 1;
+  }
+};
+window.DURATION = DURATION;
+window.ready = (async () => {
+  await Promise.all(['400 52px Georgia', '20px Literata', 'italic 70px Literata', '18px IBM Plex Mono'].map(font => document.fonts.load(font)));
+  await document.fonts.ready;
+  const manifest = await fetch('/teaser/plates/manifest.json').then(r => r.json());
+  const missing = [];
+  await Promise.all([...new Set(['horn', ...ORDER])].map(async slug => {
+    const entry = manifest.find(p => p.slug === slug);
+    if (!entry) { missing.push(slug); return; }
+    const stem = entry.file.replace(/\.\w+$/, '_ink');
+    const frames = await Promise.all(['', '1', '2'].map(v => new Promise(resolve => {
+      const im = new Image(); im.onload = () => resolve(im); im.onerror = () => resolve(null); im.src = `/teaser/plates/${stem}${v}.png`;
+    })));
+    plates[slug] = frames.filter(Boolean).map(lift);
+    if (plates[slug].length !== 3) missing.push(slug);
+  }));
+  if (missing.length) throw new Error(`Missing archival plates: ${missing.join(', ')}`);
+  prepareHornBackground();
+  window.render(0);
+  // Export remains seekable and deterministic; ?play is a convenient live preview.
+  if (new URLSearchParams(location.search).has('play')) {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) window.render(18);
+    else { const start = performance.now(); const tick = now => { window.render((now - start) / 1000 % DURATION); requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
+  }
+  return { duration: DURATION, plates: Object.keys(plates).length, missing };
+})();
+</script>
+</body>
+</html>

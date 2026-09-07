@@ -1,0 +1,5 @@
+# The site imports its delivery videos/posters from src/lib/blog.
+# Keep original films, GIFs, studies and render sources in Git and local previews.
+static/teaser/
+static/anim/
+.render-cache/

@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">Ink runs forward into the next word. The words already dry do not take it back.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 23; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const INK = [40,97,122], DRY = [44, 88, 143], SKY = [113,146,158], PALE = [155,173,176];
+const mix = (a, b, t) => `rgb(${a[0] + (b[0] - a[0]) * t | 0},${a[1] + (b[1] - a[1]) * t | 0},${a[2] + (b[2] - a[2]) * t | 0})`;
+
+const WORDS = ['THE', 'CAT', 'SAT', 'ON', 'THE'], FONT = '700 46px Georgia, serif', GRID = 2.0, GAP = 18, BASE = 240;
+const off = document.createElement('canvas'), og = off.getContext('2d');
+og.font = FONT;
+const widths = WORDS.map(w => og.measureText(w).width);
+let x0 = (W - (widths.reduce((a, b) => a + b, 0) + GAP * WORDS.length + 10)) / 2;
+const words = WORDS.map((text, k) => {
+  const wd = Math.ceil(widths[k]) + 8, ht = 66; off.width = wd; off.height = ht;
+  og.font = FONT; og.fillStyle = '#000'; og.fillText(text, 4, 52);
+  const px = og.getImageData(0, 0, wd, ht).data, hx = [], hy = [];
+  for (let r = 0, y = 1; y < ht; y += GRID, r++) for (let x = 1 + (r & 1) * GRID / 2; x < wd; x += GRID)
+    if (px[((y | 0) * wd + (x | 0)) * 4 + 3] > 120) { hx.push(x0 + x - 4 + (rnd() - 0.5) * 0.7); hy.push(BASE - 52 + y + (rnd() - 0.5) * 0.7); }
+  const n = hx.length, w = { k, x: x0, w: widths[k], n, hx: Float32Array.from(hx), hy: Float32Array.from(hy),
+    sx: new Float32Array(n), sy: new Float32Array(n), cx: new Float32Array(n), cy: new Float32Array(n),   // flight: source, control
+    t0: new Float32Array(n), du: new Float32Array(n), rf: new Float32Array(n).fill(-9),                    // flight start, duration, refill time
+    ph: new Float32Array(n), wv: new Float32Array(n), wr: new Float32Array(n),                             // walking loop
+    px: new Float32Array(n), py: new Float32Array(n), lv: new Uint8Array(n), planned: false };
+  for (let i = 0; i < n; i++) { w.ph[i] = rnd() * 6.283; w.wv[i] = 0.5 + rnd() * 0.8; w.wr[i] = 0.45 + rnd() * 0.5; }
+  x0 += widths[k] + GAP;
+  return w;
+});
+const CARET_X = x0;
+
+// ---- timeline (seconds into the cycle) ----
+const START = [0, 1.45, 2.9, 4.35, 5.8], FLY = 1.15, BACK_AT = 4.7, CARET_AT = 7.45, FADE_AT = 8.5, FADE = 0.7, CYCLE = 9.4;
+const dryAt = k => k < 4 ? START[k + 1] + 0.45 : 1e9;
+
+// a new word: every home is filled by ink lifted from an earlier word (most from the latest, geometrically fewer from older ones),
+// carried along its own arc; the lifted source spot shows pale for a moment while the reservoir refills it
+function plan(k) {
+  const w = words[k]; w.planned = true;
+  for (let i = 0; i < w.n; i++) {
+    let sx, sy, s = null, si = 0;
+    if (k === 0) { sx = -170 + rnd() * 150; sy = BASE - 50 + rnd() * 50; }
+    else {
+      let r = rnd() * (1 - Math.pow(0.45, k)) / 0.55, j = k - 1, p = 1;
+      while (j > 0 && r >= p) { r -= p; p *= 0.45; j--; }
+      s = words[j]; si = (rnd() * s.n) | 0; sx = s.hx[si]; sy = s.hy[si];
+    }
+    const d = Math.abs(w.hx[i] - sx);
+    w.sx[i] = sx; w.sy[i] = sy;
+    w.cx[i] = (sx + w.hx[i]) / 2 + (rnd() - 0.5) * 50;
+    w.cy[i] = BASE - 95 - Math.min(260, d * 0.6) + (rnd() - 0.5) * 40;
+    w.t0[i] = START[k] + (w.hx[i] - w.x) / w.w * 0.35 + rnd() * 0.15;
+    w.du[i] = FLY + rnd() * 0.35;
+    if (s) s.rf[si] = w.t0[i];
+  }
+}
+
+// levels: 0 hidden, 1 in flight, 2-5 landing (sky settling to ink), 5 wet, 6-7 drying to a fixed darker ink, 8 pale refill spot
+const COL = ['', mix(SKY, SKY, 0), mix(SKY, SKY, 0), mix(SKY, INK, 0.33), mix(SKY, INK, 0.66), mix(INK, INK, 0), mix(INK, DRY, 0.5), mix(DRY, DRY, 0), mix(PALE, PALE, 0)];
+const SZ = [0, 2.0, 2.0, 1.92, 1.85, 1.75, 1.65, 1.55, 1.55];
+function update(w, t) {
+  const dry = Math.min(1, Math.max(0, (t - dryAt(w.k)) / 0.6));
+  for (let i = 0; i < w.n; i++) {
+    if (!w.planned) { w.lv[i] = 0; continue; }
+    const u = (t - w.t0[i]) / w.du[i];
+    if (u < 0) { w.lv[i] = 0; continue; }
+    if (u < 1) {
+      const e = u * u * (3 - 2 * u), m = 1 - e;
+      w.px[i] = m * m * w.sx[i] + 2 * m * e * w.cx[i] + e * e * w.hx[i];
+      w.py[i] = m * m * w.sy[i] + 2 * m * e * w.cy[i] + e * e * w.hy[i];
+      w.lv[i] = 1; continue;
+    }
+    if (t >= w.rf[i] && t - w.rf[i] < 0.45) { w.px[i] = w.hx[i]; w.py[i] = w.hy[i]; w.lv[i] = 8; continue; }
+    const amp = w.wr[i] * (1 - dry * 0.85), a = w.ph[i] + T * w.wv[i];   // wet: tiny walking loop; dry: all but frozen
+    w.px[i] = w.hx[i] + Math.cos(a) * amp; w.py[i] = w.hy[i] + Math.sin(a * 1.3 + w.ph[i]) * amp * 0.8;
+    const since = t - w.t0[i] - w.du[i];
+    w.lv[i] = since < 0.5 ? 2 + (since * 6 | 0) : 5 + Math.round(dry * 2);
+  }
+}
+let marks = 0;
+function drawWord(w) {
+  for (let L = 1; L <= 8; L++) {
+    g.fillStyle = COL[L]; const s = SZ[L], h = s / 2;
+    for (let i = 0; i < w.n; i++) if (w.lv[i] === L) { g.fillRect(w.px[i] - h, w.py[i] - h, s, s); marks++; }
+  }
+}
+// a dry word is ruled off with a fine pale dotted line, drawn left to right as it dries
+function underline(w, t) {
+  const p = Math.min(1, (t - dryAt(w.k)) / 0.7); if (p <= 0) return;
+  g.fillStyle = COL[8];
+  const n = Math.round(w.w / 3.4), end = n * p;
+  for (let k = 0; k < end; k++) {
+    const x = w.x + (k + 0.5) * w.w / n + Math.sin(T * 0.6 + k * 0.9) * 0.4, y = BASE + 9 + Math.cos(T * 0.5 + k * 1.3) * 0.5;
+    g.fillRect(x - 0.65, y - 0.65, 1.3, 1.3); marks++;
+  }
+}
+// the caret: a dotted bar blinking where the next word would go
+function caret(t, fadeA) {
+  if (t < CARET_AT) return;
+  const ph = ((t - CARET_AT) % 1.1) / 1.1, on = ph < 0.6 ? Math.min(1, ph / 0.12, (0.6 - ph) / 0.12) : 0;
+  if (on <= 0) return;
+  g.globalAlpha = fadeA * on; g.fillStyle = COL[5];
+  for (let k = 0; k < 12; k++) {
+    const x = CARET_X + 6 + Math.cos(T * 0.7 + k * 0.6) * 0.35, y = BASE - 33 + k * 3.1 + Math.sin(T * 0.8 + k) * 0.3;
+    g.fillRect(x - 0.8, y - 0.8, 1.6, 1.6); marks++;
+  }
+  g.globalAlpha = fadeA;
+}
+
+// the accent: a few drops leave SAT for CAT, meet CAT's rule, turn warm and dissolve there
+const NB = 8, bx0 = new Float32Array(NB), by0 = new Float32Array(NB), bcx = new Float32Array(NB), bcy = new Float32Array(NB),
+      bx1 = new Float32Array(NB), by1 = new Float32Array(NB), bt0 = new Float32Array(NB);
+const WARMS = []; for (let i = 0; i < 8; i++) WARMS.push(`rgba(172,139,80,${(1 - i / 8).toFixed(2)})`);
+let backPlanned = false;
+function planBack() {
+  backPlanned = true; const s = words[2], d = words[1];
+  for (let i = 0; i < NB; i++) {
+    const si = (rnd() * s.n) | 0; bx0[i] = s.hx[si]; by0[i] = s.hy[si];
+    bx1[i] = d.x + 6 + rnd() * (d.w - 12); by1[i] = BASE + 9;
+    bcx[i] = (bx0[i] + bx1[i]) / 2 + (rnd() - 0.5) * 30; bcy[i] = BASE - 70 - rnd() * 40;
+    bt0[i] = BACK_AT + rnd() * 0.5; s.rf[si] = bt0[i];
+  }
+}
+function drawBack(t) {
+  for (let i = 0; i < NB; i++) {
+    const u = (t - bt0[i]) / 1.3; if (u < 0 || u > 1.6) continue;
+    if (u < 1) {
+      const e = u * u * (3 - 2 * u), m = 1 - e; g.fillStyle = COL[1];
+      g.fillRect(m * m * bx0[i] + 2 * m * e * bcx[i] + e * e * bx1[i] - 0.95, m * m * by0[i] + 2 * m * e * bcy[i] + e * e * by1[i] - 0.95, 1.9, 1.9);
+    } else {
+      const f = (u - 1) / 0.6, s = 2.3 - f * 1.3; g.fillStyle = WARMS[Math.min(7, f * 8 | 0)];
+      g.fillRect(bx1[i] + f * 4 - s / 2, by1[i] - s / 2 + Math.sin(T + i) * 0.3, s, s);
+    }
+    marks++;
+  }
+}
+
+let T = 0, cyc = 0, last = performance.now();
+function frame(now) {
+  const dt = Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now; T += dt;
+  let t = T - cyc * CYCLE;
+  if (t >= CYCLE) { cyc++; t -= CYCLE; for (const w of words) { w.planned = false; w.rf.fill(-9); } backPlanned = false; }
+  for (let k = 0; k < 5; k++) if (!words[k].planned && t >= START[k]) plan(k);
+  if (!backPlanned && t >= BACK_AT) planBack();
+  g.clearRect(0, 0, W, H); marks = 0;
+  const fadeA = t > FADE_AT ? Math.max(0, 1 - (t - FADE_AT) / FADE) : 1;
+  g.globalAlpha = fadeA;
+  for (const w of words) { update(w, t); underline(w, t); drawWord(w); }
+  drawBack(t); caret(t, fadeA);
+  g.globalAlpha = 1;
+  window.__marks = marks; window.__t = t;
+  requestAnimationFrame(frame);
+}
+window.__adv = s => { for (let k = 0, n = Math.round(s * 60); k < n; k++) frame(last + 16.667); };
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

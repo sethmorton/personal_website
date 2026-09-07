@@ -13,13 +13,14 @@
 {#if selectedBlogPost === null}
 	<p>Not found</p>
 {:else}
-	<div class="min-h-screen bg-stone-50">
+	<div class="min-h-screen">
 		{#if BLOG_META[slug]}
 			<SEO
 				title={BLOG_META[slug].title}
 				description={BLOG_META[slug].description}
 				type={BLOG_META[slug].type ?? 'article'}
 				image={BLOG_META[slug].image}
+				imageAlt={BLOG_META[slug].image ? selectedBlogPost.title : undefined}
 				twitterCard="summary_large_image"
 			/>
 		{:else}
@@ -27,6 +28,7 @@
 		{/if}
 		<BlogPost
 			content={selectedBlogPost.content}
+			teaser={selectedBlogPost.teaser}
 			publishDate={selectedBlogPost.date}
 			title={selectedBlogPost.title}
 			image={selectedBlogPost.image ?? `/blog/${slug}.webp`}

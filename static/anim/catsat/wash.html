@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  #paint, .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="Three watercolour washes reserve THE, CAT, SAT. Warm pigment flows right from CAT into SAT and remains there."></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+</div>
+<script src="../lib/brush.js"></script>
+<script>
+const started = performance.now();
+const W = 640, H = 400, DPR = 2, CYCLE = 10;
+const PAPER = '#fafaf9', INK = '#4a6a8f', DEEP = '#1f4f8f', SKY = '#6e9ece', PALE = '#b6c2d2', WARM = '#c96c3e';
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+const paint = brush.createCanvas(W, H, { pixelDensity: DPR, id: 'paint' });
+brush.angleMode(brush.DEGREES); brush.scaleBrushes(1.2); brush.noiseSeed(73);
+brush.addField('downstream', (t, field) => {
+  for (let x = 0; x < field.length; x++) for (let y = 0; y < field[x].length; y++)
+    field[x][y] = 5 + 9 * Math.sin(x * 0.47 + y * 0.22);
+  return field;
+});
+let seed = 73;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const smooth = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
+const layers = [];
+function layer(at, duration, bounds, draw) { layers.push({ at, duration, bounds, draw, image: null }); }
+function pool(x, y, rx, ry, phase) {
+  const points = [];
+  for (let i = 0; i < 32; i++) {
+    const a = i / 32 * Math.PI * 2;
+    const r = 1 + 0.09 * Math.sin(a * 3 + phase) + 0.045 * Math.sin(a * 7 + phase * 2);
+    points.push([x + rx * r * Math.cos(a), y + ry * r * Math.sin(a)]);
+  }
+  brush.polygon(points);
+}
+function wet(color, opacity, bleed = 0.22) {
+  brush.noStroke(); brush.noHatch(); brush.noField();
+  brush.fill(color, opacity); brush.fillBleed(bleed, 'out'); brush.fillTexture(0.85, 0.35, false);
+}
+const words = [{ word: 'THE', x: 132, y: 195 }, { word: 'CAT', x: 310, y: 198 }, { word: 'SAT', x: 502, y: 196 }];
+words.forEach((w, i) => {
+  layer(-1 + i * 0.25, 1.25, [w.x - 89, 119, 178, 158], () => {
+    wet(SKY, 170); pool(w.x, w.y, 66 + i * 3, 43, 1 + i);
+    wet(DEEP, 190, 0.22); pool(w.x - 4, w.y + 2, 59 + i * 2, 36, 3 + i);
+    wet(DEEP, 135, 0.18); pool(w.x + 9, w.y - 3, 42, 30, 4 + i);
+    wet(INK, 65); pool(w.x - 24, w.y - 17, 30, 16, 7 + i);
+    if (!i) {
+      brush.noFill(); brush.hatchStyle('HB', PALE, 0.065); brush.hatch(3.5, 68, { rand: 0.5 });
+      pool(w.x - 9, w.y + 26, 37, 5, 3); brush.noHatch();
+    }
+  });
+});
+// A faint blue inheritance precedes the more visible CAT contribution.
+layer(0.7, 1.8, [178, 159, 109, 76], () => {
+  brush.noFill(); brush.set('HB', PALE, 0.12); brush.field('downstream');
+  brush.flowLine(202, 188, 49, 0);
+  wet(SKY, 55); pool(257, 190, 15, 19, 5);
+});
+layer(2.0, 1.0, [338, 180, 57, 64], () => {
+  wet(WARM, 155, 0.32); pool(359, 211, 12, 16, 4);
+  wet(WARM, 100); pool(363, 209, 8, 11, 7);
+});
+// Cached deposits reveal smoothly and remain for the rest of the cycle.
+for (let i = 0; i < 8; i++) {
+  const x = 369 + i * 12, y = 212 + Math.sin(i * 0.6) * 4;
+  layer(2.7 + i * 0.30, 0.85, [x - 14, y - 23, 53, 47], () => {
+    wet(WARM, 110 + (i > 5 ? 10 : 0), 0.36); pool(x + 3, y, 13, 4.6 + i * 0.32, i + 3);
+    brush.noFill(); brush.field('downstream'); brush.set('charcoal', WARM, 0.065);
+    brush.flowLine(x - 5, y + Math.sin(i) * 1.2, 13, 0);
+    brush.noField();
+  });
+}
+layer(4.9, 1.6, [428, 170, 88, 87], () => {
+  wet(WARM, 135, 0.36); pool(468, 215, 23, 22, 6);
+  wet(WARM, 92, 0.24); pool(477, 211, 18, 19, 2);
+});
+layer(6.0, 1.8, [449, 177, 99, 81], () => {
+  wet(WARM, 85, 0.26); pool(492, 222, 24, 12, 5);
+  wet(WARM, 65, 0.16); pool(480, 222, 13, 10, 8);
+});
+layer(7.1, 1.2, [447, 206, 82, 48], () => {
+  brush.noFill(); brush.noStroke(); brush.noField();
+  brush.hatchStyle('HB', PALE, 0.065); brush.hatch(3.5, 62, { rand: 0.55, gradient: 0.6 });
+  pool(489, 229, 25, 4, 3); brush.noHatch();
+});
+layers.sort((a, b) => a.at - b.at);
+function prepare(l, i) {
+  if (l.image) return;
+  brush.clear('#ffffff'); brush.seed(710 + i * 31); brush.noiseSeed(73);
+  brush.push(); brush.translate(-W / 2, -H / 2); l.draw(); brush.pop(); brush.render();
+  const [x, y, w, h] = l.bounds;
+  l.image = document.createElement('canvas'); l.image.width = w * DPR; l.image.height = h * DPR;
+  l.image.getContext('2d').drawImage(paint, x * DPR, y * DPR, w * DPR, h * DPR, 0, 0, w * DPR, h * DPR);
+}
+// Replay exactly the same 1/30-second schedule for seeking and live playback.
+let step = -31;
+function advance(t) {
+  const stop = Math.floor(t * 30);
+  for (; step <= stop; step++) for (let i = 0; i < layers.length; i++)
+    if (layers[i].at <= step / 30) prepare(layers[i], i);
+}
+const tooth = document.createElement('canvas'); tooth.width = tooth.height = 128;
+const pg = tooth.getContext('2d');
+for (let i = 0; i < 1300; i++) {
+  pg.fillStyle = rnd() < 0.5 ? 'rgba(74,106,143,0.025)' : 'rgba(255,255,255,0.24)';
+  pg.fillRect(rnd() * 128, rnd() * 128, 0.4 + rnd() * 0.7, 0.5 + rnd());
+}
+const grain = g.createPattern(tooth, 'repeat');
+function draw(t) {
+  advance(t); g.clearRect(0, 0, W, H);
+  g.fillStyle = PAPER; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'multiply';
+  const fade = smooth(t / 0.7) * (1 - smooth((t - 9.2) / 0.8));
+  for (const l of layers) if (l.image) {
+    g.globalAlpha = fade * smooth((t - l.at) / l.duration);
+    g.drawImage(l.image, ...l.bounds);
+  }
+  // Letter silhouettes reserve clean paper through every glaze.
+  g.globalAlpha = 1; g.globalCompositeOperation = 'destination-out';
+  g.font = '700 30px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const w of words) g.fillText(w.word, w.x, w.y + 1);
+  g.globalCompositeOperation = 'destination-over'; g.fillStyle = PAPER; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'source-over'; g.fillStyle = grain; g.fillRect(0, 0, W, H);
+  brush.render(); window.__t = t;
+}
+const query = new URLSearchParams(location.search);
+if (query.has('t')) {
+  const t = Number(query.get('t')); draw(Number.isFinite(t) ? ((t % CYCLE) + CYCLE) % CYCLE : 0);
+  window.__paintMs = performance.now() - started;
+  document.documentElement.dataset.paintMs = window.__paintMs.toFixed(1);
+} else {
+  const epoch = performance.now();
+  function frame(now) { draw(((now - epoch) / 1000) % CYCLE); requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

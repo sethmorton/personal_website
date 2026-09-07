@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Shape of Inference — springs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { position: relative; width: 1080px; height: 1080px; overflow: hidden; }
+  canvas, .card, #fade { position: absolute; left: 0; top: 0; }
+  canvas { width: 1080px; height: 1080px; }
+  .card { inset: 0; display: grid; place-content: center; text-align: center; opacity: 0; }
+  h1 { margin: 0; font-family: 'Literata', Georgia, serif; font-weight: 400; font-optical-sizing: auto; font-size: 64px; line-height: 1.1; color: #1f4f8f; }
+  .card p { margin: 30px 0 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 18px; letter-spacing: 0.3em; text-indent: 0.3em; color: #1f4f8f; opacity: 0; }
+  #fade { inset: 0; background: #fafaf9; opacity: 0; }
+</style>
+</head>
+<body>
+<canvas id="paper"></canvas>
+<canvas id="scene"></canvas>
+<canvas id="rim"></canvas>
+<div class="card" id="title"><h1>The Shape of Inference</h1><p>sethmorton.com</p></div>
+<div id="fade"></div>
+<script>
+const W = 1080, H = 1080, CX = 540, CY = 540, DPR = 2;
+const R = 450, EDGE = 12;                                        // eyepiece hole
+const $ = id => document.getElementById(id);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const lerp = (a, b, u) => a + (b - a) * u;
+const DEEP = [40, 91, 181], INK = [31, 79, 143], TEAL = [19, 155, 152], VIOLET = [117, 73, 181], GOLD = [230, 170, 50], WARM = [226, 59, 42];
+const rgba = (a, al) => `rgba(${a[0]},${a[1]},${a[2]},${al.toFixed(3)})`;
+const mix = (a, b, t) => `rgb(${a[0] + (b[0] - a[0]) * t | 0},${a[1] + (b[1] - a[1]) * t | 0},${a[2] + (b[2] - a[2]) * t | 0})`;
+const hash = n => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+
+// Storyboard (seconds). Black, eyepiece on the chain and the mesh, pull at 1.5, notes hop, iris open at 5, mesh drifts home, title.
+const T = { cut: 0.4, pull: 1.5, note: 1.9, hop: 0.7, flight: 0.5, iris: 5.0, irisDur: 0.8, drift0: 5.2, drift1: 6.8,
+  meshOut0: 8.7, meshOut1: 9.6, title: 9.4, url: 10.2, fade: 11.3, end: 12.0 };
+window.DURATION = T.end;
+
+// ---- paper (same grain as the essay figures) and the eyepiece rim, both built once ----
+let seed = 977; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+{
+  const c = $('paper'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fafaf9'; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'multiply'; g.fillStyle = '#4a6a8f';
+  for (let j = 0; j < W * H * 0.057; j++) {
+    g.globalAlpha = (8 + rnd() * 4) / 255;
+    const r = .12 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .55;
+    g.beginPath(); g.arc(rnd() * W, rnd() * H, r, 0, Math.PI * 2); g.fill();
+  }
+}
+{
+  const c = $('rim'); c.width = W; c.height = H;
+  const g = c.getContext('2d'), img = g.createImageData(W, H), px = img.data;
+  for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i += 4) {
+    const d = Math.hypot(x - CX, y - CY), hole = ease((d - (R - EDGE)) / EDGE);
+    if (hole === 0) continue;
+    const ring = 9 * Math.exp(-(((d - R - 7) / 11) ** 2));
+    const weave = 2.5 * (Math.sin(x * 0.9) + Math.sin(y * 0.9));
+    const v = (17 + weave + (rnd() - 0.5) * 22 - ring) * (1 - 0.45 * clamp((d - R) / (1.4 * R)));
+    px[i] = px[i + 1] = px[i + 2] = Math.max(0, v); px[i + 3] = 255 * hole;
+  }
+  g.putImageData(img, 0, 0);
+}
+
+// ---- the mesh: same seed, layout and triangulation as the essay's springs figure (panel-local, 320x400) ----
+seed = 184; for (let i = 0; i < 8; i++) rnd();
+const N = 14, ox = new Float32Array(N), oy = new Float32Array(N);
+for (let i = 0; i < N; i++) {
+  let x = 0, y = 0;
+  for (let k = 0; k < 300; k++) {
+    x = 44 + rnd() * 232; y = 60 + rnd() * 280; let ok = true;
+    for (let j = 0; j < i; j++) if (Math.hypot(x - ox[j], y - oy[j]) < 58) ok = false;
+    if (ok) break;
+  }
+  ox[i] = x; oy[i] = y; rnd();
+}
+const key = (a, b) => a < b ? a * 32 + b : b * 32 + a, cc = [0, 0, 0];
+function circ(t, X, Y) {
+  const ax = X[t[0]], ay = Y[t[0]], bx = X[t[1]], by = Y[t[1]], cx = X[t[2]], cy = Y[t[2]];
+  const d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by)), a2 = ax * ax + ay * ay, b2 = bx * bx + by * by, c2 = cx * cx + cy * cy;
+  cc[0] = (a2 * (by - cy) + b2 * (cy - ay) + c2 * (ay - by)) / d; cc[1] = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d;
+  cc[2] = Math.hypot(ax - cc[0], ay - cc[1]);
+}
+const E = [], faces = [];
+{
+  const X = Array.from(ox), Y = Array.from(oy); X.push(-1e5, 1e5, 0); Y.push(-1e5, -1e5, 1e5);
+  let tris = [[N, N + 1, N + 2]];
+  for (let i = 0; i < N; i++) {
+    const bad = [], cnt = new Map();
+    for (const t of tris) { circ(t, X, Y); if (Math.hypot(X[i] - cc[0], Y[i] - cc[1]) < cc[2]) bad.push(t); }
+    for (const t of bad) for (let k = 0; k < 3; k++) { const e = key(t[k], t[(k + 1) % 3]); cnt.set(e, (cnt.get(e) || 0) + 1); }
+    tris = tris.filter(t => !bad.includes(t));
+    for (const [e, n] of cnt) if (n === 1) tris.push([e >> 5, e & 31, i]);
+  }
+  const seen = new Set();
+  for (const t of tris) if (t.every(i => i < N)) faces.push({ nodes: t });
+  for (const t of tris) if (t[0] < N && t[1] < N && t[2] < N) for (let k = 0; k < 3; k++) {
+    const a = t[k], b = t[(k + 1) % 3], kk = key(a, b); if (seen.has(kk)) continue; seen.add(kk);
+    const rest = Math.hypot(ox[a] - ox[b], oy[a] - oy[b]);
+    E.push({ a: Math.min(a, b), b: Math.max(a, b), rest, L0: rest, strain: 0 });
+  }
+}
+for (const face of faces) face.edges = face.nodes.map((a, k) => E.find(e => key(e.a, e.b) === key(a, face.nodes[(k + 1) % 3])));
+
+// ---- the discovery: one node is pulled 56 px and stays ----
+const moved = rnd() * N | 0;
+let mx = ox[moved], my = oy[moved];
+for (let k = 0; k < 80; k++) {
+  const a = rnd() * 6.283, x = ox[moved] + Math.cos(a) * 56, y = oy[moved] + Math.sin(a) * 56;
+  if (x < 34 || x > 286 || y < 54 || y > 346) continue;
+  let ok = true; for (let j = 0; j < N; j++) if (j !== moved && Math.hypot(x - ox[j], y - oy[j]) < 34) ok = false;
+  if (ok) { mx = x; my = y; break; }
+}
+const pullU = t => ease((t - T.pull) / 1.1);
+
+// ---- right: overdamped springs along the mesh, rest lengths that accept the new shape. Deterministic in t. ----
+const K = 3.2, ACCEPT = 0.4;
+const rx = Float32Array.from(ox), ry = Float32Array.from(oy), fx = new Float32Array(N), fy = new Float32Array(N);
+let simT = 0;
+function step(dt) {
+  fx.fill(0); fy.fill(0);
+  for (const e of E) {
+    const dx = rx[e.b] - rx[e.a], dy = ry[e.b] - ry[e.a], L = Math.hypot(dx, dy) || 1, f = K * (L - e.L0) / L;
+    fx[e.a] += f * dx; fy[e.a] += f * dy; fx[e.b] -= f * dx; fy[e.b] -= f * dy;
+    e.strain = (L - e.L0) / e.L0;
+    e.L0 += (L - e.L0) * ACCEPT * dt;
+  }
+  const u = pullU(simT);
+  for (let i = 0; i < N; i++) {
+    if (i === moved) { rx[i] = lerp(ox[i], mx, u); ry[i] = lerp(oy[i], my, u); continue; }
+    rx[i] += fx[i] * dt; ry[i] += fy[i] * dt;
+  }
+}
+function simulate(t) {
+  if (t < simT) { rx.set(ox); ry.set(oy); for (const e of E) { e.L0 = e.rest; e.strain = 0; } simT = 0; }
+  while (simT < t - 1e-6) { const dt = Math.min(1 / 120, t - simT); step(dt); simT += dt; }
+}
+
+// ---- pigment (screen space) ----
+const scene = $('scene'); scene.width = W * DPR; scene.height = H * DPR;
+const g = scene.getContext('2d');
+const flecks = Array.from({ length: 256 }, (_, i) => ({
+  offset: (hash(i + 300) + hash(i + 600) - 1), r: 0.23 + hash(i + 900) * 0.42, u: Math.sqrt(hash(i + 1200)), v: hash(i + 1500)
+}));
+function grain(x, y, r) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+function inkEdge(x1, y1, x2, y2, width, h) {
+  if (width <= 0) return;
+  const dx = x2 - x1, dy = y2 - y1, length = Math.hypot(dx, dy) || 1;
+  const n = Math.min(640, Math.max(12, Math.ceil(length * 2.8))), radiusScale = Math.sqrt(width);
+  g.beginPath();
+  for (let k = 0; k < n; k++) {
+    const p = flecks[(k + h) % 256], t = (k + p.v) / n;
+    const drift = Math.sin(t * 9 + h) * Math.sin(t * Math.PI) * 0.45 * radiusScale;
+    const spread = p.offset * width + drift, x = x1 + dx * t - dy / length * spread, y = y1 + dy * t + dx / length * spread;
+    const r = p.r * radiusScale;
+    g.moveTo(x + r, y); g.arc(x, y, r, 0, Math.PI * 2);
+  }
+  g.fill();
+}
+function inkNode(x, y, color, alpha, id, scale) {
+  g.fillStyle = rgba(color, alpha * 0.1); grain(x, y, 5 * scale);
+  g.fillStyle = rgba(color, alpha * 0.75); grain(x, y, 1.5 * scale);
+  g.fillStyle = rgba(color, alpha);
+  g.beginPath();
+  for (let k = 0; k < 42; k++) {
+    const p = flecks[(id * 13 + k) % 256], a = p.v * Math.PI * 2, spread = p.u * 3.5 * scale;
+    const xx = x + Math.cos(a) * spread, yy = y + Math.sin(a) * spread, r = p.r * scale;
+    g.moveTo(xx + r, yy); g.arc(xx, yy, r, 0, Math.PI * 2);
+  }
+  g.fill();
+}
+
+// ---- right: the whole mesh, drawn at scale S around (cx, cy) ----
+function mesh(t, cx, cy, S, alpha) {
+  const px = x => cx + (x - 160) * S, py = y => cy + (y - 200) * S, age = t - T.pull;
+  for (const face of faces) {
+    const [a, b, c] = face.nodes, strain = (face.edges[0].strain + face.edges[1].strain + face.edges[2].strain) / 3;
+    const tension = Math.min(1, Math.abs(strain) * 8), color = strain < -0.015 ? VIOLET : TEAL;
+    g.fillStyle = rgba(color, (0.065 + tension * 0.11) * alpha);
+    g.beginPath(); g.moveTo(px(rx[a]), py(ry[a])); g.lineTo(px(rx[b]), py(ry[b])); g.lineTo(px(rx[c]), py(ry[c])); g.closePath(); g.fill();
+    g.fillStyle = rgba(color, (0.1 + tension * 0.15) * alpha); g.beginPath();
+    for (const p of flecks) {
+      const u = 1 - p.u, v = p.u * (1 - p.v), w = p.u * p.v;
+      const x = px(rx[a] * u + rx[b] * v + rx[c] * w), y = py(ry[a] * u + ry[b] * v + ry[c] * w), r = p.r * 1.5;
+      g.moveTo(x + r, y); g.arc(x, y, r, 0, Math.PI * 2);
+    }
+    g.fill();
+  }
+  for (const e of E) {
+    const h = Math.min(1, Math.abs(e.strain) * 7);
+    g.fillStyle = rgba(e.strain < 0 ? VIOLET.map((v, i) => lerp(DEEP[i], v, h * 0.8)) : TEAL.map((v, i) => lerp(DEEP[i], v, h * 0.8)), alpha);
+    inkEdge(px(rx[e.a]), py(ry[e.a]), px(rx[e.b]), py(ry[e.b]), 2.3 + h * 2, key(e.a, e.b));
+  }
+  for (let i = 0; i < N; i++) inkNode(px(rx[i]), py(ry[i]), i === moved && age > 0 && age < 2.5 ? WARM : DEEP, 0.95 * alpha, i, 1.9);
+  if (age > 0 && age < 2.5) {
+    g.fillStyle = rgba(GOLD, (1 - age / 2.5) * alpha); const r = (5 + age * 2.2) * 1.9;
+    for (let k = 0; k < 5; k++) { const a = k * 6.283 / 5 + t * 0.5; grain(px(rx[moved]) + Math.cos(a) * r, py(ry[moved]) + Math.sin(a) * r, 1.3); }
+  }
+}
+
+// ---- left: five ink nodes in a column; the note hops down them, each hop leaves a smaller, fainter copy of the structure ----
+const AX = 232, SX = 348, DY = 152, Y0 = CY - 2 * DY, MS = 0.5;
+const KEEP = [1, .85, .65, .5, .35], EKEEP = [1, .9, .75, .6, .45], ERR = [0, 3, 6, 9, 12], ALPHA = [.92, .66, .48, .34, .24];
+const arrive = h => T.note + h * T.hop + T.flight;                // note h lands on node h+1
+const has = (k, i) => k === 0 || i === moved || hash(k * 97 + i) < KEEP[k];
+function chain(t, fade) {
+  for (let k = 0; k < 5; k++) {
+    const y = Y0 + k * DY, u = k === 0 ? 1 : ease((t - arrive(k - 1)) / 0.4);
+    inkNode(AX, y, INK, 0.9 * fade, 100 + k, 2.2);
+    if (u <= 0) continue;
+    const S = MS * (0.85 + 0.15 * u), alpha = ALPHA[k] * u * fade;
+    const px = i => SX + ((i === moved ? lerp(ox[i], mx, k ? 1 : pullU(t)) : ox[i]) + Math.sin(k * 3.1 + i * 7.1) * ERR[k] - 160) * S;
+    const py = i => y + ((i === moved ? lerp(oy[i], my, k ? 1 : pullU(t)) : oy[i]) + Math.cos(k * 1.3 + i * 3.7) * ERR[k] - 200) * S;
+    const kept = E.filter(e => has(k, e.a) && has(k, e.b) && !(k && hash(k * 53 + key(e.a, e.b)) > EKEEP[k]));
+    for (const e of kept) {
+      const touches = e.a === moved || e.b === moved;
+      g.fillStyle = rgba(touches ? GOLD : DEEP, alpha);
+      inkEdge(px(e.a), py(e.a), px(e.b), py(e.b), touches ? 1.4 : 1.05, key(e.a, e.b));
+    }
+    for (let i = 0; i < N; i++) if (i === moved || (has(k, i) && (k < 2 || kept.some(e => e.a === i || e.b === i)))) inkNode(px(i), py(i), i === moved ? WARM : DEEP, alpha, i, 0.85);
+  }
+  for (let h = 0; h < 4; h++) {
+    const u = (t - (T.note + h * T.hop)) / T.flight; if (u < 0) continue;
+    const e = ease(u), y0 = Y0 + h * DY, y1 = y0 + DY, trail = u <= 1 ? 0.45 : 0.45 * clamp(1 - (u - 1) * T.flight / 0.7);
+    if (trail <= 0) continue;
+    const arc = s => [AX - Math.sin(s * Math.PI) * 34, y0 + (y1 - y0) * s];
+    g.fillStyle = rgba(GOLD, trail * fade); g.beginPath();
+    for (let s = 0; s < e; s += 0.008) { const [xx, yy] = arc(s), r = 0.6 + 0.4 * Math.sin(s * 173); g.moveTo(xx + r, yy); g.arc(xx, yy, r, 0, Math.PI * 2); }
+    g.fill();
+    if (u > 1) continue;
+    const [x, y] = arc(e), n = 7 - h;
+    for (let j = 0; j < n; j++) {
+      const a = j * 6.283 / n + t * 1.3;
+      g.fillStyle = rgba(j % 3 ? GOLD : WARM, 0.9 * fade); grain(x + Math.cos(a) * 6.5, y + Math.sin(a) * 4.5, 2.1);
+    }
+  }
+}
+
+window.render = t => {
+  simulate(t);
+  g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
+  if (t < T.cut) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); }
+  else {
+    const chainA = 1 - ease((t - T.iris) / T.irisDur);
+    if (chainA > 0) chain(t, chainA);
+    const d = ease((t - T.drift0) / (T.drift1 - T.drift0)), breathe = 1 + 0.004 * Math.sin((t - T.drift1) * 2.1) * ease((t - T.drift1) / 1.5);
+    const meshA = 1 - ease((t - T.meshOut0) / (T.meshOut1 - T.meshOut0));
+    if (meshA > 0) mesh(t, lerp(668, CX, d), CY, lerp(1.85, 2.05, d) * breathe, meshA);
+  }
+  const rim = $('rim'), f = 1 + (Math.hypot(CX, CY) + 2 * EDGE - R) / R * ease((t - T.iris) / T.irisDur);
+  rim.style.transform = `scale(${f.toFixed(4)})`;
+  rim.style.opacity = t < T.iris + T.irisDur ? 1 : 0;
+  const title = $('title'), tIn = ease((t - T.title) / 0.6);
+  title.style.opacity = tIn.toFixed(3);
+  title.style.transform = `translateY(${(6 * (1 - tIn)).toFixed(2)}px)`;
+  title.lastElementChild.style.opacity = ease((t - T.url) / 0.5).toFixed(3);
+  $('fade').style.opacity = ease((t - T.fade) / (T.end - T.fade)).toFixed(3);
+};
+
+window.ready = (async () => {
+  await Promise.all([document.fonts.load('400 64px Literata'), document.fonts.load('18px "IBM Plex Mono"')]);
+  const t = Number(new URLSearchParams(location.search).get('t'));
+  render(t || 0);
+  return { duration: T.end, moved, fonts: [document.fonts.check('400 64px Literata'), document.fonts.check('18px "IBM Plex Mono"')] };
+})();
+</script>
+</body>
+</html>

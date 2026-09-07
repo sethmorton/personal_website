@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="One ink current flows through THE, CAT, SAT. Warm pigment from CAT travels downstream and enriches SAT; THE stays blue."></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2, CYCLE = 11;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 83;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { const u = clamp(x); return u * u * (3 - 2 * u); };
+const INK = '#4a6a8f', DEEP = '#1f4f8f', PALE = '#b6c2d2', WARM = '#c96c3e';
+const pools = [124, 316, 510], words = ['THE', 'CAT', 'SAT'];
+const N = 721, cy = new Float32Array(N), hw = new Float32Array(N), age = new Float32Array(N);
+for (let i = 0; i < N; i++) {
+  const x = i - 40;
+  cy[i] = 200 - 24 * Math.cos((x - 124) * Math.PI / 192) + 5 * Math.sin(x * 0.032);
+  let width = 15;
+  for (const p of pools) width += 31 * Math.exp(-Math.pow((x - p) / 58, 2));
+  hw[i] = width;
+  if (i) age[i] = age[i - 1] + width / 1700;
+}
+const total = age[N - 1], sourceAge = age[356];
+const islands = [];
+g.font = '700 33px Georgia, serif';
+for (let k = 0; k < 3; k++) {
+  let x = pools[k] - g.measureText(words[k]).width / 2;
+  for (const letter of words[k]) {
+    const width = g.measureText(letter).width;
+    islands.push({ x: x + width / 2, y: cy[pools[k] + 40], width: width * 0.85 });
+    x += width;
+  }
+}
+function indexAt(a) {
+  let lo = 0, hi = N - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (age[mid] < a) lo = mid; else hi = mid; }
+  return lo + (a - age[lo]) / (age[hi] - age[lo]);
+}
+function heightAt(i, lane, phase, comb = true) {
+  const j = Math.max(0, Math.min(N - 2, i | 0)), u = i - j;
+  const width = hw[j] + (hw[j + 1] - hw[j]) * u;
+  const center = cy[j] + (cy[j + 1] - cy[j]) * u;
+  const x = i - 40;
+  let y = center + lane * width + (1 - lane * lane) * (3.2 * Math.sin(x * 0.045 + phase) + 1.5 * Math.sin(x * 0.13 + phase));
+  if (comb) for (const island of islands) {
+    const dx = (x - island.x) / island.width, dy = y - island.y;
+    if (Math.abs(dx) < 2 && Math.abs(dy) < 28) {
+      y += (dy < 0 ? -1 : 1) * 6.5 * Math.exp(-dx * dx * 2) * Math.pow(1 - Math.abs(dy) / 28, 2);
+    }
+  }
+  return y;
+}
+function layer() {
+  const canvas = document.createElement('canvas'); canvas.width = W * DPR; canvas.height = H * DPR;
+  const ctx = canvas.getContext('2d'); ctx.scale(DPR, DPR); return [canvas, ctx];
+}
+const [bed, b] = layer(), [stain, s] = layer(), [reserves, r] = layer();
+// The pigment bed is cached; live threads carry motion over its uneven deposits.
+for (let n = 0; n < 19000; n++) {
+  const i = rnd() * (N - 1), lane = (rnd() * 2 - 1) * (0.85 + rnd() * 0.22);
+  const y = heightAt(i, lane, 0, false), radius = 0.3 + rnd() * 1.8;
+  b.globalAlpha = (0.09 + rnd() * 0.15) * (1 - Math.pow(Math.abs(lane) / 1.08, 5));
+  b.fillStyle = n % 4 ? INK : DEEP;
+  b.beginPath(); b.ellipse(i - 40, y, radius * (0.8 + rnd()), radius, 0, 0, Math.PI * 2); b.fill();
+}
+for (let n = 0; n < 140; n++) {
+  const lane = (n / 139 * 2 - 1) * 0.96, phase = rnd() * 6.28;
+  b.strokeStyle = n % 3 ? INK : DEEP; b.lineWidth = 0.3 + rnd() * 0.55;
+  b.globalAlpha = 0.1 + rnd() * 0.13; b.beginPath();
+  for (let i = 0; i < N; i += 2) {
+    const y = heightAt(i, lane, phase); if (!i) b.moveTo(i - 40, y); else b.lineTo(i - 40, y);
+  }
+  b.stroke();
+}
+for (let n = 0; n < 4800; n++) {
+  const x = 500 + rnd() * 82, i = x + 40, lane = rnd() * 1.8 - 0.9;
+  const weight = Math.exp(-Math.pow((x - 542) / 29, 2)) * (0.3 + 0.7 * Math.abs(lane));
+  s.globalAlpha = weight * (0.08 + rnd() * 0.21); s.fillStyle = n % 5 ? WARM : DEEP;
+  s.beginPath(); s.arc(x, heightAt(i, lane, 0), 0.35 + rnd() * 1.55, 0, Math.PI * 2); s.fill();
+}
+r.font = '700 33px Georgia, serif'; r.textAlign = 'center'; r.textBaseline = 'middle'; r.fillStyle = '#fafaf9';
+for (let k = 0; k < 3; k++) r.fillText(words[k], pools[k], cy[pools[k] + 40] + 1);
+const threads = Array.from({ length: 380 }, () => ({
+  lane: rnd() * 1.88 - 0.94, phase: rnd() * 6.28, start: rnd() * total,
+  speed: 0.86 + rnd() * 0.28, length: 0.22 + rnd() * 0.48,
+  width: 0.3 + rnd() * 0.6, alpha: 0.2 + rnd() * 0.38, warm: rnd() < 0.18
+}));
+const dust = Array.from({ length: 95 }, (_, n) => ({ lane: n < 32 ? -1.1 - rnd() * 0.35 : rnd() * 1.8 - 0.9, start: rnd() * total, phase: rnd() * 6.28, radius: 0.35 + rnd() * 0.55 }));
+function trace(thread, head, color, alpha, warmOnly, t) {
+  g.strokeStyle = color; g.globalAlpha = alpha; g.lineWidth = thread.width; g.beginPath();
+  let pen = false;
+  for (let k = 0; k <= 18; k++) {
+    const a = head - thread.length + thread.length * k / 18;
+    if (a < 0 || a > total) { pen = false; continue; }
+    const i = indexAt(a), x = i - 40;
+    if (warmOnly && (x < 316 || t < 2.25 + (a - sourceAge) / thread.speed)) { pen = false; continue; }
+    const y = heightAt(i, thread.lane, thread.phase);
+    if (!pen) g.moveTo(x, y); else g.lineTo(x, y); pen = true;
+  }
+  g.stroke();
+}
+function draw(seconds) {
+  const t = ((seconds % CYCLE) + CYCLE) % CYCLE;
+  const fade = ease(t / 0.7) * (1 - ease((t - 10) / 1));
+  g.globalAlpha = 1; g.fillStyle = '#fafaf9'; g.fillRect(0, 0, W, H);
+  g.globalAlpha = fade; g.drawImage(bed, 0, 0, W, H);
+  g.globalAlpha = fade * ease((t - 5.5) / 3.8); g.drawImage(stain, 0, 0, W, H);
+  g.lineCap = 'round';
+  for (const thread of threads) {
+    const head = (thread.start + t * thread.speed) % (total + thread.length);
+    trace(thread, head, DEEP, fade * thread.alpha, false, t);
+    if (thread.warm) trace(thread, head, WARM, fade * 0.8, true, t);
+  }
+  g.fillStyle = '#fafaf9'; g.globalAlpha = fade * 0.6;
+  for (const d of dust) {
+    const i = indexAt((d.start + t) % total);
+    g.fillStyle = d.lane < -1 ? PALE : '#fafaf9';
+    g.beginPath(); g.arc(i - 40, heightAt(i, d.lane, d.phase), d.radius, 0, Math.PI * 2); g.fill();
+  }
+  g.globalAlpha = fade; g.drawImage(reserves, 0, 0, W, H); g.globalAlpha = 1;
+  window.__t = t;
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) draw(Number(frozen) || 0);
+else {
+  const start = performance.now();
+  const frame = now => { draw((now - start) / 1000); requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

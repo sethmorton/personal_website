@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Separate contexts, retained artifacts</title>
+<style>
+  html, body { margin: 0; background: #f7f4ec }
+  body { width: 640px; height: 400px; overflow: hidden }
+  canvas { display: block; width: 640px; height: 400px }
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="A saved manuscript on the left branches into two separate loops, one teal and one violet, each holding its own attempt. Their outputs meet on the right. One is ringed in gold and flows back underneath to the saved manuscript."></canvas>
+<script>
+const W = 640, H = 400, D = 2
+const PAPER = '#f7f4ec', INK = '#252936'
+const BLUE = '#28617a', TEAL = '#6b8c88', VIOLET = '#23485f', GOLD = '#ac8b50'
+const c = document.getElementById('c')
+c.width = W * D
+c.height = H * D
+const g = c.getContext('2d')
+g.scale(D, D)
+const clamp = x => Math.max(0, Math.min(1, x))
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x) }
+let seed = 419
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647
+const marks = []
+function grain(ctx, x, y, r) {
+  ctx.moveTo(x + r, y)
+  ctx.arc(x, y, r, 0, Math.PI * 2)
+}
+const paper = document.createElement('canvas')
+paper.width = W * D
+paper.height = H * D
+const pg = paper.getContext('2d')
+pg.scale(D, D)
+pg.fillStyle = PAPER
+pg.fillRect(0, 0, W, H)
+pg.fillStyle = INK
+pg.globalAlpha = .035
+pg.beginPath()
+for (let i = 0; i < 10500; i++) grain(pg, rnd() * W, rnd() * H, .13 + rnd() * .34)
+pg.fill()
+
+// Pigment is sampled once. Time reveals the same grains in every rendering.
+function stroke(at, color, start, duration, width = 1, alpha = .8) {
+  const dots = []
+  for (let i = 0; i < 480; i++) {
+    const u = i / 479, p = at(u)
+    dots.push({ x: p[0] + (rnd() - .5) * width * 1.8,
+      y: p[1] + (rnd() - .5) * width * 1.8,
+      r: .15 + rnd() * .34 * Math.sqrt(width), u })
+  }
+  marks.push({ dots, color, start, duration, alpha })
+}
+function line(x, y, xx, yy, color, start, duration, width = 1, alpha = .8) {
+  stroke(u => [x + (xx - x) * u, y + (yy - y) * u + Math.sin(u * 9) * .25],
+    color, start, duration, width, alpha)
+}
+function curve([a, b, c, d], color, start, duration, width = .8, alpha = .6) {
+  stroke(u => {
+    const v = 1 - u
+    return [v ** 3 * a[0] + 3 * v * v * u * b[0] + 3 * v * u * u * c[0] + u ** 3 * d[0],
+      v ** 3 * a[1] + 3 * v * v * u * b[1] + 3 * v * u * u * c[1] + u ** 3 * d[1]]
+  }, color, start, duration, width, alpha)
+}
+function sheet(x, y, w, h, color, start, rows) {
+  line(x, y, x + w, y + .5, color, start, .25, .5, .3)
+  line(x, y, x - .6, y + h, color, start, .5, .5, .3)
+  line(x - .6, y + h, x + w, y + h - .4, color, start + .25, .3, .5, .3)
+  line(x + w, y + .5, x + w, y + h - .4, color, start + .2, .35, .5, .25)
+  const gap = (h - 14) / rows
+  for (let row = 0; row < rows; row++) {
+    const yy = y + 9 + row * gap, length = (w - 14) * (.6 + rnd() * .4)
+    line(x + 7, yy, x + 7 + length, yy + (rnd() - .5) * .6, color,
+      start + .2 + row * .1, .45, row ? .9 : 1.3, row ? .55 : .75)
+  }
+}
+function loop(cx, cy, color, start) {
+  stroke(u => {
+    const a = -.4 + u * Math.PI * 2
+    return [cx + Math.cos(a) * (76 + Math.sin(a * 3) * 1.5), cy + Math.sin(a) * (46 + Math.cos(a * 4) * 1.5)]
+  }, color, start, 1.8, 1, .55)
+}
+
+sheet(72, 152, 84, 100, BLUE, 0, 7)
+curve([[160, 190], [212, 186], [214, 124], [254, 118]], BLUE, 1.1, 1.2)
+curve([[160, 214], [212, 218], [214, 276], [254, 282]], BLUE, 1.1, 1.2)
+loop(330, 118, TEAL, 2.2)
+loop(330, 282, VIOLET, 2.2)
+sheet(311, 93, 38, 50, TEAL, 3.4, 4)
+sheet(311, 257, 38, 50, VIOLET, 3.4, 4)
+curve([[406, 118], [452, 118], [468, 168], [510, 176]], TEAL, 4.6, 1.2)
+curve([[406, 282], [452, 282], [486, 226], [540, 214]], VIOLET, 4.6, 1.2)
+sheet(499, 178, 22, 32, TEAL, 5.7, 3)
+sheet(534, 178, 22, 32, VIOLET, 5.7, 3)
+stroke(u => {
+  const a = -.6 + u * Math.PI * 1.95
+  return [545 + Math.cos(a) * (23 + Math.sin(a * 3) * .8), 194 + Math.sin(a) * 29]
+}, GOLD, 6.7, 1.1, 1.1, .85)
+curve([[545, 224], [560, 330], [380, 354], [240, 350]], GOLD, 7.7, .9, .9, .75)
+curve([[240, 350], [130, 346], [113, 300], [114, 253]], GOLD, 8.5, .8, .9, .75)
+
+function draw(t) {
+  g.globalAlpha = 1
+  g.drawImage(paper, 0, 0, W, H)
+  for (const mark of marks) {
+    const progress = clamp((t - mark.start) / mark.duration)
+    if (!progress) continue
+    g.fillStyle = mark.color
+    g.globalAlpha = mark.alpha
+    g.beginPath()
+    for (const dot of mark.dots) {
+      if (dot.u > progress) break
+      grain(g, dot.x, dot.y, dot.r * ease((progress - dot.u) * 18))
+    }
+    g.fill()
+  }
+}
+const frozen = new URLSearchParams(location.search).get('t')
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
+const FINAL = 9.4
+let frame = 0
+const epoch = performance.now()
+function tick(now) {
+  const t = Math.min(FINAL, (now - epoch) / 1000)
+  draw(t)
+  if (t < FINAL && !reducedMotion.matches) frame = requestAnimationFrame(tick)
+}
+if (frozen !== null) {
+  const time = Number(frozen)
+  draw(Number.isFinite(time) ? Math.max(0, time) : 0)
+} else if (reducedMotion.matches) draw(FINAL)
+else frame = requestAnimationFrame(tick)
+reducedMotion.addEventListener('change', event => {
+  if (frozen === null && event.matches) {
+    cancelAnimationFrame(frame)
+    draw(FINAL)
+  }
+})
+</script>
+</body>
+</html>

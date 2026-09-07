@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap, #paint { display: none; }
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="One blue brook flows through THE, CAT and SAT. Warm pigment from CAT travels downstream and stains SAT; THE remains unchanged."></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+<div id="paint"></div>
+<script src="../lib/brush.js"></script>
+<script>
+const started = performance.now();
+const W = 640, H = 400, D = 2, PAPER = '#fafaf9';
+const canvas = document.getElementById('c');
+canvas.width = W * D; canvas.height = H * D;
+const g = canvas.getContext('2d'); g.scale(D, D);
+let seed = 31;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = t => Math.max(0, Math.min(1, t));
+const ease = t => { t = clamp(t); return t * t * (3 - 2 * t); };
+const centre = x => 202 + 15 * Math.sin((x - 55) / 102) - 6 * Math.sin(x / 47);
+const rocks = [128, 311, 500].map((x, k) => ({ x, y: centre(x), rx: 40 + k * 2, ry: 24, text: ['THE', 'CAT', 'SAT'][k] }));
+function lane(x, v) {
+  let y = centre(x) + v;
+  for (const s of rocks) {
+    const d = (x - s.x) / 56;
+    y += Math.sign(v || 1) * 25 * Math.exp(-d * d * 2) * Math.exp(-Math.abs(v) / 37);
+  }
+  return y;
+}
+function stone(s, inset = 0) {
+  const p = new Path2D();
+  for (let i = 0; i <= 48; i++) {
+    const a = i / 48 * Math.PI * 2;
+    const r = 1 + .043 * Math.sin(a * 5 + s.x) + .026 * Math.cos(a * 9);
+    const x = s.x + Math.cos(a) * (s.rx - inset) * r;
+    const y = s.y + Math.sin(a) * (s.ry - inset) * r;
+    if (i) p.lineTo(x, y); else p.moveTo(x, y);
+  }
+  p.closePath(); return p;
+}
+rocks.forEach(s => s.path = stone(s));
+const paint = brush.createCanvas(W, H, { pixelDensity: D, parent: '#paint' });
+brush.seed(31); brush.noiseSeed(31); brush.angleMode(brush.DEGREES);
+brush.addField('downstream', (t, f) => {
+  for (let c = 0; c < f.length; c++) for (let r = 0; r < f[0].length; r++) {
+    const x = c / (f.length - 1) * W, y = r / (f[0].length - 1) * H;
+    const v = y - centre(x);
+    f[c][r] = -Math.atan((lane(x + 2, v) - lane(x - 2, v)) / 4) * 180 / Math.PI;
+  }
+  return f;
+});
+brush.field('downstream');
+function begin() {
+  brush.clear('#ffffff'); brush.push(); brush.translate(-W / 2, -H / 2);
+  brush.noStroke(); brush.fillBleed(.055); brush.fillTexture(.65, .35, false);
+}
+function save() {
+  brush.pop(); brush.render();
+  const c = document.createElement('canvas'); c.width = W * D; c.height = H * D;
+  c.getContext('2d').drawImage(paint, 0, 0); return c;
+}
+function ribbon(x0, x1, v, half, color, opacity) {
+  const pts = [];
+  for (let x = x0; x <= x1; x += 9) pts.push([x, lane(x, v) - half * (.9 + .12 * Math.sin(x / 13))]);
+  for (let x = x1; x >= x0; x -= 9) pts.push([x, lane(x, v) + half * (.9 + .1 * Math.cos(x / 17))]);
+  brush.fill(color, opacity); brush.polygon(pts);
+}
+begin();
+ribbon(12, 629, 0, 40, '#6e9ece', 85);
+ribbon(9, 635, -14, 18, '#1f4f8f', 105);
+ribbon(10, 634, 17, 18, '#4a6a8f', 100);
+for (const s of rocks) {
+  const crescent = [];
+  for (let i = 0; i <= 20; i++) {
+    const a = -1.45 + i / 20 * 2.9;
+    crescent.push([s.x + Math.cos(a) * (s.rx + 9), s.y + Math.sin(a) * (s.ry + 5)]);
+  }
+  for (let i = 20; i >= 0; i--) {
+    const a = -1.45 + i / 20 * 2.9;
+    crescent.push([s.x + Math.cos(a) * (s.rx - 5), s.y + Math.sin(a) * (s.ry - 2)]);
+  }
+  brush.fill('#1f4f8f', 85); brush.polygon(crescent);
+}
+const water = save();
+begin(); brush.noFill();
+for (let i = 0; i < 40; i++) {
+  const x = 12 + rnd() * 570, v = (rnd() - .5) * 68;
+  brush.set('rotring', i % 3 ? '#4a6a8f' : '#1f4f8f', .23 + rnd() * .16);
+  brush.flowLine(x, lane(x, v), 18 + rnd() * 57, 0);
+}
+const hairs = save();
+begin();
+ribbon(345, 480, 2, 6, '#c96c3e', 85);
+brush.fillBleed(.07); brush.fill('#c96c3e', 105);
+brush.polygon([[453, centre(453)-15], [466, centre(470)-24], [483, centre(500)-22], [472, centre(500)], [484, centre(500)+21], [464, centre(470)+20], [454, centre(453)+7]]);
+const warmth = save();
+const dots = Array.from({ length: 730 }, () => ({ x: 12 + rnd() * 619, v: (rnd() - .5) * 85, a: .025 + rnd() * .085, r: .2 + rnd() * .6 }));
+const currents = Array.from({ length: 54 }, () => ({ phase: rnd() * 650, v: (rnd() - .5) * 63, speed: 25 + rnd() * 16, length: 6 + rnd() * 20, a: .15 + rnd() * .18 }));
+const marks = document.createElement('canvas'); marks.width = W * D; marks.height = H * D;
+const m = marks.getContext('2d'); m.scale(D,D);
+function reveal(image, front, alpha = 1, left = 0) {
+  m.clearRect(0, 0, W, H); m.globalCompositeOperation = 'source-over';
+  m.drawImage(image, 0, 0, W, H);
+  if (left) m.clearRect(0, 0, left, H);
+  m.globalCompositeOperation = 'destination-in';
+  const grad = m.createLinearGradient(front - 28, 0, front + 6, 0);
+  grad.addColorStop(0, 'white'); grad.addColorStop(1, 'transparent');
+  m.fillStyle = grad; m.fillRect(left, 0, W - left, H);
+  m.globalCompositeOperation = 'source-over';
+  g.globalAlpha = alpha; g.drawImage(marks, 0, 0, W, H); g.globalAlpha = 1;
+}
+function frame(t) {
+  t = ((t % 11) + 11) % 11; window.__t = t;
+  g.globalCompositeOperation = 'source-over'; g.fillStyle = PAPER; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'multiply';
+  const fade = 1 - ease((t - 10) / 1);
+  canvas.style.opacity = fade;
+  const front = 8 + 660 * ease(t / 3.3);
+  g.globalAlpha = .22; g.drawImage(water, 0, 0, W, H); g.globalAlpha = 1;
+  reveal(water, front, .9);
+  reveal(hairs, front - 4, .28);
+  for (const d of dots) {
+    if (d.x > front) continue;
+    g.fillStyle = `rgba(31,79,143,${d.a})`; g.beginPath();
+    g.arc(d.x, lane(d.x, d.v), d.r, 0, Math.PI * 2); g.fill();
+  }
+  const warmFront = 345 + 180 * ease((t - 3.3) / 4.4);
+  if (t > 3.3) reveal(warmth, warmFront, ease((t - 3.3) / .6), 344);
+  for (const p of currents) {
+    const x = (p.phase + t * p.speed) % 670 - 20;
+    if (x > front - 8 || x < 8) continue;
+    const warm = x > 345 && x < warmFront - 9 && Math.abs(p.v) < 13 && t > 3.7;
+    g.strokeStyle = warm ? `rgba(201,108,62,${p.a + .15})` : `rgba(31,79,143,${p.a})`;
+    g.lineWidth = warm ? .95 : .9; g.beginPath();
+    for (let j = 0; j <= 6; j++) {
+      const xx = x + j / 6 * p.length, yy = lane(xx, p.v);
+      if (j) g.lineTo(xx, yy); else g.moveTo(xx, yy);
+    }
+    g.stroke();
+  }
+  g.globalCompositeOperation = 'source-over';
+  for (const [k, s] of rocks.entries()) {
+    g.fillStyle = PAPER; g.fill(s.path);
+    if (k === 2 && t > 6.3) {
+      g.save(); g.clip(s.path);
+      const stain = g.createLinearGradient(s.x - s.rx - 2, 0, s.x - 8, 0);
+      stain.addColorStop(0, `rgba(201,108,62,${.47 * ease((t - 6.3) / 2.4)})`);
+      stain.addColorStop(1, 'rgba(201,108,62,0)');
+      g.fillStyle = stain; g.fill(s.path); g.restore();
+    }
+    g.fillStyle = '#4a6a8f'; g.font = '700 22px Georgia, serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(s.text, s.x, s.y + 1);
+  }
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) frame(Number(frozen) || 0);
+else {
+  const epoch = performance.now();
+  const tick = now => { frame((now - epoch) / 1000); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+window.__renderMs = performance.now() - started;
+</script>
+</body>
+</html>

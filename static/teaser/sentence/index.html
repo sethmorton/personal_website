@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Shape of Inference — one sentence rewrites its past</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { position: relative; width: 1080px; height: 1080px; overflow: hidden; }
+  canvas, .card, #fade { position: absolute; left: 0; top: 0; }
+  .card { inset: 0; display: grid; place-content: center; text-align: center; opacity: 0; }
+  h1 { margin: 0; font-family: 'Literata', Georgia, serif; font-weight: 400; font-optical-sizing: auto; font-size: 64px; line-height: 1.1; color: #1f4f8f; }
+  .card p { margin: 30px 0 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 18px; letter-spacing: 0.3em; text-indent: 0.3em; color: #1f4f8f; opacity: 0; }
+  #fade { inset: 0; background: #fafaf9; opacity: 0; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="card" id="title"><h1>The Shape of Inference</h1><p>sethmorton.com</p></div>
+<div id="fade"></div>
+<script>
+// One page, written forward, then restructured in both directions by a single red sentence.
+// Geometry lives in a 450-unit square scaled by K; pigment technique is static/anim/settling/manuscript.html.
+const W = 1080, U = 450, K = W / U;
+const PAPER = '#fafaf9', INK = '#4a6a8f', DEEP = '#1f4f8f', PALE = '#b6c2d2', RED = '#e23b2a';
+const RED_AT = 3.0, FIRST = 3.35, REVISION = 2.95;
+const T = { settle: 9.7, title: 10.3, url: 11.3, fade: 12.1, end: 12.8 };
+window.DURATION = T.end;
+const c = document.getElementById('c'); c.width = c.height = W;
+const g = c.getContext('2d'); g.scale(K, K);
+let seed = 731;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+function spring(age) {
+  const a = Math.max(0, age);
+  const s = 1 - Math.exp(-2.8 * a) * (Math.cos(4.1 * a) + 2.8 / 4.1 * Math.sin(4.1 * a));
+  return mix(s, 1, ease((a - 2.5) / .8));
+}
+function layer(w, h) {
+  const canvas = document.createElement('canvas'); canvas.width = Math.ceil(w * K); canvas.height = Math.ceil(h * K);
+  const ctx = canvas.getContext('2d'); ctx.scale(K, K); return { canvas, ctx };
+}
+function grain(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+
+// Paper: same grain as the essay figures, at full pixel resolution.
+const paper = document.createElement('canvas'); paper.width = paper.height = W;
+{
+  const p = paper.getContext('2d');
+  p.fillStyle = PAPER; p.fillRect(0, 0, W, W);
+  p.globalCompositeOperation = 'multiply'; p.fillStyle = INK;
+  for (let j = 0; j < W * W * .057; j++) {
+    p.globalAlpha = (8 + rnd() * 4) / 255;
+    grain(p, rnd() * W, rnd() * W, .12 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .55);
+  }
+  p.strokeStyle = PALE; p.lineWidth = .6; p.globalAlpha = .12;
+  for (let j = 0; j < 260; j++) {
+    const x = rnd() * W, y = rnd() * W;
+    p.beginPath(); p.moveTo(x, y); p.lineTo(x + 5 + rnd() * 12, y + rnd() * 4 - 2); p.stroke();
+  }
+}
+
+// [x, y, length, width, group]. Groups: 0 lead, 1-3 paragraphs above, 4 the red sentence, 5-6 paragraphs below,
+// 7 the paragraph the red sentence opens (not on the page at first).
+const rows = [
+  [72, 52, 240, 3.6, 0],
+  [83, 84, 290, 2.4, 1], [72, 97, 305, 2.2, 1], [72, 110, 298, 2.1, 1], [72, 123, 170, 2.2, 1],
+  [83, 148, 296, 2.5, 2], [72, 161, 306, 2.3, 2], [72, 174, 288, 2.2, 2], [72, 187, 210, 2.1, 2],
+  [83, 212, 300, 2.3, 3], [72, 225, 302, 2.2, 3], [72, 238, 205, 2.2, 3],
+  [84, 263, 262, 3.0, 4],
+  [83, 288, 292, 2.2, 5], [72, 301, 300, 2.1, 5], [72, 314, 180, 2.1, 5],
+  [83, 339, 298, 2.2, 6], [72, 352, 232, 2.1, 6],
+  [84, 288, 280, 2.4, 7], [72, 301, 300, 2.2, 7], [72, 314, 150, 2.2, 7]
+].map(([x, y, length, width, group], i) => {
+  const begin = group === 4 ? RED_AT : group === 7 ? (i === 20 ? FIRST + REVISION : FIRST) + .95 + (i - 18) * .2 : .06 + i * .125;
+  const segments = [];
+  for (let x = 0; x < length;) {
+    const proposed = x + 12 + rnd() * 37;
+    const end = length - proposed < 9 ? length : proposed;
+    segments.push([x, end]); x = end + 2 + rnd() * 3;
+  }
+  const dots = [];
+  for (const [a, b] of segments) for (let j = 0; j < (b - a) * 30; j++) {
+    const u = a + rnd() * (b - a), v = rnd() + rnd() + rnd() - 1.5;
+    const edge = ease((u - a) / 2) * ease((b - u) / 2);
+    const hand = u / 3.4 + i * 1.2 + .82 * Math.sin(u / 8.1 + i) + .28 * Math.sin(u / 1.7);
+    const pressure = .34 + .66 * Math.sin(hand) ** 4;
+    const spine = Math.sin(u / 18 + i) * .7 - Math.sin(hand) * width * .19;
+    dots.push([u, 10 + spine + v * width * edge * pressure, .15 + rnd() * .4, .15 + rnd() * .42]);
+  }
+  const paints = [INK, DEEP, PALE, RED].map(color => {
+    const p = layer(length + 6, 22);
+    p.ctx.fillStyle = color;
+    for (const [u, v, r, alpha] of dots) { p.ctx.globalAlpha = color === RED ? Math.min(1, alpha * 2.7) : alpha; grain(p.ctx, u + 3, v, r); }
+    if (color !== RED) {
+      const wet = layer(length + 6, 22); wet.ctx.filter = 'blur(.75px)'; wet.ctx.drawImage(p.canvas, 0, 0, length + 6, 22);
+      p.ctx.globalAlpha = .38; p.ctx.drawImage(wet.canvas, 0, 0, length + 6, 22);
+      for (let j = 0; j < 8; j++) {
+        const xx = rnd() * length, yy = 10 + (rnd() - .5) * width, r = 1 + rnd() * 2.6;
+        const bloom = p.ctx.createRadialGradient(xx, yy, .2, xx, yy, r);
+        bloom.addColorStop(0, color + '36'); bloom.addColorStop(.6, color + '20'); bloom.addColorStop(1, color + '00');
+        p.ctx.globalAlpha = .45; p.ctx.fillStyle = bloom; grain(p.ctx, xx, yy, r);
+      }
+    }
+    return p.canvas;
+  });
+  return { x, y, length, width, group, begin, paints };
+});
+
+const state = (x, y, length, pale = 0, weight = .88) => ({ x, y, length, pale, weight });
+const initial = rows.map(r => state(r.x, r.y, r.length, r.group === 6 ? .25 : 0));
+// Two hand-set revisions. Each moves the page above the red sentence first (see delay), then reflows below it.
+const after1 = rows.map((r, i) => {
+  switch (r.group) {
+    case 0: return state(r.x, r.y, 262, 0, 1);
+    case 1: return state(r.x + 6, 84 + (i - 1) * 10, r.length * .72, .6, .75);
+    case 2: return state(r.x, r.y - 10, r.length * 1.03, 0, 1);
+    case 3: return state(r.x, r.y, r.length * .9, .45, .8);
+    case 4: return state(r.x, r.y, r.length, 0, 1);
+    case 7: return state(r.x, r.y, r.length, 0, 1);
+    case 5: return state(r.x, 326 + (i - 13) * 13, r.length * [.9, 1.05, .8][i - 13], .15, .88);
+    case 6: return state(r.x, 377 + (i - 16) * 13, r.length, .35, .88);
+  }
+});
+const after2 = rows.map((r, i) => {
+  switch (r.group) {
+    case 0: return state(r.x, r.y, 240, 0, 1);
+    case 1: return state(r.x + 10, 84 + (i - 1) * 9, r.length * .6, .75, .7);
+    case 2: return state(r.x, r.y - 16, r.length * .96, .3, .85);
+    case 3: return state(r.x, r.y - 12, r.length * 1.05, 0, 1);
+    case 4: return state(r.x - 4, r.y, 275, 0, 1);
+    case 7: return state(r.x, r.y, r.length, 0, 1);
+    case 5: return state(r.x, 339 + (i - 13) * 11, r.length * .8, .45, .75);
+    case 6: return state(r.x, 384 + (i - 16) * 11, r.length, .5, .8);
+  }
+});
+const layouts = [initial, after1, after2];
+let revision = -1, previous = initial, current = initial;
+function advance(t) {
+  const next = Math.max(-1, Math.min(1, Math.floor((t - FIRST) / REVISION)));
+  if (next === revision) return;
+  previous = layouts[Math.max(0, next)]; current = layouts[next + 1];
+  revision = next;
+}
+// The backward ripple leads: the paragraph just above the red line moves at once, the intro last of the top half;
+// only then the new paragraph opens and the rest of the page below reflows.
+const DELAY = [.6, .45, .25, .05, 0, .5, .65, .55];
+function position(i, t) {
+  const row = rows[i], a = previous[i], b = current[i];
+  const age = t - FIRST - revision * REVISION;
+  const s = revision < 0 ? 0 : spring(age - DELAY[row.group]);
+  return {
+    x: mix(a.x, b.x, s), y: mix(a.y, b.y, s), length: mix(a.length, b.length, s),
+    pale: mix(a.pale, b.pale, clamp(s)), weight: mix(a.weight, b.weight, clamp(s))
+  };
+}
+// Spring threads: paragraph leads to the red sentence (right margin), leads to the lead row and to their own lines (left).
+const links = [[12, 9, 412], [12, 5, 424], [12, 0, 436], [12, 18, 40], [12, 13, 418], [12, 16, 30], [0, 1, 46], [0, 5, 36], [5, 9, 44]];
+for (const [start, end] of [[1, 5], [5, 9], [9, 12], [13, 16], [16, 18], [18, 21]]) for (let j = start + 1; j < end; j++) links.push([start, j, 54]);
+function tensions(ctx, t, alpha) {
+  ctx.fillStyle = PALE;
+  for (const [a, b, margin] of links) {
+    const ra = rows[a], rb = rows[b];
+    const visible = ease((t - Math.max(ra.begin, rb.begin) - .25) / .75);
+    if (!visible) continue;
+    const pa = position(a, t), pb = position(b, t);
+    const right = margin > 225;
+    const ax = pa.x + (right ? pa.length : 0), bx = pb.x + (right ? pb.length : 0);
+    const age = t - FIRST - revision * REVISION;
+    const pulse = clamp(age / 1.4), live = revision < 0 ? 0 : Math.sin(Math.PI * clamp(age / 2.4));
+    const length = Math.abs(pb.y - pa.y) + Math.abs(margin - ax) + Math.abs(margin - bx);
+    const count = Math.ceil(length / 1.1);
+    for (let j = 0; j < count; j++) {
+      const u = j / (count - 1), v = 1 - u;
+      const x = v * v * v * ax + 3 * v * v * u * margin + 3 * v * u * u * margin + u * u * u * bx;
+      const y = mix(pa.y, pb.y, ease(u));
+      const bump = Math.exp(-(((u - pulse) / .14) ** 2)) * live;
+      ctx.globalAlpha = alpha * visible * (.24 + bump * .7);
+      grain(ctx, x + Math.sin(u * 43) * Math.sin(Math.PI * u) * (.38 + bump * 2.6), y, .32 + bump * .22);
+    }
+  }
+}
+function manuscript(ctx, t, alpha) {
+  tensions(ctx, t, alpha);
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const reach = ease((t - row.begin) / (row.group === 4 ? .55 : .32));
+    if (!reach) continue;
+    const { x, y, length, pale, weight } = position(i, t);
+    const red = row.group === 4;
+    const pressure = red ? 1 + .28 * Math.sin(Math.PI * clamp((t - RED_AT) / .8)) : 1;
+    ctx.save(); ctx.beginPath(); ctx.rect(x - 3, y - 12, (length + 6) * reach, 26); ctx.clip();
+    ctx.globalAlpha = alpha * weight * (1 - pale); ctx.drawImage(row.paints[red ? 3 : 0], x - 3, y - 10 * pressure, length + 6, 22 * pressure);
+    ctx.globalAlpha = alpha * weight * pale; ctx.drawImage(row.paints[2], x - 3, y - 10, length + 6, 22);
+    if (!red) { ctx.globalAlpha = alpha * .45 * (1 - pale); ctx.drawImage(row.paints[1], x - 3, y - 10, length + 6, 22); }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+const $ = id => document.getElementById(id);
+window.render = t => {
+  t = Math.max(0, t);
+  advance(t);
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.drawImage(paper, 0, 0); g.scale(K, K); g.translate(0, 6);
+  const page = 1 - ease((t - T.settle) / .8);
+  if (page) { manuscript(g, Math.max(0, t - .16), .08 * page); manuscript(g, t, page); }
+  const title = $('title'), tIn = ease((t - T.title) / .6);
+  title.style.opacity = tIn.toFixed(3);
+  title.style.transform = `translateY(${(6 * (1 - tIn)).toFixed(2)}px)`;
+  title.lastElementChild.style.opacity = ease((t - T.url) / .5).toFixed(3);
+  $('fade').style.opacity = ease((t - T.fade) / (T.end - T.fade)).toFixed(3);
+};
+window.ready = (async () => {
+  await Promise.all([document.fonts.load('400 64px Literata'), document.fonts.load('18px "IBM Plex Mono"')]);
+  const frozen = new URLSearchParams(location.search).get('t');
+  render(frozen === null ? 0 : Number(frozen) || 0);
+  return { duration: T.end, fonts: [document.fonts.check('400 64px Literata'), document.fonts.check('18px "IBM Plex Mono"')] };
+})();
+</script>
+</body>
+</html>

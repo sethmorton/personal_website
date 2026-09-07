@@ -1,7 +1,9 @@
 <script lang="ts">
 	import MarkdownIt from 'markdown-it';
 	import katex from 'katex';
-	let { publishDate, content, onClose, title = '', image = '' } = $props();
+	import { ANIMS } from '$lib/blog/anim';
+	import VariantFigure from '$lib/blog/anim/VariantFigure.svelte';
+	let { publishDate, content, onClose, title = '', image = '', teaser = '' } = $props();
 
 	// If the post opens with a markdown heading, use it as the hero title (so the
 	// casing stays in the author's voice) and strip that line from the body so it
@@ -42,6 +44,12 @@
 		typographer: true,
 		breaks: true
 	});
+	// Every link, including linkified bare URLs, opens in a new tab.
+	md.renderer.rules.link_open = (tokens, idx, options, _env, self) => {
+		tokens[idx].attrSet('target', '_blank');
+		tokens[idx].attrSet('rel', 'noopener');
+		return self.renderToken(tokens, idx, options);
+	};
 
 	// Define the delimiters for math expressions
 	const mathDelimiters = [
@@ -82,9 +90,11 @@
 		}
 	};
 
-	let renderedHTML = $state('');
-
-	$effect(() => {
+	// Rendered body, split at [[anim: name]] markers so live canvas figures can be
+	// mounted between {@html} segments (scripts never run inside {@html}).
+	type Segment = { html: string } | { anim: string };
+	let filmOpen = $state(false);
+	const segments = $derived.by((): Segment[] => {
 		// First pass: Replace math expressions with placeholders
 		let processedContent = bodyContent;
 		const mathExpressions: Array<{ placeholder: string; math: string; display: boolean }> = [];
@@ -103,6 +113,30 @@
 			});
 		});
 
+		// Expandable notes share one renderer. Gray dots carry short definitions.
+		let sidenoteCounter = 0;
+		processedContent = processedContent.replace(
+			/\[\[sn(-gray)?:([\s\S]*?)\]\]/g,
+			(_match: string, gray: string | undefined, body: string = '') => {
+				const n = ++sidenoteCounter;
+				const inner = md.renderInline(String(body).trim());
+				return (
+					`<span class="sn${gray ? ' sn-gray' : ''}">` +
+					`<input type="checkbox" id="sn-${n}" class="sn-toggle" aria-label="Toggle sidenote ${n}" />` +
+					`<label for="sn-${n}" class="sn-dot" aria-label="Toggle sidenote ${n}">${n}</label>` +
+					`<span class="sn-body">${inner}</span>` +
+					`</span>`
+				);
+			}
+		);
+
+		// Anim pass: [[anim: name]] becomes a block-level placeholder markdown-it
+		// passes through verbatim (html: true); split on it after rendering.
+		processedContent = processedContent.replace(
+			/\[\[anim:\s*([a-z]+)\s*\]\]/g,
+			(_m: string, name: string) => (name in ANIMS ? `\n\n<div data-anim="${name}"></div>\n\n` : '')
+		);
+
 		// Second pass: Render markdown
 		let html = md.render(processedContent);
 
@@ -112,7 +146,9 @@
 			html = html.replace(placeholder, renderedMath);
 		});
 
-		renderedHTML = html;
+		return html
+			.split(/<div data-anim="([a-z]+)"><\/div>/)
+			.map((part, i) => (i % 2 ? { anim: part } : { html: part }));
 	});
 </script>
 
@@ -125,16 +161,11 @@
 	/>
 </svelte:head>
 
-<div class="h-full overflow-y-auto">
-	<div class="px-6 py-6 sm:px-8">
-		<button
-			class="font-mono text-xs uppercase tracking-[0.18em] text-stone-500 transition-colors hover:text-stone-900"
-			onclick={() => onClose()}
-		>
-			Back
-		</button>
+<div class="post-shell">
+	<div class="post-nav page-nav">
+		<button class="text-link" onclick={() => onClose()}> Back </button>
 	</div>
-	<article class="mx-auto w-full max-w-[42rem] px-6 pb-24 pt-4 sm:px-8">
+	<article class="post-content">
 		<header class="blog-hero">
 			{#if image}
 				<div class="hero-figure">
@@ -145,16 +176,49 @@
 			<h1 class="hero-title">{heroTitle}</h1>
 			<p class="hero-meta"><time>{formattedDate}</time></p>
 			<span class="hero-rule" aria-hidden="true"></span>
+			{#if teaser}
+				<details class="film" bind:open={filmOpen}>
+					<summary>Watch the film <span>18 seconds</span></summary>
+					{#if filmOpen}
+						<video
+							src={teaser}
+							muted
+							controls
+							playsinline
+							preload="metadata"
+							aria-label="The Shape of Inference: the horn antenna transforms into a new instrument"
+						></video>
+					{/if}
+				</details>
+			{/if}
 		</header>
 
 		<div class="blog-prose">
-			{@html renderedHTML}
+			{#each segments as seg}
+				{#if 'anim' in seg}
+					<VariantFigure group={seg.anim} />
+				{:else}
+					{@html seg.html}
+				{/if}
+			{/each}
 		</div>
 	</article>
 </div>
 
 <style>
-	/* Centered, airy hero header: specimen image, gold rule, display title, mono date.
+	.post-nav {
+		max-width: var(--page-width);
+		margin: 0 auto;
+		padding: var(--space-page) 24px 0;
+	}
+	.post-content {
+		width: 100%;
+		max-width: var(--reading-width);
+		margin: 0 auto;
+		padding: 16px 24px 96px;
+	}
+
+	/* Centered article header: existing specimen image, theme rule, serif title, sans date.
 	   Entrance is a single orchestrated sequence: specimen surfaces, rules draw
 	   outward, title rises, meta fades. Runs once per post view. */
 	.blog-hero {
@@ -169,7 +233,7 @@
 		margin: 0 0 3rem;
 		display: flex;
 		justify-content: center;
-		animation: hero-surface 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation: hero-surface 0.9s var(--ease-out) both;
 	}
 
 	.hero-figure img {
@@ -182,36 +246,62 @@
 		animation: hero-drift 14s ease-in-out 1.2s infinite;
 	}
 
+	.film {
+		width: 100%;
+		margin-top: 1.5rem;
+		font-family: var(--font-ui);
+		font-size: var(--text-ui);
+		color: var(--blue);
+	}
+	.film summary {
+		width: fit-content;
+		min-height: 44px;
+		margin: 0 auto;
+		padding: 10px 0;
+		cursor: pointer;
+	}
+	.film summary span {
+		margin-left: 0.5rem;
+		color: var(--muted);
+	}
+	.film summary:focus-visible {
+		outline: 2px solid var(--blue);
+		outline-offset: 4px;
+	}
+	.film video {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 9;
+		margin-top: 0.75rem;
+	}
+
 	.hero-rule {
 		display: block;
 		width: 60px;
 		height: 1px;
-		background: #c2a877;
+		background: var(--rule);
 		opacity: 0.9;
-		animation: hero-rule-draw 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+		animation: hero-rule-draw 0.7s var(--ease-out) 0.25s both;
 	}
 
 	.hero-title {
 		margin: 2.5rem 0 0;
-		font-family: 'Archivo', system-ui, sans-serif;
-		font-stretch: 122%;
-		font-weight: 650;
+		font-family: var(--font-display);
+		font-weight: 400;
 		font-size: clamp(1.9rem, 4.4vw, 2.6rem);
 		line-height: 1.14;
 		letter-spacing: -0.005em;
-		color: #1c1a17;
+		color: var(--ink);
 		text-wrap: balance;
-		animation: hero-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+		animation: hero-rise 0.8s var(--ease-out) 0.35s both;
 	}
 
 	.hero-meta {
 		margin: 1.85rem 0 2.5rem;
-		font-family: 'IBM Plex Mono', ui-monospace, monospace;
-		font-size: 0.72rem;
-		letter-spacing: 0.22em;
-		text-transform: uppercase;
-		color: #8a8276;
-		animation: hero-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+		font-family: var(--font-ui);
+		font-size: var(--text-meta);
+		color: var(--muted);
+		animation: hero-rise 0.8s var(--ease-out) 0.5s both;
 	}
 
 	@keyframes hero-surface {
@@ -307,9 +397,9 @@
 	}
 
 	.blog-prose {
-		color: #15120f;
-		font-family: 'Literata', Georgia, 'Times New Roman', serif;
-		font-size: 1.1rem;
+		color: var(--ink);
+		font-family: var(--font-body);
+		font-size: var(--text-body);
 		line-height: 1.62;
 		font-weight: 400;
 		font-kerning: normal;
@@ -319,10 +409,9 @@
 	.blog-prose :global(h1),
 	.blog-prose :global(h2),
 	.blog-prose :global(h3) {
-		color: #171411;
-		font-family: 'Archivo', system-ui, sans-serif;
-		font-stretch: 122%;
-		font-weight: 650;
+		color: var(--ink);
+		font-family: var(--font-display);
+		font-weight: 400;
 		line-height: 1.15;
 		letter-spacing: -0.005em;
 		text-wrap: balance;
@@ -352,36 +441,37 @@
 	}
 
 	.blog-prose :global(strong) {
-		color: #171411;
+		color: var(--ink);
 		font-weight: 600;
 	}
 
 	.blog-prose :global(a) {
-		color: #1f4f8f;
+		color: var(--blue);
 		text-decoration: underline;
 		text-decoration-thickness: 0.08em;
 		text-underline-offset: 0.14em;
 		transition:
-			color 150ms ease,
-			text-decoration-color 150ms ease;
-		text-decoration-color: rgba(31, 79, 143, 0.45);
+			color var(--motion-fast) ease,
+			text-decoration-color var(--motion-fast) ease;
+		overflow-wrap: anywhere;
+		text-decoration-color: color-mix(in srgb, var(--blue) 45%, transparent);
 	}
 
 	.blog-prose :global(a:hover) {
-		color: #163b69;
+		color: var(--accent-hover);
 		text-decoration-color: currentColor;
 	}
 
 	.blog-prose :global(hr) {
 		margin: 2.75rem 0;
 		border: 0;
-		border-top: 1px solid rgba(120, 113, 108, 0.28);
+		border-top: 1px solid var(--rule);
 	}
 
 	.blog-prose :global(blockquote) {
 		padding-left: 1.25rem;
-		border-left: 2px solid rgba(120, 113, 108, 0.35);
-		color: #44403c;
+		border-left: 2px solid var(--rule);
+		color: var(--muted);
 		font-style: normal;
 		font-weight: 400;
 	}
@@ -410,9 +500,90 @@
 		border-radius: 0.25rem;
 	}
 
+	.blog-prose :global(pre) {
+		max-width: 100%;
+		overflow-x: auto;
+	}
+
 	.blog-prose :global(code) {
-		font-family: 'IBM Plex Mono', ui-monospace, monospace;
+		font-family: var(--font-code);
 		font-size: 0.88em;
+	}
+
+	/* Expandable notes remain keyboard-operable inside rendered markdown. */
+	.blog-prose :global(.sn-toggle) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.blog-prose :global(.sn-dot) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.3em;
+		height: 1.3em;
+		margin: 0 0.18em;
+		vertical-align: 0.25em;
+		border-radius: 9999px;
+		background: var(--blue);
+		color: var(--paper);
+		font-family: var(--font-code);
+		font-size: 0.68em;
+		font-weight: 600;
+		line-height: 1;
+		cursor: pointer;
+		user-select: none;
+		transition:
+			background var(--motion-fast) ease,
+			transform var(--motion-fast) ease;
+	}
+
+	.blog-prose :global(.sn-dot:hover) {
+		background: var(--accent-hover);
+		transform: scale(1.12);
+	}
+
+	.blog-prose :global(.sn-toggle:checked + .sn-dot) {
+		background: var(--accent-hover);
+	}
+
+	.blog-prose :global(.sn-toggle:focus-visible + .sn-dot) {
+		outline: 2px solid var(--blue);
+		outline-offset: 3px;
+	}
+
+	.blog-prose :global(.sn-gray .sn-dot) {
+		background: var(--muted);
+	}
+
+	.blog-prose :global(.sn-gray .sn-dot:hover),
+	.blog-prose :global(.sn-gray .sn-toggle:checked + .sn-dot) {
+		background: var(--ink);
+	}
+
+	.blog-prose :global(.sn-body) {
+		display: none;
+		margin: 0.85em 0;
+		padding: 0.8em 1.05em;
+		background: var(--accent-soft);
+		border-left: 2px solid var(--blue);
+		border-radius: 0.25rem;
+		color: var(--muted);
+		font-size: 0.92em;
+		line-height: 1.58;
+	}
+
+	.blog-prose :global(.sn-toggle:checked ~ .sn-body) {
+		display: block;
+	}
+
+	.blog-prose :global(.sn-gray .sn-body) {
+		background: var(--accent-soft);
+		border-left-color: var(--rule);
 	}
 
 	@media (max-width: 640px) {

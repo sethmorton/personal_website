@@ -1,0 +1,51 @@
+/* Shared design tokens. Change these values to update every Svelte page.
+   Illustration pixels and standalone animation documents keep their own palettes. */
+:root {
+	--paper: #f7f4ec;
+	--ink: #252936;
+	--muted: #656975;
+	--blue: #28617a;
+	--rule: #d8d9df;
+	--accent-hover: color-mix(in srgb, var(--blue), var(--ink) 20%);
+	--accent-soft: color-mix(in srgb, var(--blue) 6%, var(--paper));
+	--font-display: Georgia, 'Times New Roman', serif;
+	--font-body: 'Literata', Georgia, 'Times New Roman', serif;
+	--font-ui: 'Source Sans 3', sans-serif;
+	--font-code: 'IBM Plex Mono', ui-monospace, monospace;
+	--page-width: 900px;
+	--reading-width: 672px;
+	--space-page: clamp(24px, 5vw, 48px);
+	--space-section: clamp(24px, 4vh, 40px);
+	--space-item: 14px;
+	--text-page-title: clamp(36px, 5vw, 52px);
+	--text-body: 1.1rem;
+	--text-ui: 14px;
+	--text-meta: 13px;
+	--text-entry: 21px;
+	--text-home-title: clamp(44px, 5.4vw, 76px);
+	--text-home-body: 16px;
+	--motion-fast: 180ms;
+	--motion-enter: 600ms;
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 1024px) and (min-height: 700px) {
+	:root {
+		--text-home-title: clamp(48px, 6.8vh, 68px);
+		--text-home-body: clamp(14px, 1.65vh, 16px);
+	}
+}
+
+@media (max-width: 800px) {
+	:root {
+		--text-home-title: 48px;
+		--text-home-body: 15px;
+	}
+}
+
+@media (max-width: 600px) {
+	:root {
+		--text-home-title: clamp(39px, 10vw, 54px);
+		--text-entry: 18px;
+	}
+}

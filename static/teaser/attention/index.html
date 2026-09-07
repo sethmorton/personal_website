@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Shape of Inference: attention</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { position: relative; width: 1080px; height: 1080px; overflow: hidden; }
+  canvas { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script src="../../anim/lib/vangogh.js"></script>
+<script>
+// A causal attention mask painted as a 48x48 field of impasto dabs. Rows arrive on blank paper one per 0.05 s,
+// one orange token lands on the diagonal, the mask breaks: the upper triangle floods and every dab swings from
+// "right" into a curl field seeded at the token, so the grid becomes a Starry Night sky with the token as its
+// brightest star. The title rides the slowed field, then the dabs realign and the sky drains back into the mask.
+const W = 1080, N = 48, M = 84, P = (W - 2 * M) / N, DUR = 10;
+const TOK = 40, TX = M + (TOK + .5) * P, TY = TX;
+// Point vortices: the token, one in the upper triangle, one in the lower left. Signs alternate like adjacent swirls.
+const VORT = [{ x: TX, y: TY, g: 1, r: 55, R: 56, rings: 4 }, { x: M + 36.5 * P, y: M + 11.5 * P, g: -.6, r: 45, R: 26, rings: 2 }, { x: M + 9.5 * P, y: M + 33.5 * P, g: .5, r: 45, R: 26, rings: 2 }];
+const DMAX = Math.hypot(TX - M, TY - M);
+const T = { scanRow: .05, scanEnd: 3.0, land: 3.1, flood: 4.0, floodDur: .6, swing: 4.3, glow: 4.55, vortex: 4.9, title: 7.0, titleOut: 8.7, unswing: 9.0, leave: 9.2, drain: 9.4, empty: 9.42 };
+const BOIL = Number(new URLSearchParams(location.search).get("boil")) || 15, SEEDS = 4, HOLD = BOIL !== 15;   // ?boil=5 holds each seed (GIF path)
+
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+// Critically damped spring step response, settles (98%) in about 0.6 s: every structural move is driven by this.
+const cd = u => u <= 0 ? 0 : 1 - (1 + 9.7 * u) * Math.exp(-9.7 * u);
+const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+const RGB = Object.fromEntries(Object.entries(VG).filter(([, v]) => typeof v === 'string').map(([k, v]) => [k, hex(v)]));
+const toHex = ([r, g, b]) => '#' + ((1 << 24) | (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b)).toString(16).slice(1);
+const mix = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u];
+const lerp = (a, b, u) => a + (b - a) * u;
+const cx = j => M + (j + .5) * P, cy = i => M + (i + .5) * P;
+
+const c = document.getElementById('c'); c.width = c.height = W;
+const g = c.getContext('2d');
+// Height map for vgRelief: every stroke stamps its coverage here, cleared each frame since nothing is cached.
+const height = document.createElement('canvas'); height.width = height.height = W;
+const heightCtx = height.getContext('2d');
+
+// Paper: warm white with a multiply stipple, drawn once, used under the dabs and lightly over them.
+const paper = document.createElement('canvas'); paper.width = paper.height = W;
+{
+  const p = paper.getContext('2d'), rnd = vgRng(1889);
+  p.fillStyle = VG.paper; p.fillRect(0, 0, W, W);
+  p.globalCompositeOperation = 'multiply'; p.fillStyle = '#5a6a8a';
+  for (let k = 0; k < 60000; k++) {
+    p.globalAlpha = (7 + rnd() * 6) / 255;
+    const r = .15 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .7;
+    p.beginPath(); p.arc(rnd() * W, rnd() * W, r, 0, Math.PI * 2); p.fill();
+  }
+}
+
+// Curl field at a point: the sum of the three point vortices. Returns [angle, strength].
+function fieldAt(x, y) {
+  let vx = 0, vy = 0;
+  for (const v of VORT) {
+    const dx = x - v.x, dy = y - v.y, r = Math.hypot(dx, dy) || 1, s = v.g / (r + v.r) * 100;
+    vx += -dy / r * s; vy += dx / r * s;
+  }
+  return [Math.atan2(vy, vx), Math.hypot(vx, vy)];
+}
+
+// Per-cell statics: base mask colour (prussian with cobalt breaking through), field geometry, distance to each star.
+const base = [], fieldAngle = new Float32Array(N * N), fieldStrength = new Float32Array(N * N), fieldTheta = new Float32Array(N * N), dist = new Float32Array(N * N);
+const starR = VORT.map(() => new Float32Array(N * N));
+{
+  const rnd = vgRng(48);
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const k = i * N + j, x = cx(j), y = cy(i), u = rnd();
+    base[k] = u < .62 ? RGB.prussian : u < .9 ? RGB.cobalt : RGB.ultramarine;
+    [fieldAngle[k], fieldStrength[k]] = fieldAt(x, y);
+    fieldTheta[k] = Math.atan2(y - TY, x - TX);
+    VORT.forEach((v, q) => { starR[q][k] = Math.hypot(x - v.x, y - v.y); });
+    dist[k] = starR[0][k] / DMAX;
+  }
+}
+
+// Swirl phase: the field turns at a steady rate, then slows from T.title on to a metastable drift.
+function phase(t) {
+  const w0 = 2.6, w1 = .5, a = T.title, b = a + 1;
+  if (t < a) return w0 * t;
+  if (t < b) { const u = t - a; return w0 * a + w0 * u - (w0 - w1) * u * u / 2; }
+  return w0 * a + (w0 + w1) / 2 + w1 * (t - b);
+}
+
+// Star strengths over time: the token lands, blooms once the field turns, sinks before the drain; vortex stars follow.
+function stars(t) {
+  const token = cd(t - T.land) * (1 - ease((t - T.leave) / .45)), bloom = cd(t - T.swing);
+  const vortex = cd(t - T.vortex) * (1 - ease((t - T.unswing + .1) / .4));
+  return [token * (.5 + .5 * bloom), vortex, vortex];
+}
+
+function fieldColor(k, phi) {
+  const s = clamp(fieldStrength[k] / 1.6), crest = Math.sin(fieldTheta[k] * 3 + starR[0][k] / 55 - phi + fieldAngle[k] * .5);
+  let col = crest > 0 ? mix(RGB.cobalt, RGB.turquoise, ease((crest - .35) / .5) * (.35 + .65 * s))
+    : mix(RGB.ultramarine, RGB.violet, ease((-crest - .3) / .5) * (.5 + .5 * s));
+  return mix(col, RGB.cerulean, clamp((110 - starR[0][k]) / 110) * .6);
+}
+
+// Boil: four jitter seeds cycled at 15 Hz, blended between consecutive seeds so the surface shimmers every frame.
+function boil(k, t) {
+  const f = t * BOIL, s = Math.floor(f), u = HOLD ? 0 : ease(f - s);
+  const a = vgRng(k * SEEDS + s % SEEDS + 11), b = vgRng(k * SEEDS + (s + 1) % SEEDS + 11);
+  const jx = lerp(a() - .5, b() - .5, u) * 1.6, jy = lerp(a() - .5, b() - .5, u) * 1.6;
+  const ja = lerp(a() - .5, b() - .5, u) * .12, jc = lerp(a() - .5, b() - .5, u) * .5;
+  return [jx, jy, ja, jc, a];
+}
+
+function drawCells(t) {
+  const phi = phase(t), S = stars(t), breathe = 1 + .08 * Math.sin(phi * 1.3);
+  const unswing = cd(t - T.unswing), glowT = t - T.glow, drainT = t - T.drain;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const k = i * N + j, upper = j > i;
+    let scale;
+    if (upper) {
+      // Dabs grow in along a wave from the token and shrink out row by row; no alpha fades.
+      const inU = cd(t - T.flood - T.floodDur * dist[k]), outU = 1 - ease((drainT - .5 * i / N) / .1);
+      scale = Math.min(inU, outU);
+      if (scale <= .02) continue;
+    } else {
+      // Rows arrive from blank paper one per 0.05 s; the loop closes by emptying them bottom-up so t=10 matches t=0.
+      scale = cd(t - i * T.scanRow) * (1 - ease((t - T.empty - .45 * (N - 1 - i) / N) / .05));
+      if (scale <= .02) continue;
+    }
+    const [jx, jy, ja, jc, rnd] = boil(k, t);
+    const w = cd(t - T.swing - .45 * dist[k]) * (1 - unswing);
+    const angle = (fieldAngle[k] + .22 * Math.sin(cx(j) / 90 + phi * .35) * Math.cos(cy(i) / 110 - phi * .2)) * w + ja;
+    let col = mix(base[k], fieldColor(k, phi), w);
+    // Warmth around each star: no ring edge, the blue itself leans to ochre then chrome out to 2R, breathing with the field.
+    for (let q = 0; q < 3; q++) {
+      if (S[q] <= 0) continue;
+      const u = clamp(1 - starR[q][k] / (2 * VORT[q].R * breathe));
+      if (u > 0) col = mix(col, mix(RGB.ochre, RGB.chrome, u), u * u * S[q] * .95);
+    }
+    // Landing glow sweeps out from the token along its row and column over 0.4 s, then fades.
+    if (i === TOK || j === TOK) {
+      const u = glowT - .4 * Math.abs((i === TOK ? j : i) - TOK) / (N - 1);
+      col = mix(col, RGB.orange, cd(u * 2.5) * (1 - ease((u - .2) / .5)) * .95);
+    }
+    const len = 30 * scale * (1 + .1 * w), width = 16 * scale * (1 + .1 * w);
+    vgDab(g, cx(j) + jx, cy(i) + jy, angle, len, width, toHex(col), rnd, jc + w * .4);
+  }
+}
+
+// A Starry Night star: vermilion core, then rings of chrome and cadmium dabs whose angle is the field's own angle
+// there, so the halo is part of the swirl rather than a disc pasted on it. Rings breathe and drift with the field.
+function star(v, h, phi, seed) {
+  if (h <= 0) return;
+  const rnd = vgRng(seed), breathe = 1 + .08 * Math.sin(phi * 1.3 + seed);
+  for (let q = 0; q < v.rings; q++) {
+    const r = v.R * breathe * h * (q + 1) / v.rings, n = Math.round(2 * Math.PI * r / 10), color = q % 2 ? VG.cadmium : VG.chrome;
+    for (let i = 0; i < n; i++) {
+      const a = (i + .5) / n * Math.PI * 2 + phi * .25 * (1 - q / v.rings) + (rnd() - .5) * .25;
+      const x = v.x + Math.cos(a) * r + (rnd() - .5) * 3, y = v.y + Math.sin(a) * r + (rnd() - .5) * 3;
+      const [fa] = fieldAt(x, y);
+      vgDab(g, x, y, fa, (11 + r * .12) * h, (7 - q * .5) * h, color, rnd, .3, 1 - q * .12);
+    }
+  }
+  const core = v.R * .12 * h;
+  for (let i = 0; i < 5; i++) {
+    const a = i / 5 * Math.PI * 2 + phi * .4;
+    vgDab(g, v.x + Math.cos(a) * core, v.y + Math.sin(a) * core, a, core * 2.2, core * 1.1, VG.orange, rnd, .2);
+  }
+  vgDab(g, v.x, v.y, phi * .2, core * 2, core * 1.2, VG.vermilion, rnd, 0);
+}
+
+function drawHalos(t) {
+  const phi = phase(t), S = stars(t);
+  // Scan halo runs down the diagonal with the newest row, and reforms at row 0 just before the loop seam.
+  if (t < T.scanEnd || t > T.empty + .1) {
+    const row = t < T.scanEnd ? Math.min(N - 1, Math.floor(t / T.scanRow)) : 0;
+    const grow = t < T.scanEnd ? 1 : cd(t - T.empty - .1);
+    if (grow > 0) vgHalo(g, cx(row), cy(row), 5, 5 + 30 * grow, VG.chrome, VG.orange, 21, t * 9);
+  }
+  VORT.forEach((v, q) => star(v, S[q], phi, 31 + q));
+}
+
+function drawTitle(t) {
+  const a = Math.min(ease((t - T.title) / .4), 1 - ease((t - T.titleOut) / .4));
+  if (a <= 0) return;
+  g.globalAlpha = a; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const lines = [['650 expanded 52px Archivo', 'The Shape of Inference', 468], ['400 20px "IBM Plex Mono"', 'sethmorton.com/blog/the_shape_of_inference', 530]];
+  // Soft radial paper wash, 1.6x the title width, so the type sits in the field instead of on a label.
+  g.font = lines[0][0];
+  const rx = g.measureText(lines[0][1]).width * .8, ry = rx * .42, yc = 499;
+  g.save(); g.translate(W / 2, yc); g.scale(1, ry / rx);
+  const wash = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+  wash.addColorStop(0, 'rgba(250,250,249,.85)'); wash.addColorStop(.55, 'rgba(250,250,249,.6)'); wash.addColorStop(1, 'rgba(250,250,249,0)');
+  g.fillStyle = wash; g.fillRect(-rx, -rx, 2 * rx, 2 * rx); g.restore();
+  g.fillStyle = '#1a2a40';
+  for (const [font, text, y] of lines) { g.font = font; g.fillText(text, W / 2, y); }
+  g.globalAlpha = 1;
+}
+
+window.render = t => {
+  t = ((t % DUR) + DUR) % DUR;
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+  g.drawImage(paper, 0, 0);
+  heightCtx.clearRect(0, 0, W, W); VG.height = heightCtx;
+  drawCells(t);
+  drawHalos(t);
+  VG.height = null; vgRelief(g, heightCtx);
+  g.globalCompositeOperation = 'multiply'; g.globalAlpha = .5; g.drawImage(paper, 0, 0);
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+  drawTitle(t);
+};
+
+window.ready = (async () => {
+  await Promise.all([document.fonts.load('650 expanded 52px Archivo'), document.fonts.load('400 20px "IBM Plex Mono"')]);
+  const frozen = new URLSearchParams(location.search).get('t');
+  render(frozen === null ? 0 : Number(frozen) || 0);
+  return { duration: DUR, fonts: [document.fonts.check('650 expanded 52px Archivo'), document.fonts.check('400 20px "IBM Plex Mono"')] };
+})();
+</script>
+</body>
+</html>

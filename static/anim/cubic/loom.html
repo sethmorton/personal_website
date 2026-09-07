@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="Nine anonymous tokens build a delicate blue web, each joined to every earlier token. Every arrival plucks all existing springs. Below, magenta pigment records square-number work deposits: one, four, nine, through eighty-one. The accumulated bill grows faster than the web."></canvas>
+<div class="cap">Each new token reopens the web; square-number checks accumulate into a cubic bill.</div>
+</div>
+<script>
+const started = performance.now();
+const W = 640, H = 400, D = 2, CYCLE = 10, BASE = 188, COST_TOP = 209, UNIT = 1.78;
+const PAPER = '#f7f4ec', INK = '#28617a', DEEP = '#23485f', PALE = '#9badb0', SKY = '#71929e', HOT = '#9a6752';
+const c = document.getElementById('c'); c.width = W * D; c.height = H * D;
+const g = c.getContext('2d', { willReadFrequently: true }); g.scale(D, D);
+let seed = 731;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+function layer() {
+  const canvas = document.createElement('canvas'); canvas.width = W * D; canvas.height = H * D;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true }); ctx.scale(D, D); return { canvas, ctx };
+}
+function grain(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+const paper = layer();
+paper.ctx.fillStyle = PAPER; paper.ctx.fillRect(0, 0, W, H);
+paper.ctx.globalCompositeOperation = 'multiply'; paper.ctx.fillStyle = INK;
+for (let i = 0; i < 18000; i++) {
+  paper.ctx.globalAlpha = (8 + rnd() * 4) / 255;
+  grain(paper.ctx, rnd() * W, rnd() * H, .14 + rnd() * .35);
+}
+paper.ctx.strokeStyle = INK; paper.ctx.lineWidth = .25; paper.ctx.globalAlpha = .035;
+for (let i = 0; i < 180; i++) {
+  const x = rnd() * W, y = rnd() * H;
+  paper.ctx.beginPath(); paper.ctx.moveTo(x, y); paper.ctx.lineTo(x + 2 + rnd() * 5, y + rnd() - .5); paper.ctx.stroke();
+}
+const tokens = Array.from({ length: 9 }, (_, i) => ({ x: 100 + i * 54, start: .3 + i * .5, checks: (i + 1) ** 2 }));
+const edges = [];
+function springY(edge, u) {
+  const arch = Math.sin(Math.PI * u);
+  return BASE - edge.height * arch ** .82 * (1 + .13 * Math.sin(u * 5 + edge.phase)) + arch * Math.sin(u * 17 + edge.phase) * .7;
+}
+for (let j = 1; j < tokens.length; j++) for (let i = 0; i < j; i++) {
+  const span = tokens[j].x - tokens[i].x;
+  const edge = { i, j, height: span * (.24 + rnd() * .055) + 7, phase: rnd() * 6.28, points: [] };
+  for (let p = 0; p <= 84; p++) {
+    const u = p / 84;
+    edge.points.push({ u, x: mix(tokens[j].x, tokens[i].x, u), y: springY(edge, u), jitter: rnd() - .5, r: .22 + rnd() * .24 });
+  }
+  edges.push(edge);
+}
+const web = tokens.map((token, j) => {
+  const dry = layer(), wet = layer(), dot = layer();
+  for (const edge of edges.filter(e => e.j === j)) {
+    for (let p = 0; p < (token.x - tokens[edge.i].x) * 4; p++) {
+      const u = rnd(), x = mix(token.x, tokens[edge.i].x, u);
+      const y = springY(edge, u) + (rnd() + rnd() - 1) * .85;
+      dry.ctx.fillStyle = p % 7 ? INK : DEEP; dry.ctx.globalAlpha = .14 + rnd() * .22;
+      grain(dry.ctx, x, y, .15 + rnd() * .3);
+    }
+  }
+  wet.ctx.filter = 'blur(1px)'; wet.ctx.globalAlpha = .3; wet.ctx.drawImage(dry.canvas, 0, 0, W, H); wet.ctx.filter = 'none';
+  for (let p = 0; p < 170; p++) {
+    const angle = rnd() * Math.PI * 2, radius = Math.sqrt(rnd());
+    dot.ctx.fillStyle = p % 5 ? DEEP : INK; dot.ctx.globalAlpha = .14 + rnd() * .33;
+    grain(dot.ctx, token.x + Math.cos(angle) * radius * 3.3, BASE + Math.sin(angle) * radius * 4.3, .2 + rnd() * .65);
+  }
+  const bloom = dot.ctx.createRadialGradient(token.x, BASE, 1, token.x, BASE, 7);
+  bloom.addColorStop(0, SKY + '12'); bloom.addColorStop(.6, PALE + '16'); bloom.addColorStop(1, PALE + '00');
+  dot.ctx.globalAlpha = 1; dot.ctx.fillStyle = bloom; grain(dot.ctx, token.x, BASE, 7);
+  return { dry: dry.canvas, wet: wet.canvas, dot: dot.canvas };
+});
+const costs = tokens.map(token => {
+  const paint = layer(), height = token.checks * UNIT;
+  paint.ctx.fillStyle = HOT;
+  // One constant-density stratum per check; all deposits share the same unit height.
+  for (let row = 0; row < token.checks; row++) for (let p = 0; p < 24; p++) {
+    const u = (row + rnd()) / token.checks, v = (rnd() + rnd() + rnd() - 1.5) / 1.5;
+    const width = 32 * (.12 + .88 * Math.sin(Math.PI * u) ** .6);
+    const y = COST_TOP + u * height;
+    const x = token.x + v * width + Math.sin(u * 9) * 2.8 + Math.sin(row * .21) * 1.4;
+    paint.ctx.globalAlpha = .92 + rnd() * .08;
+    grain(paint.ctx, x, y, .3 + rnd() * .58);
+  }
+  return { paint: paint.canvas, height };
+});
+const history = layer();
+let historyStep = -1;
+function ripple(ctx, t) {
+  for (let k = 1; k < tokens.length; k++) {
+    const age = t - tokens[k].start - .17;
+    if (age <= 0 || age > 1.05) continue;
+    for (const edge of edges) {
+      if (edge.j > k) continue;
+      const delay = (tokens[k].x - tokens[edge.j].x) / 1500;
+      const travel = (age - delay) / .55;
+      ctx.fillStyle = INK;
+      for (const p of edge.points) {
+        const d = p.u - travel, envelope = Math.exp(-d * d * 90) * (1 - ease((age - .65) / .4));
+        if (envelope < .015) continue;
+        const displacement = Math.sin(d * 26) * envelope * 5.5 * Math.sin(Math.PI * p.u);
+        ctx.globalAlpha = envelope * .55;
+        grain(ctx, p.x, p.y + displacement + p.jitter * .55, p.r);
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function replay(t) {
+  const target = Math.floor(Math.min(t, 5.8) * 30);
+  if (target < historyStep) { history.ctx.clearRect(0, 0, W, H); historyStep = -1; }
+  while (historyStep < target) {
+    historyStep++;
+    history.ctx.globalCompositeOperation = 'destination-out'; history.ctx.globalAlpha = 18 / 255;
+    history.ctx.fillRect(0, 0, W, H); history.ctx.globalAlpha = 1; history.ctx.globalCompositeOperation = 'source-over';
+    ripple(history.ctx, historyStep / 30);
+  }
+}
+function draw(t) {
+  t = ((t % CYCLE) + CYCLE) % CYCLE; window.__t = t;
+  replay(t);
+  g.globalAlpha = 1; g.drawImage(paper.canvas, 0, 0, W, H);
+  for (let j = 0; j < tokens.length; j++) {
+    const token = tokens[j], age = t - token.start, reach = ease((age - .06) / .35);
+    if (age < 0) continue;
+    g.save(); g.beginPath(); g.rect(token.x - 440 * reach, 35, 443 * reach, BASE - 28); g.clip();
+    g.globalAlpha = .85; g.drawImage(web[j].dry, 0, 0, W, H);
+    g.globalAlpha = 1 - ease((age - .35) / .6); g.drawImage(web[j].wet, 0, 0, W, H); g.restore();
+    g.globalAlpha = ease(age / .16); g.drawImage(web[j].dot, 0, 0, W, H);
+  }
+  g.globalAlpha = 1 - ease((t - 5.5) / .6); g.drawImage(history.canvas, 0, 0, W, H);
+  ripple(g, t);
+  // The hot plate is painted last, opaque grains with paper left between them.
+  for (let j = 0; j < tokens.length; j++) {
+    const progress = ease((t - tokens[j].start - .3) / .48), h = costs[j].height * progress;
+    if (!h) continue;
+    g.save(); g.beginPath(); g.rect(tokens[j].x - 34, COST_TOP, 68, h); g.clip();
+    g.globalAlpha = 1; g.drawImage(costs[j].paint, 0, 0, W, H); g.restore();
+  }
+  g.globalAlpha = ease((t - 9.2) / .8); g.drawImage(paper.canvas, 0, 0, W, H); g.globalAlpha = 1;
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) draw(Number(frozen) || 0);
+else {
+  const epoch = performance.now();
+  const tick = now => { draw((now - epoch) / 1000); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+window.__renderMs = performance.now() - started;
+</script>
+</body>
+</html>

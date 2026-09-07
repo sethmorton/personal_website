@@ -23,6 +23,6 @@
 	});
 </script>
 
-<div class="min-h-screen bg-stone-50">
+<div class="min-h-screen">
 	{@render children()}
 </div>

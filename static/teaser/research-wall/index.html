@@ -1,0 +1,151 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>research wall</title>
+<style>html,body{margin:0;background:#fafaf9;width:1080px;height:1080px;overflow:hidden}canvas{display:block}</style>
+<canvas id="c" width="1080" height="1080"></canvas>
+<script>
+// 0-2.5 hard cuts, every plate full frame. 2.5-7 cuts become a field: each plate arrives through a threshold
+// mask (dark ink first) while the previous ones shrink into a 4x4 atlas. 6.5-9.5 zoom out. 9.5 a 17th tiny
+// plate lands in the centre, atlas rebalances with a damped settle. 11-12 fade to paper, loops into the cut.
+const W = 1080, DUR = 12;
+const ORDER = ['horn', 'pigeon', 'darwin', 'cmb', 'hooke', 'die', 'cajal', 'micrographia',
+  'galileo', 'moon', 'starchart', 'telescope', 'penzias', 'notebook', 'snowflake', 'audubon2'];
+const CUT = 2.5 / 16, B0 = 2.5, B1 = 7, STEP = 4.5 / 16, TILE = 280, PITCH = 340, KFIT = 0.64;
+const LAND = 9.5, HORN = 86;
+const PAPER = '#fafaf9', PALE = '#b6c2d2';
+
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const lerp = (a, b, u) => a + (b - a) * u;
+const ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+const easeOut = u => 1 - Math.pow(1 - u, 3);
+const smooth = (a, b, v) => { const u = clamp01((v - a) / (b - a)); return u * u * (3 - 2 * u); };
+let seed = 7;
+const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+
+// Arrival order: the last cut plate is the first arrival, so the cut stops being a cut instead of cutting again.
+const SEQ = ORDER.map((_, j) => ORDER[(j + 15) % 16]);
+const slots = SEQ.map((_, j) => {
+  const col = j % 4, row = j >> 2;
+  const x = 30 + col * PITCH + (rnd() - .5) * 10, y = 30 + row * PITCH + (rnd() - .5) * 10;
+  const dx = x - 540, dy = y - 540, d = Math.hypot(dx, dy) || 1;
+  const push = 24 + 14 * (1 - d / 730);            // inner tiles give way more, so the horn fits
+  return { x, y, rot: (rnd() - .5) * 0.05, px: dx / d * push, py: dy / d * push };
+});
+const PAIRS = [];
+for (let j = 0; j < 16; j++) { if (j % 4 < 3) PAIRS.push([j, j + 1]); if (j < 12) PAIRS.push([j, j + 4]); }
+
+const ctx = document.getElementById('c').getContext('2d');
+const off = document.createElement('canvas'); off.width = off.height = W;
+const octx = off.getContext('2d', { willReadFrequently: true });
+
+const grain = document.createElement('canvas'); grain.width = grain.height = W;
+{
+  const g = grain.getContext('2d'), id = g.createImageData(W, W), d = id.data;
+  for (let i = 0; i < d.length; i += 4) {
+    let v = 255 - rnd() * 22; if (rnd() < 0.012) v -= 55;
+    d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255;
+  }
+  g.putImageData(id, 0, 0);
+}
+
+const imgs = {};
+const load = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
+Promise.all(ORDER.map(async s => { imgs[s] = await Promise.all(['', '1', '2'].map(v => load(`../plates/${s}_ink${v}.png`))); }))
+  .then(() => { window.DURATION = DUR; window.ready = { duration: DUR }; render(0); });
+
+const boil = (p, t) => imgs[ORDER[p]][Math.floor(t * 12 + p) % 3];
+
+function spring(t) {
+  if (t < LAND) return 0;
+  const u = (t - LAND) / 1.5;
+  return u >= 1 ? 1 : 1 - Math.exp(-5.5 * u) * Math.cos(2 * Math.PI * 1.15 * u);
+}
+
+function camera(t) { return t < 6.5 ? 1 : lerp(1, KFIT, ease(clamp01((t - 6.5) / 3))); }
+
+function tileState(j, t) {
+  const a = B0 + j * STEP;
+  if (t < a) return null;
+  const s = slots[j], D = Math.max(0.35, Math.min(1.5, B1 - a - 0.1));
+  const e = ease(clamp01((t - a) / D)), g = Math.pow(j / 15, 0.7), sp = spring(t);
+  const ax = lerp(540, s.x, g), ay = lerp(540, s.y, g), as = lerp(W, TILE * 1.08, j / 15);
+  return {
+    x: lerp(ax, s.x, e) + s.px * sp, y: lerp(ay, s.y, e) + s.py * sp,
+    size: lerp(as, TILE, e), rot: s.rot * e, f: j === 0 ? 1 : clamp01((t - a) / 0.3), settle: e
+  };
+}
+
+function hornState(t) {
+  if (t < LAND) return null;
+  const u = t - LAND;
+  return { x: 540, y: 540, size: HORN * lerp(1.6, 1, easeOut(clamp01(u / 0.3))), rot: -0.03, f: clamp01(u / 0.3), settle: clamp01((u - 0.2) / 0.4) };
+}
+
+// Pushes everything lighter than a rising threshold to white, so under multiply the dark ink lands first.
+function threshold(img, f, S) {
+  S = Math.min(W, Math.max(2, Math.ceil(S)));
+  octx.clearRect(0, 0, S, S); octx.drawImage(img, 0, 0, S, S);
+  const id = octx.getImageData(0, 0, S, S), d = id.data, thr = lerp(50, 260, f);
+  for (let i = 0; i < d.length; i += 4) {
+    const w = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11 - thr) / 30;
+    if (w <= 0) continue;
+    if (w >= 1) { d[i] = d[i + 1] = d[i + 2] = 255; continue; }
+    d[i] += (255 - d[i]) * w; d[i + 1] += (255 - d[i + 1]) * w; d[i + 2] += (255 - d[i + 2]) * w;
+  }
+  octx.putImageData(id, 0, 0);
+  return S;
+}
+
+function drawTile(img, st, k) {
+  ctx.save(); ctx.translate(st.x, st.y); ctx.rotate(st.rot);
+  const h = st.size / 2;
+  if (st.f < 1) { const S = threshold(img, st.f, st.size * k); ctx.drawImage(off, 0, 0, S, S, -h, -h, st.size, st.size); }
+  else ctx.drawImage(img, -h, -h, st.size, st.size);
+  ctx.restore();
+}
+
+// Hairline from the edge of square A to the edge of square B, never under the paper of either.
+function thread(a, b, alpha, k) {
+  if (alpha <= 0) return;
+  const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
+  const m = Math.max(Math.abs(ux), Math.abs(uy));
+  const ta = a.size / 2 / m * 1.05, tb = b.size / 2 / m * 1.05;
+  if (ta + tb >= d) return;
+  ctx.globalAlpha = alpha; ctx.lineWidth = 1.5 / k; ctx.strokeStyle = PALE;
+  ctx.beginPath(); ctx.moveTo(a.x + ux * ta, a.y + uy * ta); ctx.lineTo(b.x - ux * tb, b.y - uy * tb); ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+function render(t) {
+  t = ((t % DUR) + DUR) % DUR;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, W);
+
+  if (t < B0) {
+    const c = Math.min(15, Math.floor(t / CUT)), z = c % 2 ? 1.1 : 1, s = W * z, o = (W - s) / 2;
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(boil(c, t), o, o, s, s);
+  } else {
+    const k = camera(t);
+    ctx.translate(540, 540); ctx.scale(k, k); ctx.translate(-540, -540);
+    const states = SEQ.map((_, j) => tileState(j, t)), horn = hornState(t);
+    for (const [a, b] of PAIRS) {
+      const A = states[a], B = states[b];
+      if (A && B) thread(A, B, smooth(0.75, 1, Math.min(A.settle, B.settle)), k);
+    }
+    if (horn) for (const j of [5, 6, 9, 10]) thread(horn, states[j], horn.settle, k);
+    ctx.globalCompositeOperation = 'multiply';
+    states.forEach((st, j) => { if (st) drawTile(boil(ORDER.indexOf(SEQ[j]), t), st, k); });
+    if (horn) drawTile(boil(0, t), horn, k);
+  }
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  if (t > 11) { ctx.globalAlpha = smooth(11, 12, t); ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, W); ctx.globalAlpha = 1; }
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.drawImage(grain, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+}
+window.render = render;
+</script>

@@ -1,0 +1,391 @@
+[
+  {
+    "slug": "horn",
+    "file": "horn.jpg",
+    "title": "Holmdel Horn Antenna, Bell Labs, Crawford Hill, New Jersey (1962 photo, with Penzias and Wilson)",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Horn_Antenna-in_Holmdel,_New_Jersey_-_restoration1.jpg",
+    "license": "Public domain (NASA)",
+    "credit": "NASA, restoration by Wikimedia Commons user Bammesk",
+    "focus": {
+      "x": 0.5,
+      "y": 0.42
+    }
+  },
+  {
+    "slug": "pigeon",
+    "file": "pigeon.jpg",
+    "title": "Passenger Pigeon, Robert Havell after John James Audubon, The Birds of America plate 62 (1829)",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Robert_Havell_after_John_James_Audubon,_Passenger_Pigeon,_1829,_NGA_32203.jpg",
+    "license": "CC0 (National Gallery of Art open access)",
+    "credit": "National Gallery of Art, Washington",
+    "focus": {
+      "x": 0.5,
+      "y": 0.42
+    }
+  },
+  {
+    "slug": "logbook_or_darwin",
+    "file": "darwin.png",
+    "title": "Charles Darwin, Notebook B page 36, \"I think\" tree of life sketch (1837)",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Darwin_Tree_1837.png",
+    "license": "Public domain",
+    "credit": "Charles Darwin, Cambridge University Library (DAR 121)",
+    "focus": {
+      "x": 0.5,
+      "y": 0.3
+    }
+  },
+  {
+    "slug": "cmb",
+    "file": "cmb.png",
+    "title": "WMAP nine-year map of the cosmic microwave background",
+    "source_url": "https://science.nasa.gov/mission/wmap/wmap-overview/",
+    "license": "Public domain (NASA)",
+    "credit": "NASA / WMAP Science Team",
+    "focus": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  {
+    "slug": "hooke",
+    "file": "hooke.jpg",
+    "title": "Robert Hooke, Lectures De Potentia Restitutiva, or of Spring (1678), title page",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Hooke-2.jpg",
+    "license": "Public domain",
+    "credit": "Robert Hooke, 1678; photograph via Wikimedia Commons",
+    "focus": {
+      "x": 0.46,
+      "y": 0.28
+    },
+    "note": "Substitute: the spring engraving plate could not be found at usable resolution (the EEBO/IA scan omits the fold-out); this is a photograph of the same 1678 book's title page."
+  },
+  {
+    "slug": "die",
+    "file": "die.jpg",
+    "title": "Ferranti F100-L microprocessor die photograph",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Ferranti_F100-L_Microprocessor_Die_Photograph.jpg",
+    "license": "CC BY 4.0",
+    "credit": "Richard Evans (Wikimedia Commons user Revaldinho)",
+    "focus": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  {
+    "slug": "cajal",
+    "file": "cajal.jpg",
+    "title": "Santiago Ram\u00f3n y Cajal, giant pyramidal cell of the rabbit hippocampus (asta de Ammon), Ehrlich-Bethe method, fig. 15",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Celula_gigante_de_la_porcion_inferior_del_asta_de_ammon_Wellcome_L0040799.jpg",
+    "license": "Public domain drawing (Cajal d. 1934); Wellcome Collection scan released CC BY 4.0",
+    "credit": "Santiago Ram\u00f3n y Cajal; Wellcome Collection",
+    "focus": {
+      "x": 0.5,
+      "y": 0.45
+    }
+  },
+  {
+    "slug": "micrographia",
+    "file": "micrographia.jpg",
+    "title": "Robert Hooke, Micrographia (1665), Schem. XXXIV, the flea",
+    "source_url": "https://commons.wikimedia.org/wiki/File:HookeFlea01.jpg",
+    "license": "Public domain",
+    "credit": "Robert Hooke, 1665; via Wikimedia Commons",
+    "focus": {
+      "x": 0.5,
+      "y": 0.45
+    }
+  },
+  {
+    "slug": "galileo",
+    "file": "galileo.png",
+    "title": "Galileo Galilei, Sidereus Nuncius (1610), engravings of the Moon in five phases",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Galileo%27s_sketches_of_the_moon.png",
+    "license": "Public domain",
+    "credit": "Galileo Galilei, 1610; via Wikimedia Commons",
+    "focus": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "note": "Substitute: the Florence ink-wash drawings are on Commons only as CC BY-SA facsimile photos; these are the printed 1610 engravings made from them."
+  },
+  {
+    "slug": "moon",
+    "file": "moon.jpg",
+    "title": "Lunar nearside, LROC Wide Angle Camera mosaic (December 2010), downscaled to 3000 px",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Moon_nearside_LRO_5000.jpg",
+    "license": "Public domain (NASA)",
+    "credit": "NASA / GSFC / Arizona State University",
+    "focus": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  {
+    "slug": "starchart",
+    "file": "starchart.jpg",
+    "title": "Andreas Cellarius, Harmonia Macrocosmica (1660), Haemisphaerium Stellatum Boreale Antiquum",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Cellarius_Harmonia_Macrocosmica_-_Haemisphaerium_Stellatum_Boreale_Antiquum.jpg",
+    "license": "Public domain",
+    "credit": "Andreas Cellarius, 1660; via Wikimedia Commons",
+    "focus": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "note": "Cellarius is 17th century (named as an acceptable example); no Bode Uranographia plate found at usable resolution within the time box."
+  },
+  {
+    "slug": "telescope",
+    "file": "telescope.jpg",
+    "title": "Lord Rosse's Great Reflecting Telescope at Parsonstown (the Leviathan), coloured lithograph, Working Men's Educational Union, c. 1850s; downscaled to 3000 px",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Lossy-page1-6940px-Lord_Rosse%27s_Great_Reflecting_Telescope,_at_Parsonstown,_Ireland_RMG_F8661_(cropped).jpg",
+    "license": "Public domain",
+    "credit": "Working Men's Educational Union; Royal Museums Greenwich (F8661)",
+    "focus": {
+      "x": 0.5,
+      "y": 0.38
+    }
+  },
+  {
+    "slug": "penzias",
+    "file": "penzias.jpg",
+    "title": "Karl Jansky with his rotating \"merry-go-round\" antenna, Bell Telephone Laboratories, Holmdel, New Jersey, 1933",
+    "source_url": "https://commons.wikimedia.org/wiki/File:JanskyatAntenna_hi.tif",
+    "license": "CC BY 3.0",
+    "credit": "Image courtesy of NRAO/AUI",
+    "focus": {
+      "x": 0.6,
+      "y": 0.5
+    },
+    "note": "Substitute: no public domain 1965 photo of Penzias and Wilson exists on Commons beyond the NASA image already used for \"horn\"; this is the Bell Labs Holmdel antenna with which Jansky discovered cosmic radio noise. Not strictly PD (CC BY 3.0, like die.jpg)."
+  },
+  {
+    "slug": "notebook",
+    "file": "notebook.jpg",
+    "title": "Isaac Newton, alchemical manuscript page (Chemical Heritage Foundation AQ17), c. 1680s; downscaled to 3000 px",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Isaac_Newton_alchemical_manuscript_page_AQ17_(2).jpg",
+    "license": "Public domain",
+    "credit": "Isaac Newton; Science History Institute, via Wikimedia Commons",
+    "focus": {
+      "x": 0.5,
+      "y": 0.35
+    }
+  },
+  {
+    "slug": "snowflake",
+    "file": "snowflake.jpg",
+    "title": "Wilson A. Bentley, snow crystal photomicrograph, c. 1905",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Snowflake_-_By_Wilson_Bentley_ca._1905_-_MoPA.jpg",
+    "license": "Public domain",
+    "credit": "Wilson A. Bentley; Museum of Photographic Arts",
+    "focus": {
+      "x": 0.5,
+      "y": 0.5
+    }
+  },
+  {
+    "slug": "audubon2",
+    "file": "audubon2.jpg",
+    "title": "Carolina Parrot, Robert Havell after John James Audubon, The Birds of America plate 26 (1827); downscaled to 3000 px",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Robert_Havell_after_John_James_Audubon,_Carolina_Parrot,_1827,_NGA_32167.jpg",
+    "license": "CC0 (National Gallery of Art open access)",
+    "credit": "National Gallery of Art, Washington",
+    "focus": {
+      "x": 0.5,
+      "y": 0.45
+    }
+  },
+  {
+    "slug": "scope-bench",
+    "file": "scope-bench.jpg",
+    "title": "NASA Researchers Examine a Pratt and Whitney RL-10 Rocket Engine",
+    "date": "1962-04-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1962-C-60071",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1962-C-60071/GRC-1962-C-60071~medium.jpg",
+    "archive_id": "GRC-1962-C-60071",
+    "description": "Lead Test Engineer John Kobak (right) and a technician use an oscilloscope to test the installation of a Pratt and Whitney RL-10 engine in the Propulsion Systems Laboratory at the National Aeronautics and Space Administration (NASA) Lewis Research Center. In 1955 the military asked Pratt and Whitney to develop hydrogen engines specifically for aircraft. The program was canceled in 1958, but Pratt and Whitney decided to use the experience to develop a liquid-hydrogen rocket engine, the RL-10. Two of the 15,000-pound-thrust RL-10 engines were used to power the new Centaur second-stage rocket. Centaur was designed to carry the Surveyor spacecraft on its mission to soft-land on the Moon.    Pratt and Whitney ran into problems while testing the RL-10 at their facilities. NASA Headquarters assigned Lewis the responsibility for investigating the RL-10 problems because of the center\u2019s long history of liquid-hydrogen development. Lewis\u2019 Chemical Rocket Division began a series of tests to study the RL-10 at its Propulsion Systems Laboratory in March 1960. The facility contained two test chambers that could study powerful engines in simulated altitude conditions.     The first series of RL-10 tests in early 1961 involved gimballing the engine as it fired. Lewis researchers were able to yaw and pitch the engine to simulate its behavior during a real flight.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1962-C-60071",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "telereader",
+    "file": "telereader.jpg",
+    "title": "NACA Computer Operates an IBM Telereader",
+    "date": "1952-02-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1952-C-29212",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1952-C-29212/GRC-1952-C-29212~medium.jpg",
+    "archive_id": "GRC-1952-C-29212",
+    "description": "A staff member from the Computing Section at the National Advisory Committee for Aeronautics (NACA) Lewis Flight Propulsion Laboratory operates an International Business Machines (IBM) telereader at the 8- by 6-Foot Supersonic Wind Tunnel. The telereader was used to measure recorded data from motion picture film or oscillographs. The machine could perform 50 measurements per minute. The component to her right is a telerecordex that was used convert the telereader measurements into decimal form and record the data on computer punch cards.     During test runs in the 8- by 6-foot tunnel, or the other large test facilities, pressure sensors on the test article were connected to mercury-filled manometer tubes located below the test section. The mercury would rise or fall in relation to the pressure fluctuations in the test section. Initially, female staff members, known as \u201ccomputers,\u201d transcribed all the measurements by hand. The process became automated with the introduction of the telereader and other data reduction equipment in the early 1950s. The Computer Section staff members were still needed to operate the machines.       The Computing Section was introduced during World War II to relieve short-handed research engineers of some of the tedious work. The computers made the initial computations and plotted the data graphically. The researcher then analyzed the data and either summarized the findings in a report or made modifications or ran the test again. The computers and analysts were located in the Altitude Wind Tunnel Shop and Office Building office wing during the 1940s. They were transferred to the new facility when the 8- by 6-Foot tunnel began operations in 1948.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1952-C-29212",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "univac",
+    "file": "univac.jpg",
+    "title": "ERA 1103 UNIVAC 2 Calculating Machine",
+    "date": "1955-09-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1955-C-39782",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1955-C-39782/GRC-1955-C-39782~medium.jpg",
+    "archive_id": "GRC-1955-C-39782",
+    "description": "The new 10-by 10-Foot Supersonic Wind Tunnel at the Lewis Flight Propulsion Laboratory included high tech data acquisition and analysis systems. The reliable gathering of pressure, speed, temperature, and other data from test runs in the facilities was critical to the research process. Throughout the 1940s and early 1950s female employees, known as computers, recorded all test data and performed initial calculations by hand. The introduction of punch card computers in the late 1940s gradually reduced the number of hands-on calculations.      In the mid-1950s new computational machines were installed in the office building of the 10-by 10-Foot tunnel. The new systems included this UNIVAC 1103 vacuum tube computer\u2014the lab\u2019s first centralized computer system. The programming was done on paper tape and fed into the machine. The 10-by 10 computer center also included the Lewis-designed Computer Automated Digital Encoder (CADDE) and Digital Automated Multiple Pressure Recorder (DAMPR) systems which converted test data to binary-coded decimal numbers and recorded test pressures automatically, respectively. The systems primarily served the 10-by 10, but were also applied to the other large facilities.      Engineering Research Associates (ERA) developed the initial UNIVAC computer for the Navy in the late 1940s. In 1952 the company designed a commercial version, the UNIVAC 1103. The 1103 was the first computer designed by Seymour Cray and the first commercially successful computer.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1955-C-39782",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "ibm-team",
+    "file": "ibm-team.jpg",
+    "title": "Ames and IBM Personnel Discussing the installation of the computing system.",
+    "date": "1961-09-06",
+    "source_url": "https://images.nasa.gov/details/ARC-1961-A-28284",
+    "download_url": "https://images-assets.nasa.gov/image/ARC-1961-A-28284/ARC-1961-A-28284~medium.jpg",
+    "archive_id": "ARC-1961-A-28284",
+    "description": "IBM 7090 computer and personnel: L-R: R Smith, IBM; Smith DeFrance, Ames; H Funk, IBM; Marcie Chartz Smith, Ames; D Swartz, IBM; discuss installation of computer at Ames.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; ARC-1961-A-28284",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "plasma-rig",
+    "file": "plasma-rig.jpg",
+    "title": "NASA Researcher with a Coaxial Plasma Gun",
+    "date": "1962-06-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1962-C-61214",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1962-C-61214/GRC-1962-C-61214~medium.jpg",
+    "archive_id": "GRC-1962-C-61214",
+    "description": "Researcher Charles Michels operates a coaxial plasma gun rig in Cell SW-13 of the Engine Research Building at the National Aeronautics and Space Administration (NASA) Lewis Research Center. From 1962 to 1967 NASA Lewis investigated coaxial plasma guns powered by conventional capacitor banks. The studies were part of a larger effort to identify electromagnetic accelerators for space propulsion. NASA worked with General Dynamics, General Electric, General Motors, and Republic Aviation on the project.    NASA Lewis conducted a research program to determine which factors influenced the coaxial gun\u2019s efficiency and analyze the acceleration process. The system had not previously been used for propulsion applications. The single-shot gun\u2019s fast gas valve and capacitor banks with variable-delay ignition source permitted the evaluation of gun performance under controllable propellant quantity and distribution conditions.    The coaxial plasma gun was the most basic type of electromagnetic accelerator. It included a charged capacitor in series with a pair of coaxial electrodes. An electrical breakdown occurred when gas was admitted to the inter-electrode region. The gas instantly became a good conductor and formed a conducting sheet that separated the magnetic field from the open region beyond. The highly-conducting gas was basically expelled by the force of the magnetic pressure. This type of thruster could operate at the high instantaneous power levels without decreasing its average power level.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1962-C-61214",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "magnetic-wave",
+    "file": "magnetic-wave.jpg",
+    "title": "NASA Researcher Adjusts a Travelling Magnetic Wave Plasma Engine",
+    "date": "1964-02-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1964-C-68254",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1964-C-68254/GRC-1964-C-68254~medium.jpg",
+    "archive_id": "GRC-1964-C-68254",
+    "description": "Raymond Palmer, of the Electromagnetic Propulsion Division\u2019s Plasma Flow Section, adjusts the traveling magnetic wave plasma engine being operated in the Electric Power Conversion at the National Aeronautics and Space Administration (NASA) Lewis Research Center. During the 1960s Lewis researchers were exploring several different methods of creating electric propulsion systems, including the traveling magnetic wave plasma engine. The device operated similarly to alternating-current motors, except that a gas, not a solid, was used to conduct the electricity. A magnetic wave induced a current as it passed through the plasma. The current and magnetic field pushed the plasma in one direction.    Palmer and colleague Robert Jones explored a variety of engine configurations in the Electric Propulsion Research Building. The engine is seen here mounted externally on the facility\u2019s 5-foot diameter and 16-foot long vacuum tank. The four magnetic coils are seen on the left end of the engine. The researchers conducted two-minute test runs with varying configurations and used of both argon and xenon as the propellant.   The Electric Propulsion Research Building was built in 1942 as the Engine Propeller Research Building, often called the Prop House. It contained four test cells to study large reciprocating engines with their propellers. After World War II, the facility was modified to study turbojet engines. By the 1960s, the facility was modified again for electric propulsion research and given its current name.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1964-C-68254",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "ion-cluster",
+    "file": "ion-cluster.jpg",
+    "title": "Engineer Examines Cluster of Ion Engines in the Electric Propulsion Laboratory",
+    "date": "1963-01-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1963-C-63281",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1963-C-63281/GRC-1963-C-63281~medium.jpg",
+    "archive_id": "GRC-1963-C-63281",
+    "description": "New staff member Paul Margosian inspects a cluster of ion engines in the Electric Propulsion Laboratory\u2019s 25-foot diameter vacuum tank at the National Aeronautics and Space Administration (NASA) Lewis Research Center. Lewis researchers had been studying different methods of electric rocket propulsion since the mid-1950s. Harold Kaufman created the first successful engine, the electron bombardment ion engine, in the early 1960s. These engines used electric power to create and accelerate small particles of propellant material to high exhaust velocities. Electric engines have a very small thrust, and but can operate for long periods of time. The ion engines are often clustered together to provide higher levels of thrust.     The Electric Propulsion Laboratory contained two large vacuum tanks capable of simulating the space environment. The tanks were designed especially for testing ion and plasma thrusters and spacecraft. The larger 25-foot diameter tank was intended for testing electric thrusters with condensable propellants. The tank\u2019s test compartment, seen here, was 10 feet in diameter.    Margosian joined Lewis in late 1962 during a major NASA hiring phase. The Agency reorganized in 1961 and began expanding its ranks through a massive recruiting effort. Lewis personnel increased from approximately 2,700 in 1961 to over 4,800 in 1966. Margosian, who worked with Bill Kerslake in the Electromagnetic Propulsion Division\u2019s Propulsion Systems Section, wrote eight technical reports on mercury and electron bombardment thrusters, thermoelectrostatic generators, and a high voltage insulator.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1963-C-63281",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "ruby-laser",
+    "file": "ruby-laser.jpg",
+    "title": "Researcher Determining a Ruby Laser\u2019s Effect on a Crystal",
+    "date": "1965-05-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1965-C-00811",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1965-C-00811/GRC-1965-C-00811~medium.jpg",
+    "archive_id": "GRC-1965-C-00811",
+    "description": "National Aeronautics and Space Administration (NASA) Lewis Research Center researcher Americo Forestieri aims a ruby laser beam at a crystal to determine the effects of its radiation. Forestieri was a researcher in the Electric Component Experiment Section of the Space Power System Division. Lewis was in the midst of a long-term effort to develop methods of delivering electrical power to spacecraft using nuclear, solar, or electrochemical technologies.     Ruby lasers contain a ruby crystal with mirrors on either side. The laser action is created when a high-intensity lamp shines around the ruby and excites the electrons in the ruby\u2019s chromium atoms. After the excitation, the electrons emit their ruby-red light. The mirrors reflect some of this red light back and forth inside the ruby which causes other excited chromium atoms to produce additional red light. This continues until the light pulse reaches high power levels and consumes all of the energy stored in the crystal.    Forestieri used optical absorption and electron paramagnetic resonance techniques to study the extent and manner in which the radiation interacted with the samples. He determined that individual bands were assigned to specific electronic transitions. He also studied the atomic changes in the ruby crystals after irradiation. He found that complex interactions depend on the crystal pretreatment, purity, and irradiation dose.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1965-C-00811",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "interferometer",
+    "file": "interferometer.jpg",
+    "title": "Gas Laser Interferometer in the Electric Conversion Laboratory",
+    "date": "1966-10-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1966-C-03919",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1966-C-03919/GRC-1966-C-03919~medium.jpg",
+    "archive_id": "GRC-1966-C-03919",
+    "description": "Richard Lancashire operates a gas laser interferometer in the Electric Conversion Laboratory at the National Aeronautics and Space Administration (NASA) Lewis Research Center. Lewis was in the midst of a long-term effort to develop methods of delivering electrical power to spacecraft using nuclear, solar, or electrochemical technologies. Lancashire was measuring the thermionic diode\u2019s plasma particle density. The thermionic diodes were being studied for possible use in radioisotope thermoelectric generators for use in space.    Microwave interferometry was one method of measuring transient plasmas. The interferometer measured the difference between the frequencies of two laser beams, one of which passed through the diode. The electron density was measured by revealing the phase shift of the transmitted microwave beam brought about by a change in the plasma refraction. Microwave interferometry, however, offers poor spatial resolution and has limited range of applicability.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1966-C-03919",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "differential-analyzer",
+    "file": "differential-analyzer.jpg",
+    "title": "Harry Mergler with His Modified Differential Analyzer",
+    "date": "1951-06-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1951-C-27875",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1951-C-27875/GRC-1951-C-27875~medium.jpg",
+    "archive_id": "GRC-1951-C-27875",
+    "description": "Harry Mergler stands at the control board of a differential analyzer in the new Instrument Research Laboratory at the National Advisory Committee for Aeronautics (NACA) Lewis Flight Propulsion Laboratory. The differential analyzer was a multi-variable analog computation machine devised in 1931 by Massachusetts Institute of Technology researcher and future NACA Committee member Vannevar Bush. The mechanical device could solve computations up to the sixth order, but had to be rewired before each new computation. Mergler modified Bush\u2019s differential analyzer in the late 1940s to calculate droplet trajectories for Lewis\u2019 icing research program. In four days Mergler\u2019s machine could calculate what previously required weeks.      NACA Lewis built the Instrument Research Laboratory in 1950 and 1951 to house the large analog computer equipment. The two-story structure also provided offices for the Mechanical Computational Analysis, and Flow Physics sections of the Physics Division. The division had previously operated from the lab\u2019s hangar because of its icing research and flight operations activities.    Mergler joined the Instrument Research Section of the Physics Division in 1948 after earning an undergraduate degree in Physics from the Case Institute of Technology. Mergler\u2019s focus was on the synthesis of analog computers with the machine tools used to create compressor and turbine blades for jet engines.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1951-C-27875",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "computer-room",
+    "file": "computer-room.jpg",
+    "title": "IBM 704 Computer Operations ",
+    "date": "1957-12-16",
+    "source_url": "https://images.nasa.gov/details/LRC-1957-B701_P-05391",
+    "download_url": "https://images-assets.nasa.gov/image/LRC-1957-B701_P-05391/LRC-1957-B701_P-05391~medium.jpg",
+    "archive_id": "LRC-1957-B701_P-05391",
+    "description": "IBM 704 Computer Operations People on the photo are: Woman in the front with her back to the camera is Jean Ruddle Migneault. She provided the names for the rest of the staff in the photo. Kathy Christian Young, Mary Talmage Kaylor, Willie Terrell Ruffin (computer operator not mathematician), Joyce Alston Clemens, Lou Mayo Ladson,  Rachel Richardson Mayo,  Sadie Livingston Boyer ,  Joann Shipp Buschman worked in hangar in West Area,  Shelva Blevins Stroud  (programmer in data reduction),   Jackie Kilby,  Rita Englebert, Harriet Seals Winestein, Lillian Boney, Jane Thompson Kemper, Helen Thompson  ( math aide) Jane and Helen were daughters of Floyd Thompson, center director.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; LRC-1957-B701_P-05391",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "data-plotting",
+    "file": "data-plotting.jpg",
+    "title": "Computer Plotting Data Points in the Engine Research Building",
+    "date": "1956-09-23",
+    "source_url": "https://images.nasa.gov/details/GRC-1956-C-42046",
+    "download_url": "https://images-assets.nasa.gov/image/GRC-1956-C-42046/GRC-1956-C-42046~medium.jpg",
+    "archive_id": "GRC-1956-C-42046",
+    "description": "A female computer plotting compressor data in the Engine Research Building at the NACA\u2019s Lewis Flight Propulsion Laboratory. The Computing Section was introduced during World War II to relieve short-handed research engineers of some of the tedious data-taking work. The computers made the initial computations and plotted the data graphically. The researcher then analyzed the data and either summarized the findings in a report or made modifications or ran the test again.       With the introduction of mechanical computer systems in the 1950s the female computers learned how to encode the punch cards. As the data processing capabilities increased, fewer female computers were needed. Many left on their own to start families, while others earned mathematical degrees and moved into advanced positions.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; GRC-1956-C-42046",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "bell-transistor-team",
+    "file": "bell-transistor-team.jpg",
+    "title": "Bardeen, Shockley and Brattain at the Bell Labs transistor bench",
+    "date": "1948 (publicity image; print has a 1964 stamp)",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Bardeen_Shockley_Brattain_1948.JPG",
+    "download_url": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Bardeen_Shockley_Brattain_1948.JPG",
+    "license": "Public domain in the US; published without copyright notice (Commons PD-US-no notice)",
+    "credit": "AT&T / Bell Laboratories; photographer credited on print as Jack St. [surname incomplete]",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "flight-waveforms",
+    "file": "flight-waveforms.jpg",
+    "title": "X-1A in flight with flight data superimposed",
+    "date": "Flight data: 12 December 1953",
+    "source_url": "https://images.nasa.gov/details/E-24911",
+    "download_url": "https://images-assets.nasa.gov/image/E-24911/E-24911~medium.jpg",
+    "archive_id": "E-24911",
+    "description": "This photo of the X-1A includes graphs of the flight data from Maj. Charles E. Yeager's Mach 2.44 flight on December 12, 1953. (This was only a few days short of the 50th anniversary of the Wright brothers' first powered flight.) After reaching Mach 2.44, then the highest speed ever reached by a piloted aircraft, the X-1A tumbled completely out of control. The motions were so violent that Yeager cracked the plastic canopy with his helmet. He finally recovered from a inverted spin and landed on Rogers Dry Lakebed. Among the data shown are Mach number and altitude (the two top graphs). The speed and altitude changes due to the tumble are visible as jagged lines. The third graph from the bottom shows the G-forces on the airplane. During the tumble, these twice reached 8 Gs or 8 times the normal pull of gravity at sea level. (At these G forces, a 200-pound human would, in effect, weigh 1,600 pounds if a scale were placed under him in the direction of the force vector.) Producing these graphs was a slow, difficult process. The raw data from on-board instrumentation recorded on oscillograph film. Human computers then reduced the data and recorded it on data sheets, correcting for such factors as temperature and instrument errors. They used adding machines or slide rules for their calculations, pocket calculators being 20 years in the future.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; E-24911",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  },
+  {
+    "slug": "reeves-analog",
+    "file": "reeves-analog.jpg",
+    "title": "Reeves Electronic Analog Computer at Ames",
+    "date": "1949-09-27",
+    "source_url": "https://images.nasa.gov/details/ARC-1949-A-14505",
+    "download_url": "https://images-assets.nasa.gov/image/ARC-1949-A-14505/ARC-1949-A-14505~medium.jpg",
+    "archive_id": "ARC-1949-A-14505",
+    "description": "Reeves Electronic analog computer (REAC), Ames' first electronic computing machine, was acquired in 1949 to perform control simulation analysis.",
+    "license": "Public domain (NASA/NACA, US government work)",
+    "credit": "NASA / NACA; ARC-1949-A-14505",
+    "treatment": "Cropped, indigo duotone, dithered; three grain variants."
+  }
+]

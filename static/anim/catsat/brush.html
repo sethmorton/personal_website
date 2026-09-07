@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 31; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const INK = [74, 106, 143], DEEP = [31, 79, 143], DRY = [44, 88, 143], SKY = [110, 158, 206], WARM = [201, 108, 62];
+const FIN = [WARM[0] + (DEEP[0] - WARM[0]) * 0.5 | 0, WARM[1] + (DEEP[1] - WARM[1]) * 0.5 | 0, WARM[2] + (DEEP[2] - WARM[2]) * 0.5 | 0];
+const EDGE = [WARM[0] + (DEEP[0] - WARM[0]) * 0.72 | 0, WARM[1] + (DEEP[1] - WARM[1]) * 0.72 | 0, WARM[2] + (DEEP[2] - WARM[2]) * 0.72 | 0];
+const mix = (a, b, t) => `rgb(${a[0] + (b[0] - a[0]) * t | 0},${a[1] + (b[1] - a[1]) * t | 0},${a[2] + (b[2] - a[2]) * t | 0})`;
+const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v, smooth = u => u * u * (3 - 2 * u);
+const ramp = (a, b, n) => { const r = []; for (let i = 0; i <= n; i++) r.push(mix(a, b, i / n)); return r; };
+const WET2DRY = ramp(INK, DRY, 8), POOL2DRY = ramp(DEEP, DEEP, 8), SKY2INK = ramp(SKY, INK, 6), INK2WARM = ramp(INK, WARM, 10), WARM2FIN = ramp(WARM, FIN, 8), WARM2EDGE = ramp(WARM, EDGE, 8);
+const HALO = []; for (let i = 0; i <= 10; i++) HALO.push(`rgba(182,194,210,${(0.72 * Math.pow(1 - i / 10, 1.2)).toFixed(3)})`);
+const GRAIN = 'rgba(74,106,143,0.5)', HAIR = 'rgba(74,106,143,0.2)';
+
+// ---- the words: rasterised at 2x, with a distance-to-ink field outside the glyphs for the bleed ----
+const WORDS = ['THE', 'CAT', 'SAT'], FONT = '700 76px Georgia, serif', GAP = 32, BASE = 232, CAPH = 53;
+const T0 = [0.3, 2.9, 5.5], DUR = [2.1, 2.1, 2.3], CYCLE = 12.4, FADE_AT = 11.6;
+const off = document.createElement('canvas'), og = off.getContext('2d');
+og.font = FONT;
+const widths = WORDS.map(w => og.measureText(w).width);
+let x0 = (W - (widths[0] + widths[1] + widths[2] + GAP * 2)) / 2;
+const words = WORDS.map((text, k) => {
+  const PAD = 12, wd = Math.ceil(widths[k]) + PAD * 2, ht = CAPH + PAD * 2, GW = wd * 2, GH = ht * 2;
+  off.width = GW; off.height = GH; og.scale(2, 2); og.font = FONT; og.fillStyle = '#000'; og.fillText(text, PAD, PAD + CAPH); og.setTransform(1, 0, 0, 1, 0, 0);
+  const a = og.getImageData(0, 0, GW, GH).data, mask = new Uint8Array(GW * GH), dist = new Float32Array(GW * GH).fill(99);
+  let inkL = 1e9, inkR = 0;
+  for (let q = 0; q < GW * GH; q++) if (a[q * 4 + 3] > 110) { mask[q] = 1; dist[q] = 0; const gx = q % GW; if (gx < inkL) inkL = gx; if (gx > inkR) inkR = gx; }
+  for (let pass = 0; pass < 2; pass++)                       // two-sweep chamfer distance, in 2x cells
+    for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
+      const jj = pass ? GH - 1 - j : j, ii = pass ? GW - 1 - i : i, q = jj * GW + ii; let d = dist[q];
+      const dj = pass ? -1 : 1, di = pass ? -1 : 1;
+      if (jj - dj >= 0 && jj - dj < GH) { d = Math.min(d, dist[q - dj * GW] + 1); if (ii - di >= 0 && ii - di < GW) d = Math.min(d, dist[q - dj * GW - di] + 1.414); if (ii + di >= 0 && ii + di < GW) d = Math.min(d, dist[q - dj * GW + di] + 1.414); }
+      if (ii - di >= 0 && ii - di < GW) d = Math.min(d, dist[q - di] + 1);
+      dist[q] = d;
+    }
+  const ox = x0 - PAD, oy = BASE - CAPH - PAD;                  // page position of the raster's origin
+  const w = { k, text, ox, oy, GW, GH, mask, dist, x: x0, w: widths[k], inkL: ox + inkL / 2, inkR: ox + inkR / 2 };
+  x0 += widths[k] + GAP;
+  return w;
+});
+const distAt = (w, x, y) => { const i = (x - w.ox) * 2 | 0, j = (y - w.oy) * 2 | 0; return i >= 0 && j >= 0 && i < w.GW && j < w.GH ? w.dist[j * w.GW + i] / 2 : 99; };
+
+// ---- the brush: travels each word left to right, slow at both ends (pooling), fast through the middle (flying white) ----
+const NF = 34, STEP = 1.2, FTOP = BASE - CAPH - 3, FBOT = BASE + 3, RUNNERS = [13, 22];
+const pos = u => 0.5 * u + 0.5 * smooth(u), speed = u => 0.5 + 3 * u * (1 - u);      // fraction of the run, and d pos / d u
+const INV = new Float32Array(401); { let j = 0; for (let i = 0; i <= 400; i++) { const f = i / 400; while (j < 400 && pos((j + 1) / 400) < f) j++; const a = pos(j / 400), b = pos((j + 1) / 400); INV[i] = (j + clamp((f - a) / (b - a || 1))) / 400; } }
+const invPos = f => { const s = clamp(f) * 400, i = s | 0; return i >= 400 ? 1 : INV[i] + (INV[i + 1] - INV[i]) * (s - i); };
+for (const w of words) {
+  w.runL = w.inkL - 5; w.runR = w.inkR + 5; w.run = w.runR - w.runL;
+  w.tOf = x => T0[w.k] + DUR[w.k] * invPos((x - w.runL) / w.run);                 // when the brush passes column x
+  w.press = x => { const u = invPos((x - w.runL) / w.run); return clamp(1 - (speed(u) - 0.5) / 1.5 * 0.85 + 0.08 * Math.sin(x * 0.31 + w.k)); };
+  w.wetness = x => 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(x * 0.045 + w.k * 2.1));      // how damp the paper is here: how far the bleed goes
+  w.haloR = x => (1.4 + 6.4 * w.press(x)) * w.wetness(x);
+  const fy = new Float32Array(NF), fa = new Float32Array(NF), fp = new Float32Array(NF), ff = new Float32Array(NF), fb = new Float32Array(NF);
+  for (let i = 0; i < NF; i++) { fy[i] = FTOP + (FBOT - FTOP) * (i + 0.5) / NF + (rnd() - 0.5) * 1.1; fa[i] = 0.5 + rnd() * 0.9; fp[i] = rnd() * 6.283; ff[i] = 0.04 + rnd() * 0.05; fb[i] = (rnd() - 0.5) * 0.3; }
+  w.fiber = (i, x) => fy[i] + fa[i] * Math.sin(x * ff[i] + fp[i]);
+  w.runY = (r, x) => (FTOP + FBOT) / 2 + 11 * Math.sin(x * 0.021 + r * 2.4 + w.k) + fa[RUNNERS[r]] * Math.sin(x * 0.09 + r);
+  const dx = [], dy = [], dt = [], ds = [], dc = [], dp = [];                        // deposits: x, y, pass time, size, class (0 ink 1 pool 2 grain 3 hair), phase
+  const put = (x, y, tp, s, cls) => { dx.push(x); dy.push(y); dt.push(tp); ds.push(s); dc.push(cls); dp.push(rnd() * 6.283); };
+  for (let x = w.runL; x <= w.runR; x += STEP) {
+    const P = w.press(x), tp = w.tOf(x), q = 0.45 + 0.42 * P, edge = 0.5 + 1.3 * P;
+    for (let i = 0; i < NF; i++) {
+      const y = w.fiber(i, x), d = distAt(w, x, y);
+      const load = 0.5 + 0.32 * Math.sin(x * 0.11 + fp[i] * 3.1) + 0.18 * Math.sin(x * 0.29 + fp[i] * 7.3);   // how much ink this fibre holds here: gaps run, not sputter
+      if (d === 0) {
+        if (load > 1 - q - fb[i]) put(x + (rnd() - 0.5) * 0.4, y + (rnd() - 0.5) * 0.4, tp, 0.9 + 0.9 * P + 0.6 * load, P > 0.8 ? 1 : 0);
+        if (rnd() < 0.11) put(x + (rnd() - 0.5) * 1.2, y + (rnd() - 0.5) * 1.8, tp, 0.9 + rnd() * 0.5, 2);
+      } else if (d < edge && load > 0.45 && rnd() < 0.6 * (1 - d / edge)) put(x + (rnd() - 0.5) * 0.6, y + (rnd() - 0.5) * 0.5, tp, 1.0 + 0.6 * P, 0);
+    }
+    for (let r = 0; r < 2; r++) {                                                     // the two most loaded fibres drag a dry hairline across the gaps
+      const y = w.runY(r, x); if (x > w.inkL + 2 && x < w.inkR - 2 && rnd() < 0.55 && distAt(w, x, y) > 1.2) put(x, y + (rnd() - 0.5) * 0.4, tp, 0.7 + rnd() * 0.35, 3);
+    }
+  }
+  w.n = dx.length; w.dx = Float32Array.from(dx); w.dy = Float32Array.from(dy); w.dt = Float32Array.from(dt); w.ds = Float32Array.from(ds); w.dc = Uint8Array.from(dc); w.dp = Float32Array.from(dp);
+  const hx = [], hy = [], ht = [], hr = [];                                           // bleed: granular halo outside the glyphs, spreading while wet
+  for (let j = 0; j < w.GH; j++) for (let i = 0; i < w.GW; i++) {
+    const d = w.dist[j * w.GW + i] / 2; if (d < 0.6 || d > 8) continue;
+    const x = w.ox + i / 2 + rnd() * 0.5, y = w.oy + j / 2 + rnd() * 0.5, R = w.haloR(x); if (d > R) continue;
+    if (rnd() > (0.05 + 0.09 * w.press(x)) * Math.pow(1 - d / R, 1.2)) continue;
+    hx.push(x); hy.push(y); ht.push(w.tOf(x)); hr.push(d / R);
+  }
+  w.hn = hx.length; w.hx = Float32Array.from(hx); w.hy = Float32Array.from(hy); w.ht = Float32Array.from(ht); w.hr = Float32Array.from(hr);
+}
+
+// ---- the transfer: CAT's wet ink is drawn forward along the fibres into SAT while SAT is written, warms on the way, settles ----
+const CAT = words[1], SAT = words[2], NT = 600;
+const sx = new Float32Array(NT), sy = new Float32Array(NT), tx = new Float32Array(NT), ty = new Float32Array(NT), ta = new Float32Array(NT), td = new Float32Array(NT), tph = new Float32Array(NT), tsz = new Float32Array(NT), tring = new Uint8Array(NT);
+{
+  const srcs = []; for (let i = 0; i < CAT.n; i++) if (CAT.dc[i] < 2 && CAT.dx[i] > CAT.inkR - 30) srcs.push(i);
+  const inner = [], ring = [];
+  for (let j = 0; j < SAT.GH; j++) for (let i = 0; i < SAT.GW; i++) { const d = SAT.dist[j * SAT.GW + i]; if (d === 0) inner.push(j * SAT.GW + i); else if (d <= 2.4) ring.push(j * SAT.GW + i); }
+  for (let i = 0; i < NT; i++) {
+    const s = srcs[(rnd() * srcs.length) | 0]; sx[i] = CAT.dx[s]; sy[i] = CAT.dy[s];
+    tring[i] = rnd() < 0.45 ? 0 : 1; const pool = tring[i] ? ring : inner, q = pool[(rnd() * pool.length) | 0];
+    tx[i] = SAT.ox + (q % SAT.GW) / 2 + rnd() * 0.5; ty[i] = SAT.oy + ((q / SAT.GW) | 0) / 2 + rnd() * 0.5;
+    td[i] = 0.9 + rnd() * 0.6 + (tx[i] - sx[i]) / 200;
+    ta[i] = Math.max(SAT.tOf(tx[i]) + 0.2, T0[2] + 0.5 + td[i]) + rnd() * 0.9;
+    tph[i] = rnd() * 6.283; tsz[i] = 1.6 + rnd() * 0.5;
+  }
+}
+
+// ---- draw: a pure function of cycle time ----
+let marks = 0;
+const CLS_COL = [WET2DRY, POOL2DRY, null, null];
+function drawWord(w, t) {
+  const tEnd = T0[w.k] + DUR[w.k];
+  for (let i = 0; i < w.hn; i++) {                                   // bleed halo first, under the ink
+    const age = t - w.ht[i]; if (age <= 0) continue;
+    const reach = smooth(clamp(age / 1.8)); if (w.hr[i] > reach) continue;
+    g.fillStyle = HALO[Math.min(10, (w.hr[i] * 10) | 0)];
+    g.fillRect(w.hx[i] - 1.1, w.hy[i] - 1.1, 2.2, 2.2); marks++;
+  }
+  for (let cls = 3; cls >= 0; cls--) {
+    for (let i = 0; i < w.n; i++) {
+      if (w.dc[i] !== cls) continue; const age = t - w.dt[i]; if (age <= 0) continue;
+      const dry = smooth(clamp((age - 1.1) / 1.6)), wob = (1 - dry) * 0.45, s = w.ds[i] * (1 - dry * 0.1);
+      const x = w.dx[i] + Math.sin(t * 1.5 + w.dp[i]) * wob, y = w.dy[i] + Math.cos(t * 1.2 + w.dp[i] * 1.7) * wob;
+      if (cls === 3) g.fillStyle = HAIR;
+      else if (cls === 2) g.fillStyle = GRAIN;
+      else if (age < 0.3) g.fillStyle = SKY2INK[(age / 0.3 * 6) | 0];
+      else g.fillStyle = CLS_COL[cls][(dry * 8) | 0];
+      g.fillRect(x - s / 2, y - s / 2, s, s); marks++;
+    }
+  }
+  if (t >= T0[w.k] && t < tEnd) {                                    // the brush tip: a dense wet bead across the fibres it is touching
+    const X = w.runL + w.run * pos((t - T0[w.k]) / DUR[w.k]), P = w.press(X);
+    g.fillStyle = mix(DEEP, DEEP, 0);
+    for (let i = 0; i < NF; i++) {
+      const y = w.fiber(i, X); if (distAt(w, X, y) > 0.8 && distAt(w, X - 1.5, y) > 0.8) continue;
+      const s = 1.6 + 1.2 * P; g.fillRect(X - 1 - s / 2 + Math.sin(t * 9 + i) * 0.3, y - s / 2, s, s); marks++;
+    }
+    g.fillStyle = HAIR;
+    for (let r = 0; r < 2; r++) { const y = w.runY(r, X); g.fillRect(X - 1.5, y - 0.45, 1, 0.9); marks++; }
+  }
+}
+function drawTransfer(t) {
+  for (let i = 0; i < NT; i++) {
+    const dep = ta[i] - td[i]; if (t < dep) continue;
+    const u = (t - dep) / td[i];
+    if (u < 1) {                                                     // in flight: a short dash riding its fibre, leaving fast, easing onto the target row late
+      const e = 1 - (1 - u) * (1 - u) * (1 - u * 0.4), x = sx[i] + (tx[i] - sx[i]) * e, y = sy[i] + (ty[i] - sy[i]) * smooth(clamp((u - 0.5) / 0.45)) + Math.sin(x * 0.06 + tph[i]) * 0.7 * (1 - e) + Math.sin(t * 2.2 + tph[i]) * 0.3;
+      g.fillStyle = INK2WARM[(clamp((u - 0.02) / 0.45) * 10) | 0];
+      g.fillRect(x - 2.2, y - 0.65, 4.4, 1.3);
+    } else {                                                         // landed: settles into a fibre-shaped dash, warm cooling toward the ink around it
+      const settle = smooth(clamp((u - 1) * td[i] / 1.4)), wob = (1 - settle) * 0.4, len = 3.2 - settle * (3.2 - tsz[i] * 1.6), th = 1.5 - settle * 0.35;
+      g.fillStyle = (tring[i] ? WARM2EDGE : WARM2FIN)[(settle * 8) | 0];
+      g.fillRect(tx[i] + Math.sin(t * 1.5 + tph[i]) * wob - len / 2, ty[i] + Math.cos(t * 1.2 + tph[i]) * wob - th / 2, len, th);
+    }
+    marks++;
+  }
+}
+function draw(t) {
+  g.clearRect(0, 0, W, H); marks = 0;
+  g.globalAlpha = t > FADE_AT ? Math.max(0, 1 - (t - FADE_AT) / (CYCLE - FADE_AT)) : 1;
+  for (const w of words) drawWord(w, t);
+  drawTransfer(t);
+  g.globalAlpha = 1;
+  window.__marks = marks; window.__t = t;
+}
+
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) draw(parseFloat(frozen) % CYCLE);
+else {
+  let T = 0, last = performance.now();
+  const frame = now => { T += Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now; draw(T % CYCLE); requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

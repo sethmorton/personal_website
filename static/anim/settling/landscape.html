@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">New evidence reshapes the landscape everywhere at once. The ball rolls to a basin that did not exist a moment ago.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+
+const INK = [40,97,122], DEEP = [35,72,95], SKY = [113,146,158], PALE = [155,173,176];
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const mix = (a, b, t) => `rgb(${a[0] + (b[0] - a[0]) * t | 0},${a[1] + (b[1] - a[1]) * t | 0},${a[2] + (b[2] - a[2]) * t | 0})`;
+
+// ---- the landscape: gaussian wells (depth d, width s) on a very gentle bowl ----
+const MAXW = 7, wells = [];
+const addWell = (x, y, d, s) => wells.push({ x, y, d: 0, s, d0: 0, d1: d, s0: s, s1: s });
+for (let i = 0; i < 6; i++) addWell(110 + rnd() * 420, 80 + rnd() * 240, 0.6 + rnd() * 0.4, 38 + rnd() * 26);
+for (const w of wells) w.d = w.d1;                      // initial wells appear fully formed
+
+function field(x, y) {
+  let f = ((x - 320) * (x - 320) + (y - 200) * (y - 200)) * 0.0000025 + x * 0.00012;
+  for (let i = 0; i < wells.length; i++) { const w = wells[i], dx = x - w.x, dy = y - w.y; f -= w.d * Math.exp(-(dx * dx + dy * dy) / (2 * w.s * w.s)); }
+  return f;
+}
+function grad(x, y, out) {                             // analytic gradient, no allocation
+  let gx = (x - 320) * 0.000005 + 0.00012, gy = (y - 200) * 0.000005;
+  for (let i = 0; i < wells.length; i++) {
+    const w = wells[i], dx = x - w.x, dy = y - w.y, e = w.d * Math.exp(-(dx * dx + dy * dy) / (2 * w.s * w.s)) / (w.s * w.s);
+    gx += dx * e; gy += dy * e;
+  }
+  out[0] = gx; out[1] = gy;
+}
+
+// ---- sampled grid + marching squares, dotted like an engraving ----
+const GX = 96, GY = 60, CW = W / GX, CH = H / GY, F = new Float32Array((GX + 1) * (GY + 1));
+const NLEV = 12, NDEEP = 3, levels = new Float32Array(NLEV + NDEEP);
+const colors = [], sizes = [];
+for (let i = 0; i < NDEEP; i++) { colors.push(mix(DEEP, DEEP, 0)); sizes.push(1.9); }
+for (let i = 0; i < NLEV; i++) { const t = i / (NLEV - 1); colors.push(mix(INK, PALE, t * t)); sizes.push(1.8 - t * 0.4); }
+// edge pairs for the 16 marching-squares cases (0=top 1=right 2=bottom 3=left); -1 ends the list
+const CASES = [[-1], [3, 2, -1], [2, 1, -1], [3, 1, -1], [0, 1, -1], [3, 0, 1, 2, -1], [0, 2, -1], [3, 0, -1],
+               [3, 0, -1], [0, 2, -1], [3, 2, 0, 1, -1], [0, 1, -1], [3, 1, -1], [2, 1, -1], [3, 2, -1], [-1]];
+const ex = new Float64Array(4), ey = new Float64Array(4);
+let T = 0, dots = 0;
+let spacing = 4.2;                                     // eases wider when the map gets busy, holding ~3600 dots
+function dotLine(x1, y1, x2, y2, l, h) {
+  const L = Math.hypot(x2 - x1, y2 - y1), n = Math.max(1, Math.round(L / spacing)), sz = sizes[l];
+  for (let k = 0; k < n; k++) {
+    const t = (k + 0.5) / n, q = h * 0.618 + k * 2.39;
+    g.fillRect(x1 + (x2 - x1) * t + Math.sin(T * 1.4 + q) * 0.55 - sz / 2, y1 + (y2 - y1) * t + Math.cos(T * 1.1 + q * 1.7) * 0.55 - sz / 2, sz, sz);
+    dots++;
+  }
+}
+function contours() {
+  for (let j = 0; j <= GY; j++) for (let i = 0; i <= GX; i++) F[j * (GX + 1) + i] = field(i * CW, j * CH);
+  let lo = 1e9, hi = -1e9;
+  for (let k = 0; k < F.length; k++) { if (F[k] < lo) lo = F[k]; if (F[k] > hi) hi = F[k]; }
+  const R = hi - lo;
+  for (let i = 0; i < NDEEP; i++) levels[i] = lo + R * (0.018 + i * 0.026);
+  for (let i = 0; i < NLEV; i++) levels[NDEEP + i] = lo + R * (0.11 + 0.74 * Math.pow(i / (NLEV - 1), 0.75));
+  for (let l = 0; l < levels.length; l++) {
+    const v = levels[l]; g.fillStyle = colors[l];
+    for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
+      const o = j * (GX + 1) + i, a = F[o], b = F[o + 1], cc = F[o + GX + 2], d = F[o + GX + 1];
+      const code = (a > v ? 8 : 0) | (b > v ? 4 : 0) | (cc > v ? 2 : 0) | (d > v ? 1 : 0);
+      if (code === 0 || code === 15) continue;
+      const x = i * CW, y = j * CH;
+      ex[0] = x + CW * (v - a) / (b - a); ey[0] = y;
+      ex[1] = x + CW; ey[1] = y + CH * (v - b) / (cc - b);
+      ex[2] = x + CW * (v - d) / (cc - d); ey[2] = y + CH;
+      ex[3] = x; ey[3] = y + CH * (v - a) / (d - a);
+      let cs = CASES[code];
+      if ((code === 5 || code === 10) && (a + b + cc + d) * 0.25 < v) cs = CASES[15 - code];
+      for (let k = 0; cs[k] >= 0; k += 2) dotLine(ex[cs[k]], ey[cs[k]], ex[cs[k + 1]], ey[cs[k + 1]], l, o * 3 + l * 7 + k);
+    }
+  }
+}
+
+// ---- the marble: overdamped, slides down the gradient and rests ----
+const m = { x: wells[0].x + 20, y: wells[0].y - 10 }, gv = [0, 0];
+const TRAIL = 90, tx = new Float32Array(TRAIL), ty = new Float32Array(TRAIL); let th = 0, tAcc = 0;
+for (let i = 0; i < TRAIL; i++) { tx[i] = m.x; ty[i] = m.y; }
+function marble(dt) {
+  grad(m.x, m.y, gv);                                   // overdamped: velocity follows the slope, saturating on steep ground
+  const gm = Math.hypot(gv[0], gv[1]), sp = 50000 / (1 + 50000 * gm / 80);
+  m.x -= gv[0] * sp * dt; m.y -= gv[1] * sp * dt;
+  tAcc += dt; if (tAcc > 0.04) { tAcc = 0; tx[th] = m.x; ty[th] = m.y; th = (th + 1) % TRAIL; }
+  for (let i = 0; i < TRAIL; i++) {
+    const age = ((th - 1 - i + TRAIL * 2) % TRAIL) / TRAIL, a = (1 - age) * (1 - age) * 0.85;
+    if (a < 0.04) continue;
+    g.fillStyle = `rgba(${SKY[0]},${SKY[1]},${SKY[2]},${a.toFixed(2)})`;
+    const wob = 0.5 + age * 2.5;
+    g.fillRect(tx[i] + Math.sin(i * 1.7 + T) * wob - 0.9, ty[i] + Math.cos(i * 2.3 + T * 0.8) * wob - 0.9, 1.8, 1.8); dots++;
+  }
+  g.fillStyle = 'rgb(31,79,143)';
+  for (let k = 0; k < 14; k++) {
+    const a = k * 2.399 + T * (0.6 + (k % 3) * 0.3), r = 1.2 + (k % 5) * 0.75 + Math.sin(T * 2 + k) * 0.4;
+    g.fillRect(m.x + Math.cos(a) * r - 1.1, m.y + Math.sin(a) * r - 1.1, 2.2, 2.2); dots++;
+  }
+}
+
+// ---- the disturbance: a new well is born, the marble's own well dies; whole map re-forms over 2.5 s ----
+let nextKick = 3, kickT = -10; const TRANS = 2.5;
+function kick() {
+  kickT = T;
+  for (const w of wells) { w.d0 = w.d; w.d1 = Math.min(1, Math.max(0.45, w.d * (0.8 + rnd() * 0.35))); w.s0 = w.s; w.s1 = w.s * (0.85 + rnd() * 0.3); }
+  let mine = wells[0], best = 1e9;                     // the well the marble sits in dies away
+  for (const w of wells) { const dd = Math.hypot(w.x - m.x, w.y - m.y); if (dd < best) { best = dd; mine = w; } }
+  mine.d1 = 0;
+  if (wells.length >= MAXW) { let sh = wells[0]; for (const w of wells) if (w !== mine && w.d1 < sh.d1) sh = w; sh.d1 = 0; }
+  let nx = 0, ny = 0, far = -1e9;                      // the newcomer: deepest on the map, within the marble's reach, clear of other wells
+  for (let c = 0; c < 16; c++) {
+    const cx = 100 + rnd() * 440, cy = 80 + rnd() * 240, dm = Math.hypot(cx - m.x, cy - m.y);
+    let near = dm < 90 || dm > 190 ? -1000 : 1e9;
+    for (const w of wells) if (w !== mine && w.d1 > 0) near = Math.min(near, Math.hypot(w.x - cx, w.y - cy));
+    if (near > far) { far = near; nx = cx; ny = cy; }
+  }
+  addWell(nx, ny, 1.05 + rnd() * 0.25, 55 + rnd() * 17);
+}
+function morph() {
+  const p = Math.min(1, (T - kickT) / TRANS), e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  for (const w of wells) { w.d = w.d0 + (w.d1 - w.d0) * e; w.s = w.s0 + (w.s1 - w.s0) * e; }
+  if (p >= 1) for (let i = wells.length - 1; i >= 0; i--) if (wells[i].d1 <= 0) wells.splice(i, 1);
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now; T += dt;
+  if (T > nextKick) { kick(); nextKick = T + 6.5 + rnd() * 1.5; }
+  morph();
+  g.clearRect(0, 0, W, H); dots = 0;
+  contours();
+  marble(dt);
+  spacing = Math.min(6, Math.max(4.2, spacing * (0.97 + 0.03 * dots / 3600)));
+  document.title = 'dots ' + dots + ' wells ' + wells.length;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

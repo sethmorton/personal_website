@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="Passing notes reconstructs the same relationships in separate contexts across three agents. Beside them, a connected ink-blue spring mesh retains its structure, with muted green tension, slate compression, and an ochre discovery."></canvas>
+<div class="cap">Messages reconstruct relationships; shared state carries their effects directly.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+const INK = [113, 146, 158], DEEP = [40, 97, 122], TEAL = [107,140,136], VIOLET = [35,72,95], GOLD = [172,139,80], WARM = [154, 103, 82];
+const rgba = (a, al) => `rgba(${a[0]},${a[1]},${a[2]},${al.toFixed(2)})`;
+const mix = (a, b, t) => `rgb(${a[0] + (b[0] - a[0]) * t | 0},${a[1] + (b[1] - a[1]) * t | 0},${a[2] + (b[2] - a[2]) * t | 0})`;
+let seed = 184; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+for (let i = 0; i < 8; i++) rnd();
+const ease = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u);
+
+// ---- 14 nodes, same layout on both panels (panel-local coords, each panel 320 wide) ----
+const N = 14, ox = new Float32Array(N), oy = new Float32Array(N);
+for (let i = 0; i < N; i++) {
+  let x = 0, y = 0;
+  for (let k = 0; k < 300; k++) {
+    x = 44 + rnd() * 232; y = 60 + rnd() * 280; let ok = true;
+    for (let j = 0; j < i; j++) if (Math.hypot(x - ox[j], y - oy[j]) < 58) ok = false;
+    if (ok) break;
+  }
+  ox[i] = x; oy[i] = y; rnd(); // Preserve the seeded layout and discovery sequence.
+}
+// left: fixed. right: free to move.
+const rx = Float32Array.from(ox), ry = Float32Array.from(oy);
+
+// ---- one triangulation (Bowyer-Watson), used as the fixed map on the left and as the spring mesh on the right ----
+const key = (a, b) => a < b ? a * 32 + b : b * 32 + a, cc = [0, 0, 0];
+function circ(t, X, Y) {
+  const ax = X[t[0]], ay = Y[t[0]], bx = X[t[1]], by = Y[t[1]], cx = X[t[2]], cy = Y[t[2]];
+  const d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by)), a2 = ax * ax + ay * ay, b2 = bx * bx + by * by, c2 = cx * cx + cy * cy;
+  cc[0] = (a2 * (by - cy) + b2 * (cy - ay) + c2 * (ay - by)) / d; cc[1] = (a2 * (cx - bx) + b2 * (ax - cx) + c2 * (bx - ax)) / d;
+  cc[2] = Math.hypot(ax - cc[0], ay - cc[1]);
+}
+const E = [], faces = [];                                       // one topology for notes, springs, and pigment
+{
+  const X = Array.from(ox), Y = Array.from(oy); X.push(-1e5, 1e5, 0); Y.push(-1e5, -1e5, 1e5);
+  let tris = [[N, N + 1, N + 2]];
+  for (let i = 0; i < N; i++) {
+    const bad = [], cnt = new Map();
+    for (const t of tris) { circ(t, X, Y); if (Math.hypot(X[i] - cc[0], Y[i] - cc[1]) < cc[2]) bad.push(t); }
+    for (const t of bad) for (let k = 0; k < 3; k++) { const e = key(t[k], t[(k + 1) % 3]); cnt.set(e, (cnt.get(e) || 0) + 1); }
+    tris = tris.filter(t => !bad.includes(t));
+    for (const [e, n] of cnt) if (n === 1) tris.push([e >> 5, e & 31, i]);
+  }
+  const seen = new Set();
+  for (const t of tris) if (t.every(i => i < N)) faces.push({ nodes: t });
+  for (const t of tris) if (t[0] < N && t[1] < N && t[2] < N) for (let k = 0; k < 3; k++) {
+    const a = t[k], b = t[(k + 1) % 3], kk = key(a, b); if (seen.has(kk)) continue; seen.add(kk);
+    E.push({ a: Math.min(a, b), b: Math.max(a, b), L0: Math.hypot(ox[a] - ox[b], oy[a] - oy[b]), strain: 0 });
+  }
+}
+// Associations can cross the drawing: three nonlocal springs participate in the
+// same solver and message reconstruction as the local triangulation.
+const distant = [];
+for (let a = 0; a < N; a++) for (let b = a + 1; b < N; b++) {
+  const L0 = Math.hypot(ox[a] - ox[b], oy[a] - oy[b]);
+  if (L0 > 180 && !E.some(e => e.a === a && e.b === b)) distant.push({ a, b, L0, strain: 0, cross: true });
+}
+const used = new Set();
+for (const e of distant.sort((a, b) => b.L0 - a.L0)) {
+  if (used.has(e.a) || used.has(e.b)) continue;
+  E.push(e); used.add(e.a); used.add(e.b);
+  if (used.size === 6) break;
+}
+const adj = new Uint8Array(N * N); for (const e of E) adj[e.a * N + e.b] = adj[e.b * N + e.a] = 1;
+for (const face of faces) face.edges = face.nodes.map((a, k) => E.find(e => key(e.a, e.b) === key(a, face.nodes[(k + 1) % 3])));
+
+// ---- the discovery, every 7 s: one node learns something ----
+let T = 0, moved = -1, moveT = -10, nextMove = 1.6, mx = 0, my = 0, msx = 0, msy = 0;
+// hops from the moved node, for what each agent can reconstruct
+const hop = new Int8Array(N), q = new Int8Array(N);
+function move() {
+  let m; do m = rnd() * N | 0; while (m === moved); moved = m; moveT = T;
+  // right: the node moves 50 px and stays; the mesh will follow
+  msx = rx[m]; msy = ry[m];
+  for (let k = 0; k < 80; k++) {
+    const a = rnd() * 6.283, x = rx[m] + Math.cos(a) * 50, y = ry[m] + Math.sin(a) * 50;
+    if (x < 34 || x > 286 || y < 54 || y > 346) continue;
+    let ok = true; for (let j = 0; j < N; j++) if (j !== m && Math.hypot(x - rx[j], y - ry[j]) < 34) ok = false;
+    if (ok) { mx = x; my = y; break; }
+  }
+  hop.fill(-1); hop[m] = 0; let h = 0, tl = 0; q[tl++] = m;
+  while (h < tl) { const v = q[h++]; for (let w = 0; w < N; w++) if (adj[v * N + w] && hop[w] < 0) { hop[w] = hop[v] + 1; q[tl++] = w; } }
+  // left: agent 1 moves the node in its own context. Agents 2 and 3 start over from nothing.
+  const A1 = AG[0]; A1.msx = A1.x[m]; A1.msy = A1.y[m]; A1.mx = mx - rx[m] + A1.x[m]; A1.my = my - ry[m] + A1.y[m];
+  for (const ag of AG.slice(1)) { ag.has.fill(0); ag.born.fill(-1); ag.jit = rnd() * 1000; }
+}
+
+// ---- right panel physics: overdamped springs along the mesh, rest lengths that remember ----
+const K = 3.2, MOB = 1, ACCEPT = 0.25;
+const fx = new Float32Array(N), fy = new Float32Array(N);
+function settle(dt) {
+  fx.fill(0); fy.fill(0);
+  for (const e of E) {
+    const dx = rx[e.b] - rx[e.a], dy = ry[e.b] - ry[e.a], L = Math.hypot(dx, dy) || 1, f = K * (L - e.L0) / L;
+    fx[e.a] += f * dx; fy[e.a] += f * dy; fx[e.b] -= f * dx; fy[e.b] -= f * dy;
+    e.strain = (L - e.L0) / e.L0;
+    e.L0 += (L - e.L0) * ACCEPT * dt;                              // the mesh accepts the shape it is pulled into
+  }
+  const u = ease((T - moveT) / 1.1);
+  for (let i = 0; i < N; i++) {
+    if (i === moved) { rx[i] = msx + (mx - msx) * u; ry[i] = msy + (my - msy) * u; continue; }
+    rx[i] += fx[i] * MOB * dt; ry[i] += fy[i] * MOB * dt;
+    rx[i] = Math.min(300, Math.max(20, rx[i])); ry[i] = Math.min(370, Math.max(40, ry[i]));
+  }
+}
+
+// ---- left panel: three agents, each with its own context. Agent 1 has the whole structure. The others rebuild
+// it from the note at the same positions, with the same information arriving later. ----
+const SC = 0.36;
+const mkAgent = (y0, keep, err, drop) => ({ y0, keep, err, drop, x: Float32Array.from(ox), y: Float32Array.from(oy), has: new Uint8Array(N), born: new Float32Array(N).fill(-1), jit: 0, msx: 0, msy: 0, mx: 0, my: 0 });
+const AG = [mkAgent(52, 1, 0, 0), mkAgent(166, 1, 0, 0), mkAgent(280, 1, 0, 0)];
+AG[0].has.fill(1); AG[0].born.fill(0);
+// notes in flight: from agent i to agent i+1, leaving at t0, carrying `size` dots
+const NOTES = [{ t0: 1.3, size: 7 }, { t0: 3.9, size: 7 }];
+function agents(dt) {
+  const age = T - moveT, A1 = AG[0], u = ease(age / 1.1);
+  A1.x[moved] = A1.msx + (A1.mx - A1.msx) * u; A1.y[moved] = A1.msy + (A1.my - A1.msy) * u;   // agent 1 moves it; nothing else in its context moves
+  for (let k = 1; k < AG.length; k++) {
+    const ag = AG[k], arrive = NOTES[k - 1].t0 + 1.1;
+    if (age < arrive) continue;
+    // reconstruct from the note: nodes within reach appear nearest first, at their true positions
+    for (let i = 0; i < N; i++) if (hop[i] >= 0 && !ag.has[i] && age > arrive + hop[i] * 0.18 + (i % 3) * 0.08) {
+      if (i !== moved && Math.sin(ag.jit + i * 12.9) * 0.5 + 0.5 > ag.keep) { ag.has[i] = 2; continue; }   // lost in the retelling
+      ag.has[i] = 1; ag.born[i] = T;
+      const s1 = Math.sin(ag.jit + i * 7.1), s2 = Math.cos(ag.jit * 1.3 + i * 3.7);
+      ag.x[i] = (i === moved ? A1.mx : ox[i]) + s1 * ag.err; ag.y[i] = (i === moved ? A1.my : oy[i]) + s2 * ag.err;
+    }
+  }
+}
+function agentPanel(ag, k) {
+  const X0 = 68, ax = x => X0 + (x - 44) * SC, ay = y => ag.y0 + (y - 60) * SC, age = T - moveT;
+  g.font = '14px Georgia, serif'; g.textAlign = 'left'; g.letterSpacing = '0px'; g.fillStyle = rgba(INK, 1);
+  g.fillText('AGENT ' + (k + 1), 196, ag.y0 + 45);
+  if (k) { g.font = '12px Georgia, serif'; g.fillText('New context', 196, ag.y0 + 62); }
+  for (const e of E) {
+    if (ag.has[e.a] !== 1 || ag.has[e.b] !== 1) continue;
+    if (ag.drop && Math.sin(ag.jit * 0.7 + key(e.a, e.b) * 5.3) * 0.5 + 0.5 < ag.drop) continue;
+    const touches = e.a === moved || e.b === moved, live = Math.min(1, (T - Math.max(ag.born[e.a], ag.born[e.b])) / 0.5);
+    g.fillStyle = touches && age < 6 ? rgba(GOLD, 0.95) : rgba(DEEP, k ? 0.58 - k * 0.08 : 0.85);
+    inkEdge(ax(ag.x[e.a]), ay(ag.y[e.a]), ax(ag.x[e.b]), ay(ag.y[e.b]), (touches ? 1.25 : 0.85) * live, key(e.a, e.b));
+  }
+  for (let i = 0; i < N; i++) {
+    if (ag.has[i] !== 1) continue;
+    const x = ax(ag.x[i]), y = ay(ag.y[i]), deep = i === moved && age < 6;
+    inkNode(x, y, deep ? WARM : DEEP, k ? 0.68 - k * 0.08 : 0.95, i, 0.7);
+  }
+  if (k === 0 && age < 2.5 && moved >= 0) {
+    g.fillStyle = rgba(WARM, 1 - age / 2.5); const r = 3 + age * 1.6;
+    for (let j = 0; j < 3; j++) { const a = j * 2.094 + T * 0.5; grain(ax(ag.x[moved]) + Math.cos(a) * r, ay(ag.y[moved]) + Math.sin(a) * r, 0.65); }
+  }
+}
+function notes() {
+  const age = T - moveT;
+  for (let k = 0; k < NOTES.length; k++) {
+    const n = NOTES[k], u = (age - n.t0) / 1.1; if (u < 0 || u > 1) continue;
+    const from = AG[k], to = AG[k + 1], e = ease(u);
+    const x0 = 68 + (from.x[moved] - 44) * SC, y0 = from.y0 + (from.y[moved] - 60) * SC, x1 = 68 + (ox[moved] - 44) * SC, y1 = to.y0 + (oy[moved] - 60) * SC;
+    const x = x0 + (x1 - x0) * e + Math.sin(e * 3.1416) * 26, y = y0 + (y1 - y0) * e;
+    g.fillStyle = rgba(GOLD, 0.42);
+    g.beginPath();
+    for (let s = 0; s < e; s += 0.012) {
+      const xx = x0 + (x1 - x0) * s + Math.sin(s * 3.1416) * 26, yy = y0 + (y1 - y0) * s;
+      const r = 0.3 + 0.2 * Math.sin(s * 173);
+      g.moveTo(xx + r, yy); g.arc(xx, yy, r, 0, Math.PI * 2);
+    }
+    g.fill();
+    for (let j = 0; j < n.size; j++) {
+      const a = j * 6.283 / n.size + T * 1.3;
+      g.fillStyle = rgba(j % 3 ? GOLD : WARM, 0.9); grain(x + Math.cos(a) * 3, y + Math.sin(a) * 2, 0.9);
+    }
+  }
+}
+
+// Fixed pigment grains deform with the mesh instead of marching along a dotted line.
+const hash = n => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+const flecks = Array.from({ length: 256 }, (_, i) => ({
+  offset: (hash(i + 300) + hash(i + 600) - 1),
+  r: 0.23 + hash(i + 900) * 0.42, u: Math.sqrt(hash(i + 1200)), v: hash(i + 1500)
+}));
+function grain(x, y, r) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+function inkEdge(x1, y1, x2, y2, width, h) {
+  if (width <= 0) return;
+  const dx = x2 - x1, dy = y2 - y1, length = Math.hypot(dx, dy) || 1;
+  const n = Math.min(256, Math.max(12, Math.ceil(length * 2.8))), radiusScale = Math.sqrt(width);
+  g.beginPath();
+  for (let k = 0; k < n; k++) {
+    const p = flecks[(k + h) % 256], t = (k + p.v) / n;
+    const drift = Math.sin(t * 9 + h) * Math.sin(t * Math.PI) * 0.45;
+    const spread = p.offset * width + drift, x = x1 + dx * t - dy / length * spread, y = y1 + dy * t + dx / length * spread;
+    const r = p.r * radiusScale;
+    g.moveTo(x + r, y); g.arc(x, y, r, 0, Math.PI * 2);
+  }
+  g.fill();
+}
+function inkNode(x, y, color, alpha, id, scale = 1) {
+  g.fillStyle = rgba(color, alpha * 0.1); grain(x, y, 5 * scale);
+  g.fillStyle = rgba(color, alpha * 0.75); grain(x, y, 1.5 * scale);
+  g.fillStyle = rgba(color, alpha);
+  g.beginPath();
+  for (let k = 0; k < 42; k++) {
+    const p = flecks[(id * 13 + k) % 256], a = p.v * Math.PI * 2, spread = p.u * 3.5 * scale;
+    const xx = x + Math.cos(a) * spread, yy = y + Math.sin(a) * spread, r = p.r * scale;
+    g.moveTo(xx + r, yy); g.arc(xx, yy, r, 0, Math.PI * 2);
+  }
+  g.fill();
+}
+function panel(X0, X, Y) {
+  for (const face of faces) {
+    const [a, b, c] = face.nodes, strain = (face.edges[0].strain + face.edges[1].strain + face.edges[2].strain) / 3;
+    const tension = Math.min(1, Math.abs(strain) * 8), color = strain < -0.015 ? VIOLET : TEAL;
+    g.fillStyle = rgba(color, 0.065 + tension * 0.11);
+    g.beginPath(); g.moveTo(X0 + X[a], Y[a]); g.lineTo(X0 + X[b], Y[b]); g.lineTo(X0 + X[c], Y[c]); g.closePath(); g.fill();
+    g.fillStyle = rgba(color, 0.1 + tension * 0.15); g.beginPath();
+    for (const p of flecks) {
+      const u = 1 - p.u, v = p.u * (1 - p.v), w = p.u * p.v;
+      const x = X0 + X[a] * u + X[b] * v + X[c] * w, y = Y[a] * u + Y[b] * v + Y[c] * w;
+      g.moveTo(x + p.r, y); g.arc(x, y, p.r, 0, Math.PI * 2);
+    }
+    g.fill();
+  }
+  for (const e of E) {
+    const h = Math.min(1, Math.abs(e.strain) * 7);
+    g.fillStyle = e.cross ? rgba(GOLD, .8) : mix(DEEP, e.strain < 0 ? VIOLET : TEAL, h * 0.8);
+    inkEdge(X0 + X[e.a], Y[e.a], X0 + X[e.b], Y[e.b], (e.cross ? 1.7 : 1.25) + h * 1.1, key(e.a, e.b));
+  }
+  const age = T - moveT;
+  for (const e of E.filter(e => e.cross)) {
+    const from = hop[e.a] <= hop[e.b] ? e.a : e.b, to = from === e.a ? e.b : e.a;
+    const u = (age - Math.min(hop[e.a], hop[e.b]) * .2) / 1.1;
+    if (u > 0 && u < 1) {
+      g.fillStyle = rgba(GOLD, 1);
+      grain(X0 + X[from] + (X[to] - X[from]) * u, Y[from] + (Y[to] - Y[from]) * u, 2.4);
+    }
+  }
+  for (let i = 0; i < N; i++) {
+    const deep = i === moved && age < 2.5;
+    inkNode(X0 + X[i], Y[i], deep ? WARM : DEEP, 0.95, i);
+  }
+  if (age < 2.5 && moved >= 0) {
+    g.fillStyle = rgba(GOLD, 1 - age / 2.5); const r = 5 + age * 2.2;
+    for (let k = 0; k < 5; k++) { const a = k * 6.283 / 5 + T * 0.5; grain(X0 + X[moved] + Math.cos(a) * r, Y[moved] + Math.sin(a) * r, 0.65); }
+  }
+}
+function chrome() {
+  g.fillStyle = rgba(INK, 0.2);
+  inkEdge(320, 48, 320, 380, 0.55, 7);
+  g.fillStyle = rgba(INK, 1);
+  g.font = '18px Georgia, serif'; g.textAlign = 'center'; g.letterSpacing = '0px';
+  g.fillText('Passing notes', 160, 30); g.fillText('Shared state', 480, 30);
+}
+
+function advance(dt) {
+  T += dt;
+  if (T > nextMove) { move(); nextMove = T + 7; }
+  if (moved >= 0) { settle(dt); agents(dt); }
+}
+function draw() {
+  g.clearRect(0, 0, W, H);
+  chrome(); AG.forEach(agentPanel); notes(); panel(320, rx, ry);
+  window.__notes = { T, moved, crossLinks: E.filter(e => e.cross).length, positions: [...rx, ...ry], copies: AG.map(ag => ({ nodes: [...ag.has].filter(h => h === 1).length, edges: E.filter(e => ag.has[e.a] === 1 && ag.has[e.b] === 1 && !(ag.drop && Math.sin(ag.jit * 0.7 + key(e.a, e.b) * 5.3) * 0.5 + 0.5 < ag.drop)).length })) };
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) {
+  const target = Math.max(0, Math.min(60, Number(frozen) || 0));
+  while (T < target) advance(Math.min(1 / 120, target - T));
+  draw();
+} else {
+  let last = performance.now();
+  function frame(now) {
+    advance(Math.max(0, Math.min(0.033, (now - last) / 1000))); last = now;
+    draw(); requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

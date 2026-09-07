@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+html, body { margin: 0; background: #fafaf9; overflow: hidden; }
+canvas { display: block; width: 100vmin; height: 100vmin; margin: auto; }
+</style>
+</head>
+<body>
+<canvas id="ov" width="1080" height="1080" role="img" aria-label="A granular manuscript repeatedly reorganizes around incoming red evidence."></canvas>
+<script>
+const W = 1080, DURATION = 8, ROUND = 1.6;
+const PAPER = '#fafaf9', INK = '#4a6a8f', DEEP = '#1f4f8f', PALE = '#b6c2d2', RED = '#e23b2a';
+const canvas = document.getElementById('ov'), ctx = canvas.getContext('2d');
+const clamp = x => Math.max(0, Math.min(1, x));
+const mix = (a, b, s) => a + (b - a) * s;
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+function spring(t) {
+  if (t <= 0) return 0;
+  if (t >= .35) return 1;
+  const s = 1 - Math.exp(-17 * t) * (Math.cos(29 * t) + 17 / 29 * Math.sin(29 * t));
+  return mix(s, 1, ease((t - .2) / .15));
+}
+let seed = 731;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+// Sentence grain follows the manuscript's segmented words and changing pen pressure.
+const blocks = Array.from({ length: 14 }, (_, id) => {
+  const lines = [];
+  for (let row = 0; row < 4; row++) {
+    const length = row === 3 ? 430 + rnd() * 310 : 770 + rnd() * 70;
+    const dots = [];
+    for (let start = row === 0 ? 18 : 0; start < length;) {
+      const end = Math.min(length, start + 19 + rnd() * 63);
+      for (let j = 0; j < (end - start) * 5; j++) {
+        const x = start + rnd() * (end - start);
+        const hand = x / 5 + id + .82 * Math.sin(x / 11 + row);
+        const pressure = .28 + .72 * Math.sin(hand) ** 4;
+        const y = (rnd() + rnd() + rnd() - 1.5) * 5.5 * pressure - Math.sin(hand) * 1.5;
+        dots.push([x, y, .45 + rnd() * .72, rnd() * 6.283, rnd() > .8 ? 2.1 : 0]);
+      }
+      start = end + 5 + rnd() * 7;
+    }
+    lines.push({ dots, length });
+  }
+  return { lines };
+});
+const orders = [
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+  [6, 4, 2, 13, 8, 10, 0, 3, 1, 12, 5, 9, 7, 11],
+  [12, 8, 5, 11, 7, 3, 9, 1, 13, 0, 4, 2, 10, 6],
+  [4, 10, 8, 6, 0, 12, 2, 11, 5, 7, 13, 3, 9, 1],
+  [9, 3, 11, 1, 5, 7, 12, 10, 6, 2, 8, 4, 0, 13]
+];
+const collapsed = [[13, 10], [11, 9], [6, 12], [1, 7], [2, 4]];
+const expanded = [2, 13, 11, 6, 1];
+const evidence = [2, 5, 8, 11, 1];
+const layouts = orders.map((order, k) => {
+  let top = 78;
+  const poses = [];
+  for (const id of order) {
+    const h = collapsed[k].includes(id) ? 4.8 : id === expanded[k] ? 120 : 60;
+    poses[id] = { x: [105, 165, 75, 135, 45][k], y: top, h, w: 1.02 };
+    top += h + 10;
+  }
+  return poses;
+});
+function state(t) {
+  t = ((t % DURATION) + DURATION) % DURATION;
+  const round = Math.floor(t / ROUND), age = t - round * ROUND;
+  const a = layouts[round], b = layouts[(round + 1) % 5];
+  const s = spring(age - .2);
+  const step = Math.floor(t / .2), local = t / .2 - step;
+  const nudge = spring(local * .35);
+  const offset = (beat, id) => {
+    beat = (beat + 40) % 40;
+    return id === beat % 14 || id === (beat + 7) % 14 ? 70 : 0;
+  };
+  const poses = a.map((p, id) => {
+    const q = b[id], x = mix(p.x, q.x, s);
+    const shift = mix(offset(step - 1, id), offset(step, id), nudge);
+    return {
+      x: x + (id % 2 ? -1 : 1) * shift,
+      y: mix(p.y, q.y, s),
+      h: mix(p.h, q.h, clamp(s)), w: mix(p.w, q.w, s)
+    };
+  });
+  // Resolve the moving stack before drawing: paragraphs never paint through each other.
+  const stack = [...poses].sort((p, q) => p.y - q.y);
+  let bottom = 78;
+  for (const p of stack) { p.y = Math.max(bottom, p.y); bottom = p.y + p.h + 10; }
+  bottom = 998;
+  for (let i = stack.length - 1; i >= 0; i--) {
+    const p = stack[i]; p.y = Math.min(p.y, bottom - p.h); bottom = p.y - 10;
+  }
+  return { t, round, age, poses };
+}
+function sentence(line, id, row, p, color, reveal, t, alpha = 1) {
+  ctx.fillStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.beginPath();
+  const wave = Math.sin(t * Math.PI * 7.5), wave2 = Math.cos(t * Math.PI * 10);
+  const right = line.length * reveal, heavy = color === RED;
+  for (const [u, v, radius, phase, stroke] of line.dots) {
+    if (u > right) continue;
+    const jitter = .34 * (wave * Math.sin(phase) + wave2 * Math.cos(phase));
+    const x = p.x + (u + jitter) * p.w;
+    const lineScale = Math.max(1, p.h / 60);
+    const thickness = heavy ? 2.5 : p.h < 10 ? .3 : lineScale;
+    const y = p.y + Math.min(7, p.h / 2) + row * 15 * lineScale + v * thickness + jitter;
+    const r = radius * (heavy ? 1.45 : 1);
+    ctx.moveTo(x + r, y);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    if (heavy) { ctx.moveTo(x + r + 1, y + .6); ctx.arc(x + 1, y + .6, r, 0, Math.PI * 2); }
+    if (stroke) ctx.rect(x, y - r * .45, stroke, r * .9);
+  }
+  ctx.fill();
+}
+window.render = t => {
+  const { t: time, round, age, poses } = state(t);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, W);
+  const red = evidence[round], previous = evidence[(round + 4) % 5];
+  const reach = ease(age / .2);
+  for (let id = 0; id < blocks.length; id++) {
+    const p = poses[id];
+    for (let row = 0; row < 4; row++) {
+      const visible = row === 0 ? 1 : clamp((p.h - row * 15 - 7) / 9);
+      if (!visible) continue;
+      const pale = p.h < 25;
+      const color = pale ? PALE : evidence.includes(id) ? DEEP : INK;
+      sentence(blocks[id].lines[row], id, row, p, color, 1, time, visible * .86);
+      if (id === 0)
+        sentence(blocks[id].lines[row], id, row, p, DEEP, 1, time, ease((age - .2) / .15) * (1 - ease((age - .8) / .4)));
+      if (row === 0 && id === previous && age < .2)
+        sentence(blocks[id].lines[row], id, row, p, RED, 1, time, 1 - reach);
+      if (row === 0 && id === red)
+        sentence(blocks[id].lines[row], id, row, p, RED, reach, time);
+    }
+  }
+  ctx.globalAlpha = 1;
+};
+window.ready = { duration: DURATION, width: W, height: W, blocks: blocks.length };
+window.render(0);
+if (!new URLSearchParams(location.search).has('offline')) {
+  const start = performance.now();
+  const tick = now => { window.render((now - start) / 1000); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>

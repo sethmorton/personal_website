@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import SEO from '$lib/blog/components/SEO.svelte';
 </script>
 
@@ -10,12 +9,11 @@
 	twitterCard="summary_large_image"
 />
 
-<div class="max-w-3xl p-8">
-	<div class="mb-4 flex justify-start">
-		<button class="text-blue-600 hover:text-blue-800" on:click={() => goto('/')}>Back</button>
-	</div>
+<main class="site-page reveal">
+	<nav class="page-nav" aria-label="Back"><a class="text-link" href="/">← Home</a></nav>
+	<header class="page-header"><h1 class="page-title">About</h1></header>
 
-	<div class="space-y-6 text-lg leading-relaxed">
+	<div class="about-prose">
 		<p>
 			I'm Seth Morton, a software engineer from San Diego now studying in Boston. My journey started
 			at 12 when I built my first photography website to bypass expensive hosting fees - a small
@@ -35,4 +33,14 @@
 			Markets while planning my next project.
 		</p>
 	</div>
-</div>
+</main>
+
+<style>
+	.about-prose {
+		max-width: var(--reading-width);
+		font: var(--text-body) / 1.7 var(--font-body);
+	}
+	.about-prose p + p {
+		margin-top: var(--space-section);
+	}
+</style>

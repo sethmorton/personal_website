@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { width: 640px; height: 400px; overflow: hidden; }
+  canvas { display: block; width: 640px; height: 400px; }
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="A schematic of dense coupled state. Six blocks share fifteen springs, including connections across the whole field. A seventh and eighth block each tug an earlier block; the existing relationships transmit the change. Eight blocks share twenty-eight springs."></canvas>
+<script>
+const W = 640, H = 400, D = 2, CYCLE = 12;
+const PAPER = '#f7f4ec', BLUE = '#28617a', SLATE = '#23485f', GOLD = '#ac8b50';
+const c = document.getElementById('c'); c.width = W * D; c.height = H * D;
+const g = c.getContext('2d'); g.scale(D, D);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const homes = [[145, 120], [310, 96], [495, 135], [530, 255], [335, 293], [160, 257], [77, 195], [456, 321]];
+const births = [0, 0, 0, 0, 0, 0, 2.4, 6.2];
+const edges = [];
+for (let b = 1; b < homes.length; b++) for (let a = 0; a < b; a++) {
+  edges.push({ a, b, rest: Math.hypot(homes[b][0] - homes[a][0], homes[b][1] - homes[a][1]), strain: 0 });
+}
+let seed = 124;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const flecks = Array.from({ length: 480 }, () => ({ x: rnd() - .5, y: rnd() - .5, r: .3 + rnd() * .48 }));
+const paper = document.createElement('canvas'); paper.width = W * D; paper.height = H * D;
+const pg = paper.getContext('2d'); pg.scale(D, D); pg.fillStyle = PAPER; pg.fillRect(0, 0, W, H);
+pg.fillStyle = BLUE; pg.globalAlpha = .03;
+for (let i = 0; i < 12500; i++) pg.fillRect(rnd() * W, rnd() * H, .25 + rnd() * .4, .25 + rnd() * .4);
+let positions, time;
+function reset() { positions = homes.map(p => [...p]); time = 0; }
+reset();
+function step(dt) {
+  time += dt;
+  const forces = positions.map((p, i) => [(homes[i][0] - p[0]) * .3, (homes[i][1] - p[1]) * .3]);
+  for (const e of edges) {
+    const age = time - births[e.b];
+    if (age < 0) continue;
+    const a = positions[e.a], b = positions[e.b], dx = b[0] - a[0], dy = b[1] - a[1], length = Math.hypot(dx, dy) || 1;
+    const pull = (e.b === 6 && e.a === 3) || (e.b === 7 && e.a === 0);
+    const rest = e.rest * (1 - (pull ? .35 * ease((age - .65) / 1.1) : 0));
+    e.strain = (length - rest) / rest;
+    const f = (pull ? 1.7 : .72) * ease(age / .7) * (length - rest) / length;
+    forces[e.a][0] += dx * f; forces[e.a][1] += dy * f;
+    forces[e.b][0] -= dx * f; forces[e.b][1] -= dy * f;
+  }
+  for (let i = 0; i < positions.length; i++) if (time >= births[i]) {
+    positions[i][0] += forces[i][0] * dt;
+    positions[i][1] += forces[i][1] * dt;
+  }
+}
+function edgePoint(e, u) {
+  const a = positions[e.a], b = positions[e.b], dx = b[0] - a[0], dy = b[1] - a[1], length = Math.hypot(dx, dy);
+  const inset = 20 / length, v = inset + u * (1 - inset * 2);
+  const coil = Math.sin(u * Math.PI * 2 * Math.round(e.rest / 18)) * Math.sin(u * Math.PI) * 2;
+  return [a[0] + dx * v - dy / length * coil, a[1] + dy * v + dx / length * coil];
+}
+function spring(e, opacity) {
+  const reveal = ease((time - births[e.b]) / .7);
+  const strain = Math.min(1, Math.abs(e.strain) * 8);
+  g.fillStyle = strain > .2 ? SLATE : BLUE;
+  g.globalAlpha = opacity * (.21 + .62 * strain) * reveal;
+  g.beginPath();
+  for (let k = 0; k < 330; k++) {
+    const u = k / 329;
+    if (u > reveal) continue;
+    const p = edgePoint(e, u), f = flecks[(k + e.a * 17 + e.b * 31) % flecks.length];
+    const x = p[0] + f.x * .7, y = p[1] + f.y * .7, r = f.r * (.75 + .3 * strain);
+    g.moveTo(x + r, y); g.arc(x, y, r, 0, Math.PI * 2);
+  }
+  g.fill();
+}
+function block(i, opacity) {
+  const age = time - births[i];
+  if (age < 0) return;
+  const p = positions[i], show = ease(age / .45), hot = i > 5 ? 1 - ease((age - 1.3) / 2.4) : 0;
+  const color = hot > .1 ? GOLD : BLUE;
+  g.globalAlpha = opacity * show;
+  g.fillStyle = PAPER; g.beginPath(); g.roundRect(p[0] - 20, p[1] - 12, 40, 24, 6); g.fill();
+  g.strokeStyle = color; g.lineWidth = 1; g.setLineDash([.8, .7]); g.stroke(); g.setLineDash([]);
+  g.fillStyle = color; g.globalAlpha = opacity * show * .68;
+  for (let row = 0; row < 3; row++) for (let k = 0; k < 25 - row * 4; k++) {
+    const f = flecks[i * 31 + row * 25 + k];
+    g.fillRect(p[0] - 12 + k * .9 + f.x * .35, p[1] - 5 + row * 5 + f.y * .5, .7 + f.r * .6, .6);
+  }
+}
+function draw(t) {
+  t = ((t % CYCLE) + CYCLE) % CYCLE;
+  if (t < time) reset();
+  while (time < t - .000001) step(Math.min(1 / 120, t - time));
+  const opacity = ease(t / .5) * (1 - ease((t - 11.3) / .7));
+  g.globalAlpha = 1; g.drawImage(paper, 0, 0, W, H);
+  const active = edges.filter(e => time >= births[e.b]);
+  active.forEach(e => spring(e, opacity));
+  // Only stressed connections carry marks: the motion depicts the response, not decoration.
+  const stressed = active.filter(e => Math.abs(e.strain) > .025).sort((a, b) => Math.abs(b.strain) - Math.abs(a.strain)).slice(0, 4);
+  g.fillStyle = GOLD;
+  for (const e of stressed) for (let k = 0; k < 2; k++) {
+    const u = (time * .45 + k * .5 + e.a * .13) % 1, p = edgePoint(e, u);
+    g.globalAlpha = opacity * Math.sin(u * Math.PI) * .85;
+    g.beginPath(); g.arc(p[0], p[1], 1.35, 0, Math.PI * 2); g.fill();
+  }
+  homes.forEach((_, i) => block(i, opacity));
+  const count = births.filter(b => time >= b).length;
+  g.globalAlpha = opacity; g.fillStyle = SLATE; g.font = '18px Georgia, serif'; g.textAlign = 'center';
+  g.fillText('New evidence revisits old relationships', 320, 37);
+  g.fillText(count + ' blocks · ' + active.length + ' springs', 320, 375);
+  g.globalAlpha = 1;
+  window.__coupling = { time: t, nodeCount: count, edgeCount: active.length,
+    positions: positions.slice(0, count).map(p => [...p]),
+    edges: active.map(e => [e.a, e.b]) };
+}
+const frozen = new URLSearchParams(location.search).get('t');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const epoch = performance.now();
+function tick(now) { draw(reducedMotion.matches ? 10.5 : (now - epoch) / 1000); requestAnimationFrame(tick); }
+if (frozen !== null) draw(Number(frozen) || 0);
+else requestAnimationFrame(tick);
+</script>
+</body>
+</html>

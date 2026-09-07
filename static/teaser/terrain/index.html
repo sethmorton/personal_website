@@ -1,0 +1,179 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;background:#fafaf9;overflow:hidden}canvas{display:block;width:100vw;height:100vh}</style><script type="importmap">{"imports":{"three":"../../anim/lib/three.module.js"}}</script></head><body><script type="module">
+import * as THREE from 'three';
+const figure=new URLSearchParams(location.search).has('figure');
+const PAPER=figure?0xf7f4ec:0xfafaf9, INK=figure?0x28617a:0x4a6a8f, DEEP=figure?0x28617a:0x1f4f8f, PALE=figure?0x9badb0:0xb6c2d2, RED=figure?0xac8b50:0xe23b2a;
+const BALL_RADIUS=figure?.85:.45;
+const N=figure?192:320, COUNT=N*N, PERIOD=28, SPEED=2.8, XSPAN=200, ZSPAN=250, ZFRONT=60;
+const lands=[1.4,3.2,4.4,5.6,6.8,8], centers=[[-5,-16],[1,-4],[-5,-7],[5,-4],[-3,-6],[-1,-3]];
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(2); renderer.setSize(figure?640:1080,figure?400:1080,false); renderer.setClearColor(PAPER); document.body.append(renderer.domElement);
+const scene=new THREE.Scene();scene.fog=new THREE.Fog(PAPER,55,155);
+const camera=new THREE.PerspectiveCamera(50,figure?1.6:1,0.1,400);
+const mod=(a,b)=>{const r=a%b;return r<0?r+b:r;},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const smooth=v=>{v=clamp(v,0,1);return v*v*(3-2*v)};
+// Exact underdamped step response: 15% overshoot, first peak at 0.141s, settled by 0.35s.
+function spring(t){if(t<=0)return 0;if(t>=0.35)return 1;return 1-Math.exp(-14*t)*(Math.cos(22.2*t)+14/22.2*Math.sin(22.2*t));}
+let seed=27; function random(){seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;}
+const fields=[];
+for(let k=0;k<7;k++){
+  const peaks=[];
+  for(let p=0;p<8;p++)peaks.push([(random()-.5)*62,random()*PERIOD,((p===1||p===5)?1:-1)*(3+random()*5),3.2+random()*4,2.2+random()*3]);
+  const center=k===0?[-1,PERIOD-3]:[centers[k%6][0],mod(centers[k%6][1]+lands[k%6]*SPEED,PERIOD)];
+  const values=new Float32Array(COUNT);
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+    const x=(i/(N-1)-.5)*XSPAN,z=j/N*PERIOD;
+    let h=0.55*Math.sin(x*.25+z*Math.PI*2/PERIOD)+0.3*Math.cos(z*Math.PI*4/PERIOD-x*.13);
+    for(const [px,pz,a,sx,sz] of peaks){const dz=mod(z-pz+PERIOD/2,PERIOD)-PERIOD/2;h+=a*Math.exp(-.5*((x-px)**2/sx**2+dz**2/sz**2));}
+    const dz=mod(z-center[1]+PERIOD/2,PERIOD)-PERIOD/2;
+    h-=6*Math.exp(-.5*((x-center[0])**2/13+dz**2/(k===0?80:11)));
+    // Tall flanking ridges let the foreground crop through actual contour structure.
+    h+=6*Math.exp(-.5*((x+13)**2/20+(mod(z-5+14,28)-14)**2/18));
+    h+=5*Math.exp(-.5*((x-12)**2/24+(mod(z-18+14,28)-14)**2/14));
+    values[j*N+i]=h;
+  }
+  fields.push(values);
+}
+fields[5]=fields[0];
+let minimum=Infinity,maximum=-Infinity;
+for(const field of fields)for(const h of field){minimum=Math.min(minimum,h);maximum=Math.max(maximum,h);}
+const TERRAIN_SCALE=2.5,SHOCK_HEIGHT=(maximum-minimum)*TERRAIN_SCALE*.4,WAVE_SPAN=100,WAVE_WIDTH=8;
+const waveDuration=event=>event===0?1.6:.25;
+function waveDistance(event,x,z,t){return Math.hypot(x-centers[event][0],z+(t-lands[event])*SPEED-centers[event][1]);}
+function waveDelay(event,x,z,t){return Math.min(waveDuration(event),waveDistance(event,x,z,t)/WAVE_SPAN*waveDuration(event));}
+function sample(k,x,z){
+  const u=clamp((x/XSPAN+.5)*(N-1),0,N-1.001),v=mod(z,PERIOD)/PERIOD*N;
+  const i=Math.floor(u),j=Math.floor(v),a=u-i,b=v-j,f=fields[k],q=j*N+i,r=((j+1)%N)*N+i;
+  return (f[q]*(1-a)+f[q+1]*a)*(1-b)+(f[r]*(1-a)+f[r+1]*a)*b;
+}
+function artifact(x,z){return .9*Math.sin(x*.19+z*.13)+.55*Math.cos(z*.27-x*.09);}
+function height(x,z,t){
+  const world=z+t*SPEED,zero=sample(0,x,world),candidate=sample(6,x,world);
+  const loss=zero+.85*(candidate-zero)+artifact(x,world);
+  let h=zero+(loss-zero)*spring(t-1.4-waveDelay(0,x,z,t)),old=loss,shock=0;
+  for(let e=1;e<lands.length;e++){const next=sample(e,x,world);h+=(next-old)*spring(t-lands[e]-waveDelay(e,x,z,t));old=next;}
+  for(let e=0;e<lands.length;e++){
+    const age=t-lands[e],duration=waveDuration(e);if(age<0||age>duration+.2)continue;
+    const distance=waveDistance(e,x,z,t),radius=age/duration*WAVE_SPAN;
+    shock+=SHOCK_HEIGHT*Math.exp(-.5*((distance-radius)/WAVE_WIDTH)**2)*smooth(age/.02)*(1-smooth((age-duration)/.2));
+  }
+  return TERRAIN_SCALE*(h+.36*Math.sin(x*.7+world*Math.PI*8/PERIOD-t*Math.PI*2*1.8))+shock;
+}
+const positions=new Float32Array(COUNT*3),heights=new Float32Array(COUNT),heats=new Float32Array(COUNT);
+const surfaceGeometry=new THREE.BufferGeometry();surfaceGeometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+const triangles=[];
+for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+  const q=j*N+i,x=Math.sinh((i/(N-1)-.5)*4)/Math.sinh(2)*XSPAN/2,z=ZFRONT-Math.pow(1-j/(N-1),1.8)*ZSPAN;
+  positions[q*3]=x;positions[q*3+1]=height(x,z,0);positions[q*3+2]=z;
+  if(i<N-1&&j<N-1)triangles.push(q,q+N,q+1,q+1,q+N,q+N+1);
+}
+surfaceGeometry.setIndex(triangles);
+const wireGeometry=new THREE.WireframeGeometry(surfaceGeometry),wireData=wireGeometry.attributes.position.array,wireIds=new Uint32Array(wireData.length/3);
+for(let v=0;v<wireIds.length;v++){
+  const i=Math.round((Math.asinh(wireData[v*3]*Math.sinh(2)/(XSPAN/2))/4+.5)*(N-1));
+  const j=Math.round((1-Math.pow(clamp((ZFRONT-wireData[v*3+2])/ZSPAN,0,1),1/1.8))*(N-1));wireIds[v]=j*N+i;
+}
+wireGeometry.attributes.position.setUsage(THREE.DynamicDrawUsage);
+const wire=new THREE.LineSegments(wireGeometry,new THREE.LineBasicMaterial({color:DEEP,transparent:true,opacity:.9,linewidth:1,depthWrite:false}));wire.frustumCulled=false;scene.add(wire);
+const ghostGeometry=wireGeometry.clone(),ghostData=ghostGeometry.attributes.position.array,ghostHeights=new Float32Array(COUNT);
+const ghost=new THREE.LineSegments(ghostGeometry,new THREE.LineBasicMaterial({color:PALE,transparent:true,opacity:.35,depthWrite:false}));ghost.frustumCulled=false;scene.add(ghost);
+const tickData=new Float32Array(Math.ceil(COUNT/2)*6),tickGeometry=new THREE.BufferGeometry();tickGeometry.setAttribute('position',new THREE.BufferAttribute(tickData,3).setUsage(THREE.DynamicDrawUsage));
+const ticks=new THREE.LineSegments(tickGeometry,new THREE.LineBasicMaterial({color:RED,transparent:true,opacity:.85,depthWrite:false}));ticks.frustumCulled=false;scene.add(ticks);
+const ground=new THREE.GridHelper(240,120,PALE,PALE);ground.position.y=minimum*TERRAIN_SCALE-3;ground.material.transparent=true;ground.material.opacity=.27;ground.material.depthWrite=false;scene.add(ground);
+const point=new THREE.Vector3(),tip=new THREE.Vector3(),normal=new THREE.Vector3();
+const ball=new THREE.Mesh(new THREE.SphereGeometry(BALL_RADIUS,32,24),new THREE.MeshBasicMaterial({color:figure?0xac8b50:DEEP}));scene.add(ball);
+const ignitionGeometry=new THREE.BufferGeometry();ignitionGeometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(3),3));
+const ignition=new THREE.Points(ignitionGeometry,new THREE.PointsMaterial({color:RED,size:10,sizeAttenuation:false}));ignition.frustumCulled=false;scene.add(ignition);
+ignition.material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nif(length(gl_PointCoord-vec2(.5))>.5)discard;');};
+// Fixed-step momentum integration is computed once; render(t) never advances hidden state.
+const ballPath=new Float32Array(1201*3);let bx=-1,bz=-3,vx=.8,vz=-1.2,by=height(bx,bz,0)+BALL_RADIUS,vy=0;
+for(let n=0;n<=1200;n++){
+  const t=n/120,dt=1/120;
+  for(let e=1;e<lands.length;e++)if(Math.abs(t-lands[e])<dt/2){vx+=(centers[e][0]-bx)*5;vz+=(centers[e][1]-bz)*4;}
+  const slow=t>=1.4&&t<3.2?.055:1;
+  const gx=(height(bx+.15,bz,t)-height(bx-.15,bz,t))/.3,gz=(height(bx,bz+.15,t)-height(bx,bz-.15,t))/.3;
+  vx=(vx-gx*8*dt)*Math.exp(-3*dt);vz=(vz-gz*8*dt)*Math.exp(-3*dt);
+  if(n){bx+=vx*dt*slow;bz+=vz*dt*slow;}
+  const floor=height(bx,bz,t)+BALL_RADIUS;vy-=85*dt;by+=vy*dt;if(by<floor){by=floor;vy=0;}
+  const ret=smooth((t-8.35)/1.65);const rx=bx*(1-ret)-ret,rz=bz*(1-ret)-3*ret;
+  ballPath[n*3]=rx;ballPath[n*3+2]=rz;ballPath[n*3+1]=by*(1-ret)+(height(rx,rz,t)+BALL_RADIUS)*ret;
+}
+// Solve the 0.5s low-pass filter's periodic initial state, so tracking also loops.
+const cameraPath=new Float32Array(ballPath.length),lag=1-Math.exp(-1/120/.5);
+for(let axis=0;axis<3;axis++){
+  let value=0;
+  for(let n=1;n<=1200;n++)value+=lag*(ballPath[n*3+axis]-value);
+  value/=1-Math.pow(1-lag,1200);cameraPath[axis]=value;
+  for(let n=1;n<=1200;n++){value+=lag*(ballPath[n*3+axis]-value);cameraPath[n*3+axis]=value;}
+}
+const tracking=new THREE.Vector3(),cameraRight=new THREE.Vector3(),cameraUp=new THREE.Vector3();
+function interpolate(path,t,out){
+  const u=t*120,n=Math.floor(u),f=u-n,next=Math.min(n+1,1200)*3;out.fromArray(path,n*3);
+  out.x+=(path[next]-out.x)*f;out.y+=(path[next+1]-out.y)*f;out.z+=(path[next+2]-out.z)*f;
+}
+function vertexHeat(x,z,t){
+  let w=0;
+  for(let event=0;event<lands.length;event++){
+    const age=t-lands[event];if(age<0)continue;
+    const duration=waveDuration(event),distance=waveDistance(event,x,z,t),offset=distance-age/duration*WAVE_SPAN;
+    if(Math.abs(offset)>WAVE_WIDTH)continue;
+    w=Math.max(w,Math.cos(offset/WAVE_WIDTH*Math.PI/2)**2*smooth(age/.02)*(1-smooth((age-duration)/.2)));
+  }
+  return clamp(w,0,1);
+}
+window.render=function(time){
+  const t=mod(time,10);let event=-1;for(let e=0;e<lands.length;e++)if(t>=lands[e])event=e;
+  const age=event<0?99:t-lands[event];
+  let yaw=Math.sin(t*Math.PI/5)*4,roll=0;
+  if(event>=0){const snap=spring(age)*(1-smooth((age-.2)/.5));yaw+=(event%2?16:-16)*snap;roll=(event%2?2:-2)*snap;}
+  interpolate(ballPath,t,ball.position);interpolate(cameraPath,t,tracking);
+  const orbit=26/Math.tan(22*Math.PI/180),angle=yaw*Math.PI/180;
+  camera.position.set(tracking.x-Math.sin(angle)*orbit,tracking.y+26,tracking.z+Math.cos(angle)*orbit);
+  camera.up.set(Math.sin(roll*Math.PI/180),Math.cos(roll*Math.PI/180),0);camera.lookAt(tracking);camera.updateMatrixWorld();
+  point.copy(ball.position).applyMatrix4(camera.matrixWorldInverse);const viewScale=-point.z*Math.tan(25*Math.PI/180);
+  point.copy(ball.position).project(camera);
+  cameraRight.setFromMatrixColumn(camera.matrixWorld,0);cameraUp.setFromMatrixColumn(camera.matrixWorld,1);
+  camera.position.addScaledVector(cameraRight,(point.x-clamp(point.x,-.56,.56))*viewScale).addScaledVector(cameraUp,(point.y-clamp(point.y,-.56,.56))*viewScale);
+  camera.updateMatrixWorld();point.copy(ball.position).project(camera);
+  window.frameInfo={ballX:point.x,ballY:point.y};
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+    const q=j*N+i,x=positions[q*3],z=positions[q*3+2],h=height(x,z,t);
+    heights[q]=h;heats[q]=vertexHeat(x,z,t);positions[q*3+1]=h;
+  }
+  for(let v=0;v<wireIds.length;v++)wireData[v*3+1]=heights[wireIds[v]];
+  wireGeometry.attributes.position.needsUpdate=true;
+  ghost.visible=event>=0&&age<.7;ghost.material.opacity=.35*(1-smooth((age-.5)/.2));
+  if(ghost.visible){
+    for(let q=0;q<COUNT;q++)ghostHeights[q]=height(positions[q*3],positions[q*3+2]+age*SPEED,lands[event]-.001);
+    for(let v=0;v<wireIds.length;v++)ghostData[v*3+1]=ghostHeights[wireIds[v]];
+    ghostGeometry.attributes.position.needsUpdate=true;
+  }
+  let tickCount=0;
+  for(let q=0;q<COUNT;q+=2){
+    const heat=heats[q];if(heat<=.15)continue;
+    const i=q%N,j=Math.floor(q/N),left=q-(i>0?1:0),right=q+(i<N-1?1:0),back=q-(j>0?N:0),front=q+(j<N-1?N:0);
+    const gx=(heights[right]-heights[left])/(positions[right*3]-positions[left*3]),gz=(heights[front]-heights[back])/(positions[front*3+2]-positions[back*3+2]);
+    normal.set(-gx,1,-gz).normalize();point.fromArray(positions,q*3);tip.copy(point).add(normal).project(camera);point.project(camera);
+    const projected=Math.hypot(tip.x-point.x,tip.y-point.y),length=Math.min(4,48*heat/1080/Math.max(projected,.0001)),off=tickCount++*6;
+    tickData[off]=positions[q*3];tickData[off+1]=heights[q]+.025;tickData[off+2]=positions[q*3+2];
+    tickData[off+3]=tickData[off]+normal.x*length;tickData[off+4]=tickData[off+1]+normal.y*length;tickData[off+5]=tickData[off+2]+normal.z*length;
+  }
+  tickGeometry.setDrawRange(0,tickCount*2);tickGeometry.attributes.position.needsUpdate=true;ground.position.z=mod(t*SPEED,2);
+  ignition.visible=event>=0&&age<3/30-1e-9;window.frameInfo.ignition=ignition.visible;
+  if(ignition.visible){
+    const x=centers[event][0],z=centers[event][1]-age*SPEED,data=ignitionGeometry.attributes.position.array;
+    data[0]=x;data[1]=height(x,z,t)+.08;data[2]=z;ignitionGeometry.attributes.position.needsUpdate=true;
+  }
+  renderer.render(scene,camera);
+};
+let loopHeightError=0;
+for(let z=-70;z<=20;z+=3)for(let x=-40;x<=40;x+=3)loopHeightError=Math.max(loopHeightError,Math.abs(height(x,z,10)-height(x,z,0)));
+const ballDrops=lands.slice(1).map(landing=>{
+  let peak=-Infinity,low=Infinity;
+  for(let frame=Math.round(landing*120);frame<Math.round((landing+.3)*120);frame++)peak=Math.max(peak,ballPath[frame*3+1]);
+  for(let frame=Math.round((landing+.3)*120);frame<Math.round((landing+1.1)*120);frame++)low=Math.min(low,ballPath[frame*3+1]);
+  return peak-low;
+});
+window.render(0);window.ready={duration:10,vertices:COUNT,wireSegments:wireIds.length/2,period:PERIOD,dpr:2,loopHeightError,shockHeight:SHOCK_HEIGHT,landings:lands,waveSeconds:[1.6,.25],ballDrops};
+if(!new URLSearchParams(location.search).has('capture')){const start=performance.now();function animate(now){window.render((now-start)/1000);requestAnimationFrame(animate)}requestAnimationFrame(animate)}
+</script></body></html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Shape of Inference</title>
+<style>html,body{margin:0;background:#fafaf9;overflow:hidden}canvas{display:block;width:100vmin;height:100vmin}</style>
+</head>
+<body>
+<script type="module">
+import * as THREE from '../../anim/lib/three.module.js';
+const N=48,PER=26,COUNT=N*N*PER,DUR=10,TAU=Math.PI*2;
+const query=new URLSearchParams(location.search),size=Number(query.get('size'))||1080;
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(size===1080?2:1);renderer.setSize(size,size);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.localClippingEnabled=true;
+document.body.appendChild(renderer.domElement);window.renderer=renderer;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#fafaf9');
+const camera=new THREE.PerspectiveCamera(37,1,.1,160);
+scene.add(new THREE.HemisphereLight('#d8e7fa','#b4a291',1));
+const sun=new THREE.DirectionalLight('#fff3d9',3);sun.position.set(-35,38,29);sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:130});
+sun.shadow.bias=-.00008;sun.shadow.normalBias=.018;sun.shadow.radius=2;scene.add(sun);scene.add(sun.target);
+let seed=1889;
+function rnd(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
+const clamp=x=>Math.max(0,Math.min(1,x));
+const ease=x=>{x=clamp(x);return x*x*(3-2*x);};
+const spring=(x,w=15)=>x<=0?0:1-(1+w*x)*Math.exp(-w*x);
+const tones=['#1f3f6e','#2d5287','#4a6a8f','#7f97b5','#b6c2d2'].map(c=>new THREE.Color(c));
+const grain=document.createElement('canvas');grain.width=grain.height=2048;
+const gc=grain.getContext('2d');gc.fillStyle='#fafaf9';gc.fillRect(0,0,2048,2048);gc.fillStyle='rgba(31,63,110,.022)';
+for(let i=0;i<100000;i++)gc.fillRect(rnd()*2048,rnd()*2048,.6,.6);
+const paperTexture=new THREE.CanvasTexture(grain);paperTexture.colorSpace=THREE.SRGBColorSpace;
+const paper=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshBasicMaterial({map:paperTexture,toneMapped:false}));scene.add(paper);
+const paperShadow=new THREE.Mesh(paper.geometry,new THREE.ShadowMaterial({opacity:.3}));paperShadow.position.z=.001;paperShadow.receiveShadow=true;scene.add(paperShadow);
+// One shared bristle slab: pointed tail, domed ridge and solid sides.
+const vertices=[],indices=[],SX=8,SY=6;
+for(let ix=0;ix<=SX;ix++)for(let iy=0;iy<=SY;iy++){
+ const u=ix/SX,v=iy/SY*2-1,taper=Math.min(1,.015+u*5)*(1-.17*Math.pow(u,6));
+ vertices.push(u-.5,v*.14*taper,.035+.03*Math.sin(Math.PI*u)*Math.max(0,1-v*v)+.007*Math.cos(v*Math.PI*3)*Math.sin(Math.PI*u));
+}
+for(let ix=0;ix<SX;ix++)for(let iy=0;iy<SY;iy++){const a=ix*(SY+1)+iy,b=a+SY+1;indices.push(a,b,a+1,b,b+1,a+1);}
+const boundary=[];
+for(let ix=0;ix<=SX;ix++)boundary.push(ix*(SY+1));
+for(let iy=1;iy<=SY;iy++)boundary.push(SX*(SY+1)+iy);
+for(let ix=SX-1;ix>=0;ix--)boundary.push(ix*(SY+1)+SY);
+for(let iy=SY-1;iy>0;iy--)boundary.push(iy);
+for(let k=0;k<boundary.length;k++){
+ const a=boundary[k],b=boundary[(k+1)%boundary.length],c=vertices.length/3;
+ vertices.push(vertices[a*3],vertices[a*3+1],0,vertices[b*3],vertices[b*3+1],0);indices.push(a,c,b,b,c,c+1);
+}
+const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();
+const paint=new THREE.MeshStandardMaterial({roughness:.39,metalness:0});
+paint.clippingPlanes=[new THREE.Plane(new THREE.Vector3(1,0,0),24),new THREE.Plane(new THREE.Vector3(-1,0,0),24),new THREE.Plane(new THREE.Vector3(0,1,0),24),new THREE.Plane(new THREE.Vector3(0,-1,0),24)];paint.clipShadows=true;
+const strokes=new THREE.InstancedMesh(geo,paint,COUNT);strokes.instanceMatrix.setUsage(THREE.DynamicDrawUsage);strokes.castShadow=true;strokes.receiveShadow=true;strokes.frustumCulled=false;scene.add(strokes);
+const markMaterial=new THREE.MeshBasicMaterial({color:'#e23b2a',transparent:true,depthWrite:false,toneMapped:false});
+const token=new THREE.Mesh(new THREE.CircleGeometry(.34,64),markMaterial);token.position.set(16.5,-16.5,.6);token.renderOrder=2;scene.add(token);
+const statics=[],vortices=[[16.5,-16.5,1],[12.5,12.5,-.4],[-14.5,-9.5,.25]];
+for(let row=0;row<N;row++)for(let col=0;col<N;col++)for(let p=0;p<PER;p++){
+ const x=col-23.5+(p%5===0?rnd()-.5:((p%5)+.25+rnd()*.5)/5-.5),y=23.5-row+(Math.floor(p/5)+rnd())/5-.5;
+ let vx=.014,vy=0,strength=0,waveA=0,waveB=0,weight=0;
+ for(const [cx,cy,g] of vortices){
+  const dx=x-cx,dy=y-cy,d=Math.hypot(dx,dy),a=g/(d*d+10),w=1/(d*d*d+20),th=Math.atan2(dy,dx);
+  vx-=dy*a;vy+=dx*a;strength+=Math.abs(a)*12;waveA+=w*Math.sin(d*.64-th*2*Math.sign(g));waveB+=w*Math.cos(d*.64-th*2*Math.sign(g));weight+=w;
+ }
+ const noise=.35*Math.hypot(vx,vy);
+ vx+=noise*(Math.sin(x*.17+1.8)*Math.cos(y*.14)+.5*Math.sin(x*.34-.7)*Math.cos(y*.28+2));
+ vy-=noise*(Math.cos(x*.17+1.8)*Math.sin(y*.14)+.5*Math.cos(x*.34-.7)*Math.sin(y*.28+2));
+ const q=rnd(),base=tones[q<.4?0:q<.68?1:q<.85?2:q<.96?3:4].clone();
+ statics.push({row,col,x,y,angle:Math.atan2(vy,vx),strength,distance:Math.hypot(x-16.5,y+16.5)/58,waveA:waveA/weight,waveB:waveB/weight,phase:rnd()*TAU,length:1.3*(.6+rnd()*.8),width:1.07*(.84+rnd()*.4),roll:(rnd()-.5)*.1,z:p%5===0?.13+rnd()*.025:.008+rnd()*.03,base});
+}
+const dummy=new THREE.Object3D(),color=new THREE.Color();
+window.render=function(time){
+ const t=((time%DUR)+DUR)%DUR,loop=TAU*t/DUR;
+ const shimmer=query.has('gif')?Math.floor(t*15/3)*3/15:t;
+ const retreat=ease((t-9)/.55),landing=spring(t-3.1,18)*(1-ease((t-9)/.3));
+ const phase=t<7?(t-4.3)*1.1:2.97+.25*(t-7);
+ for(let i=0;i<COUNT;i++){
+  const s=statics[i],d=s.distance;
+  const arrival=s.col>s.row?spring(t-4-.42*d,32):spring(t-s.row*.05,52);
+  const drain=s.col>s.row?1-ease((t-9.16-.53*s.row/47)/.12):1-ease((t-9.35-.49*(47-s.row)/47)/.12);
+  const fill=arrival*drain,swing=spring(t-4.3-.68*d,15)*(1-retreat),breath=Math.sin(shimmer*TAU*1.5+s.phase);
+  const flow=s.angle+.17*Math.sin(s.x*.22-phase)*Math.cos(s.y*.16+phase*.4),crest=s.waveA*Math.cos(phase)-s.waveB*Math.sin(phase);
+  color.copy(s.base).lerp(crest>0?tones[4]:tones[0],Math.abs(crest)*swing*(crest>0?.3:.2));
+  if(s.row===40||s.col===40){const u=t-3.1-.3*Math.abs((s.row===40?s.col:s.row)-40)/47;color.lerp(tones[0],.65*spring(u,22)*(1-ease((u-.2)/.5)));}
+  dummy.position.set(s.x,s.y,-.45+(s.z+.45)*fill+(.02+.04*clamp(s.strength))*swing+.004*breath*fill);
+  dummy.rotation.set(s.roll,.025*Math.sin(s.phase),flow*swing+.04*breath*fill);
+  dummy.scale.set(s.length*(.82+.18*fill),s.width,1);dummy.updateMatrix();strokes.setMatrixAt(i,dummy.matrix);strokes.setColorAt(i,color);
+ }
+ strokes.instanceMatrix.needsUpdate=true;strokes.instanceColor.needsUpdate=true;
+ token.scale.setScalar(landing);markMaterial.opacity=landing;
+ sun.position.set(-35+1.4*Math.sin(loop),38+Math.sin(loop),29);
+ camera.position.set(.55*Math.sin(loop),-10.4+.4*(1-Math.cos(loop)),86);camera.lookAt(.3*Math.sin(loop),.2*(1-Math.cos(loop)),0);
+ renderer.render(scene,camera);
+};
+window.render(Number(query.get('t'))||0);window.ready={duration:DUR,strokes:COUNT,pixelRatio:renderer.getPixelRatio()};
+if(!query.has('t')){const start=performance.now();function animate(now){window.render((now-start)/1000);requestAnimationFrame(animate);}requestAnimationFrame(animate);}
+</script>
+</body>
+</html>

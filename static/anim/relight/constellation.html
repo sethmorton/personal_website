@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">No star moved. One new point of light and the figure is drawn differently.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2, CX = 320, CY = 200;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 23; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const INK = [40,97,122], DEEP = [35,72,95], PALE = [155,173,176], WARM = 'rgb(201,108,62)';
+const mix = (a, b, t) => `rgb(${a[0] + (b[0] - a[0]) * t | 0},${a[1] + (b[1] - a[1]) * t | 0},${a[2] + (b[2] - a[2]) * t | 0})`;
+const PAL = []; for (let i = 0; i <= 16; i++) PAL.push(mix(PALE, INK, i / 16)); for (let i = 1; i <= 8; i++) PAL.push(mix(INK, DEEP, i / 8));
+const ease = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u);
+let T = 0;
+
+// ---- stars: fixed positions on a disc wider than the paper, so the sky can turn under it ----
+const N = 240, sx = new Float32Array(N), sy = new Float32Array(N), ph = new Float32Array(N), base = new Uint8Array(N);
+const alive = new Uint8Array(N), member = new Uint8Array(N), RX = new Float32Array(N), RY = new Float32Array(N);
+// eased channels: visibility, brightness (PALE->INK), depth (INK->DEEP), dot count
+const CH = () => ({ v0: new Float32Array(N), v1: new Float32Array(N), t0: new Float32Array(N), du: new Float32Array(N).fill(1) });
+const VIS = CH(), BRI = CH(), DPT = CH(), ND = CH();
+const val = (ch, i) => { const u = (T - ch.t0[i]) / ch.du[i]; return u <= 0 ? ch.v0[i] : u >= 1 ? ch.v1[i] : ch.v0[i] + (ch.v1[i] - ch.v0[i]) * u * u * (3 - 2 * u); };
+const set = (ch, i, to, t0, du) => { ch.v0[i] = val(ch, i); ch.v1[i] = to; ch.t0[i] = t0; ch.du[i] = du; };
+const put = (ch, i, v) => { ch.v0[i] = ch.v1[i] = v; ch.t0[i] = -1e9; ch.du[i] = 1; };
+const d2 = (i, j) => (sx[i] - sx[j]) ** 2 + (sy[i] - sy[j]) ** 2;
+const MD = 12, DOX = new Float32Array(N * MD), DOY = new Float32Array(N * MD), DPH = new Float32Array(N * MD);   // speck homes within the unit disc
+function spawn(i, x, y, nb) { sx[i] = x; sy[i] = y; ph[i] = rnd() * 6.283; base[i] = nb; alive[i] = 1; member[i] = 0; put(VIS, i, 1); put(BRI, i, 0); put(DPT, i, 0); put(ND, i, nb);
+  for (let k = 0; k < MD; k++) { const a = rnd() * 6.283, r = Math.sqrt(rnd()); DOX[i * MD + k] = Math.cos(a) * r; DOY[i * MD + k] = Math.sin(a) * r; DPH[i * MD + k] = rnd() * 6.283; } }
+let count = 0;
+for (let t = 0; t < 40000 && count < 200; t++) {
+  const a = rnd() * 6.283, r = Math.sqrt(rnd()) * 395, x = CX + Math.cos(a) * r, y = CY + Math.sin(a) * r;
+  let ok = true; for (let j = 0; j < count; j++) if ((sx[j] - x) ** 2 + (sy[j] - y) ** 2 < 38 * 38) { ok = false; break; }
+  if (ok) spawn(count++, x, y, 4 + rnd() * 4 | 0);
+}
+
+// ---- the figure: a minimum spanning tree plus three short extra links over the member stars ----
+const LN = 26, list = new Int32Array(LN); let ln = 0;
+const keys = new Int32Array(64); let kn = 0;                       // a*N+b with a<b
+const deg = new Uint8Array(N), hop = new Int16Array(N), dist = new Float32Array(LN), par = new Int32Array(LN), used = new Uint8Array(LN);
+const key = (i, j) => i < j ? i * N + j : j * N + i;
+function findKey(k) { for (let e = 0; e < kn; e++) if (keys[e] === k) return e; return -1; }
+function build() {
+  kn = 0; used.fill(0); used[0] = 1;
+  for (let k = 1; k < ln; k++) { dist[k] = d2(list[0], list[k]); par[k] = 0; }
+  for (let it = 1; it < ln; it++) {
+    let b = -1, bd = 1e18; for (let k = 1; k < ln; k++) if (!used[k] && dist[k] < bd) { bd = dist[k]; b = k; }
+    used[b] = 1; keys[kn++] = key(list[par[b]], list[b]);
+    for (let k = 1; k < ln; k++) if (!used[k]) { const d = d2(list[b], list[k]); if (d < dist[k]) { dist[k] = d; par[k] = b; } }
+  }
+  for (let e = 0; e < 3; e++) {
+    let bk = -1, bd = 1e18;
+    for (let i = 0; i < ln; i++) for (let j = i + 1; j < ln; j++) { const k = key(list[i], list[j]); if (findKey(k) >= 0) continue; const d = d2(list[i], list[j]); if (d < bd) { bd = d; bk = k; } }
+    if (bk >= 0) keys[kn++] = bk;
+  }
+  for (let i = 0; i < ln; i++) deg[list[i]] = 0;
+  for (let e = 0; e < kn; e++) { deg[keys[e] / N | 0]++; deg[keys[e] % N]++; }
+}
+function bfs(root) {
+  for (let i = 0; i < ln; i++) hop[list[i]] = 99; hop[root] = 0;
+  for (let ch = 1; ch;) { ch = 0; for (let e = 0; e < kn; e++) { const a = keys[e] / N | 0, b = keys[e] % N;
+    if (hop[a] + 1 < hop[b]) { hop[b] = hop[a] + 1; ch = 1; } if (hop[b] + 1 < hop[a]) { hop[a] = hop[b] + 1; ch = 1; } } }
+}
+// drawn edges: state 0 free, 1 steady, 2 drawing in (from ea toward eb), 3 fading out
+const EN = 64, ea = new Int32Array(EN), eb = new Int32Array(EN), est = new Uint8Array(EN), et0 = new Float32Array(EN), mt = new Uint8Array(64);
+function addEdge(e, k, t0) { let a = k / N | 0, b = k % N; if (hop[b] < hop[a]) { const s = a; a = b; b = s; } ea[e] = a; eb[e] = b; est[e] = 2; et0[e] = t0; }
+
+// the first figure: fourteen stars near the middle of the sky, fully drawn
+{ const idx = []; for (let i = 0; i < count; i++) idx.push(i);
+  idx.sort((a, b) => (sx[a] - 300) ** 2 + (sy[a] - 190) ** 2 - (sx[b] - 300) ** 2 - (sy[b] - 190) ** 2);
+  for (let k = 0; k < 28; k += 2) { const i = idx[k]; member[i] = 1; put(BRI, i, 1); put(ND, i, base[i] + 3); list[ln++] = i; }
+  build(); bfs(list[0]);
+  for (let e = 0; e < kn; e++) { addEdge(e, keys[e], -9); est[e] = 1; } }
+
+// ---- the call: a new star, and the figure re-drawn around it ----
+let star = -1, cycleAt = 3.5;
+function call() {
+  const cs = T;
+  if (star >= 0) set(DPT, star, 0, cs, 1.6);
+  let na = 0; for (let i = 0; i < N; i++) na += alive[i];
+  if (na >= 215) { let f = -1, fd = -1; for (let i = 0; i < N; i++) if (alive[i] && !member[i]) { const d = (sx[i] - CX) ** 2 + (sy[i] - CY) ** 2; if (d > fd) { fd = d; f = i; } }
+    alive[f] = 0; set(VIS, f, 0, cs, 2); }
+  ln = 0; for (let i = 0; i < N; i++) if (member[i]) list[ln++] = i;
+  let nx = 0, ny = 0;
+  for (let t = 0; t < 120; t++) {
+    const m = list[rnd() * ln | 0], a = rnd() * 6.283, d = 30 + rnd() * 50; nx = sx[m] + Math.cos(a) * d; ny = sy[m] + Math.sin(a) * d;
+    if ((nx - CX) ** 2 + (ny - CY) ** 2 > 128 * 128) continue;   // the figure keeps drifting back toward the middle of the paper
+    let ok = true; for (let j = 0; j < N; j++) if (val(VIS, j) > 0 && (sx[j] - nx) ** 2 + (sy[j] - ny) ** 2 < 24 * 24) { ok = false; break; }
+    if (ok) break;
+  }
+  let ns = 0; for (let i = 0; i < N; i++) if (!alive[i] && val(VIS, i) <= 0) { ns = i; break; }
+  spawn(ns, nx, ny, 6 + rnd() * 3 | 0); star = ns; member[ns] = 3;
+  put(VIS, ns, 0); set(VIS, ns, 1, cs, 1); put(BRI, ns, 1); put(DPT, ns, 1);
+  for (let r = 0; r < 3; r++) { let b = -1, bd = 1e18; for (let j = 0; j < N; j++) if (alive[j] && !member[j]) { const d = d2(j, ns); if (d < bd) { bd = d; b = j; } } member[b] = 2; }
+  ln = 0; for (let i = 0; i < N; i++) if (member[i]) list[ln++] = i;
+  build();
+  let k = 2 + (rnd() < 0.5); if (ln - k > 18) k = ln - 18;
+  for (; k > 0; k--) {                                             // the least-connected old stars let go
+    let w = -1, wd = 99, wf = -1;
+    for (let i = 0; i < ln; i++) { const s = list[i]; if (member[s] !== 1) continue; const dd = d2(s, ns);
+      if (deg[s] < wd || (deg[s] === wd && dd > wf)) { wd = deg[s]; wf = dd; w = i; } }
+    const s = list[w]; member[s] = 0; set(BRI, s, 0, cs + 1, 1.4); set(ND, s, base[s], cs + 1, 1.4); list[w] = list[--ln];
+  }
+  build(); bfs(ns);
+  mt.fill(0);
+  for (let e = 0; e < EN; e++) { if (!est[e]) continue; const f = findKey(key(ea[e], eb[e]));
+    if (f < 0) { if (est[e] !== 3) { est[e] = 3; et0[e] = cs + 1; } continue; }
+    mt[f] = 1; if (est[e] === 3) addEdge(e, keys[f], cs + 1 + Math.min(hop[ea[e]], hop[eb[e]]) * 0.25); }
+  for (let f = 0; f < kn; f++) { if (mt[f]) continue; let e = 0; while (est[e]) e++;
+    addEdge(e, keys[f], cs + 1 + Math.min(hop[keys[f] / N | 0], hop[keys[f] % N]) * 0.25); }
+  for (let i = 0; i < ln; i++) { const s = list[i];
+    if (member[s] === 2) { set(BRI, s, 1, cs + 1 + hop[s] * 0.25, 1.2); set(ND, s, base[s] + 3, cs + 1 + hop[s] * 0.25, 1.2); }
+    member[s] = 1; }
+}
+
+// ---- graticule: three faint arcs of great circles, dotted, with small tick marks like a chart scale ----
+const GP = []; { const arcs = [[320, 1700, 1330], [320, 1700, 1460], [320, 1700, 1590], [1420, -700, 1421]];
+  for (const [cx, cy, r] of arcs) { const a0 = Math.atan2(CY - cy, CX - cx), sp = 540 / r, n = Math.round(1080 / 5.2);
+    for (let k = 0; k <= n; k++) { const a = a0 - sp + 2 * sp * k / n, ca = Math.cos(a), sa = Math.sin(a); GP.push(cx + ca * r, cy + sa * r);
+      if (k % 7 === 3) for (let j = 1; j <= 3; j++) GP.push(cx + ca * (r + j * 2.7), cy + sa * (r + j * 2.7)); } } }
+const GRAT = new Float32Array(GP);
+
+let cr = 1, sr = 0, dots = 0;
+function rot(x, y, i) { RX[i] = CX + (x - CX) * cr - (y - CY) * sr; RY[i] = CY + (x - CX) * sr + (y - CY) * cr; }
+function edgeDots(e, p) {
+  const a = ea[e], b = eb[e], dx = RX[b] - RX[a], dy = RY[b] - RY[a], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+  const s0 = 8 / L, s1 = 1 - 8 / L, n = Math.max(1, Math.round(L * (s1 - s0) / 4)), w = (T * 0.3) % 1;
+  for (let k = 0; k < n; k++) {
+    const t = s0 + (s1 - s0) * (k + w) / n; if (t > p) break;
+    const q = Math.sin(T * 1.1 + k * 1.7 + a * 0.3) * 0.5;
+    g.fillRect(RX[a] + dx * t - uy * q - 0.85, RY[a] + dy * t + ux * q - 0.85, 1.7, 1.7); dots++;
+  }
+}
+function draw() {
+  const r = T * 0.4 * Math.PI / 180; cr = Math.cos(r); sr = Math.sin(r);   // the sky turns, 0.4 degrees a second
+  g.clearRect(0, 0, W, H); dots = 0;
+  g.fillStyle = 'rgba(155,173,176,0.8)';
+  for (let k = 0; k < GRAT.length; k += 2) {
+    const x = GRAT[k], y = GRAT[k + 1], X = CX + (x - CX) * cr - (y - CY) * sr, Y = CY + (x - CX) * sr + (y - CY) * cr;
+    if (X < -2 || X > W + 2 || Y < -2 || Y > H + 2) continue;
+    g.fillRect(X + Math.sin(T * 0.6 + k * 0.37) * 0.6 - 0.65, Y + Math.cos(T * 0.5 + k * 0.23) * 0.6 - 0.65, 1.3, 1.3); dots++;
+  }
+  for (let i = 0; i < N; i++) rot(sx[i], sy[i], i);
+  g.strokeStyle = PAL[0]; g.lineWidth = 1.7; g.lineCap = 'round'; g.setLineDash([2, 4]);
+  for (let e = 0; e < EN; e++) {                                  // broken links: pale dashes, letting go
+    if (est[e] !== 3 || T < et0[e]) continue; const p = (T - et0[e]) / 0.8;
+    if (p >= 1) { est[e] = 0; continue; }
+    g.globalAlpha = 0.9 * (1 - ease(p)); g.lineDashOffset = -T * 1.5 - e;
+    g.beginPath(); g.moveTo(RX[ea[e]], RY[ea[e]]); g.lineTo(RX[eb[e]], RY[eb[e]]); g.stroke(); dots += 12;
+  }
+  g.setLineDash([]); g.globalAlpha = 0.92; g.fillStyle = PAL[16];
+  for (let e = 0; e < EN; e++) {                                  // living links: ants walking outward from the new star
+    if (est[e] === 1 || (est[e] === 3 && T < et0[e])) edgeDots(e, 1);
+    else if (est[e] === 2) { const p = ease((T - et0[e]) / 1); edgeDots(e, p); if (p >= 1) est[e] = 1; }
+  }
+  for (let i = 0; i < N; i++) {
+    const v = val(VIS, i); if (v <= 0.005) continue;
+    const X = RX[i], Y = RY[i]; if (X < -8 || X > W + 8 || Y < -8 || Y > H + 8) continue;
+    const b = val(BRI, i), d = val(DPT, i), n = val(ND, i), cnt = Math.ceil(n), R = (1.3 + 0.42 * n) * (1 + 0.35 * d), sz = 1.35 + 0.65 * b + 0.85 * d;
+    g.globalAlpha = v; g.fillStyle = d > 0.02 ? PAL[16 + Math.round(d * 8)] : PAL[Math.round(b * 16)];
+    for (let k = 0, q = i * MD; k < cnt; k++, q++) {              // each speck walks a slow little loop around its home
+      const fr = k < cnt - 1 ? 1 : n - cnt + 1, s = sz * (0.45 + 0.55 * fr), w = T * (0.5 + (k % 4) * 0.13) + DPH[q];
+      g.fillRect(X + DOX[q] * R + Math.sin(w) * 0.5 - s / 2, Y + DOY[q] * R + Math.cos(w * 1.3) * 0.5 - s / 2, s, s); dots++;
+    }
+  }
+  const age = T - (star >= 0 ? VIS.t0[star] : 1e9);              // the call itself: three warm specks, briefly
+  if (age < 2.4) { g.globalAlpha = Math.min(1, age * 2) * (1 - age / 2.4); g.fillStyle = WARM;
+    for (let q = 0; q < 3; q++) { const a = q * 2.094 + T * 0.8, rr = 6.5 + Math.sin(T + q) * 1.2;
+      g.fillRect(RX[star] + Math.cos(a) * rr - 1, RY[star] + Math.sin(a) * rr - 1, 2, 2); dots++; } }
+  g.globalAlpha = 1;
+}
+function tick(dt) { T += dt; if (T > cycleAt) { call(); cycleAt = T + 9; } draw(); window.__T = T; window.__dots = dots; }
+let last = performance.now(); window.auto = true;
+function frame(now) { if (window.auto) tick(Math.max(0, Math.min(0.033, (now - last) / 1000))); last = now; requestAnimationFrame(frame); }
+window.tick = tick; requestAnimationFrame(frame);
+</script>
+</body>
+</html>

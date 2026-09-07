@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="THE, CAT, SAT in floating ink. Earlier blue rings and CAT's warm ink gather in SAT; earlier word cores remain."></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2, CYCLE = 10;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+const PAPER = '#fafaf9', INK = '#4a6a8f', DEEP = '#1f4f8f', SKY = '#6e9ece', PALE = '#b6c2d2', WARM = '#c96c3e';
+let seed = 71; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = x => Math.max(0, Math.min(1, x));
+const smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const ease = (t, a, b) => smooth((t - a) / (b - a)), TAU = Math.PI * 2;
+// Seeded geometry and paper are sampled only at load.
+const paper = document.createElement('canvas'); paper.width = c.width; paper.height = c.height;
+const pg = paper.getContext('2d'); pg.scale(DPR, DPR); pg.fillStyle = PAPER; pg.fillRect(0, 0, W, H);
+for (let i = 0; i < 2400; i++) {
+  pg.fillStyle = i % 3 ? 'rgba(74,106,143,0.023)' : 'rgba(182,194,210,0.045)';
+  pg.beginPath(); pg.ellipse(rnd() * W, rnd() * H, 0.15 + rnd() * 0.5, 0.1 + rnd() * 0.2, rnd() * TAU, 0, TAU); pg.fill();
+}
+const islands = [
+  { word: 'THE', x: 112, y: 201, r: 64, n: 29, start: 0.04 },
+  { word: 'CAT', x: 291, y: 197, r: 70, n: 34, start: 0.38 },
+  { word: 'SAT', x: 485, y: 202, r: 77, n: 38, start: 0.76 }
+];
+const mask = document.createElement('canvas'); mask.width = 120; mask.height = 60;
+const mg = mask.getContext('2d', { willReadFrequently: true });
+for (const [k, o] of islands.entries()) {
+  o.rings = []; o.dots = [];
+  for (let j = 0; j < o.n; j++) {
+    const f = j / (o.n - 1), r = 23 + (o.r - 23) * f, points = [], phase = k * 1.7;
+    for (let s = 0; s <= 224; s++) {
+      const a = s / 224 * TAU;
+      const wave = Math.sin(a * 3 + phase + f * 0.6) * 1.5 + Math.sin(a * 7 - f * 1.2 + phase) * 0.65 + Math.sin(a * 13 + phase) * 0.27;
+      const jitter = (rnd() - 0.5) * 0.37, rx = r + 16 * (1 - f) + wave + jitter;
+      points.push({ x: Math.cos(a) * rx, y: Math.sin(a) * (r * 0.9 + wave + jitter), a });
+    }
+    o.rings.push({ points, f, width: 0.35 + rnd() * 0.7 + (j % 9 === 3 ? 0.7 : 0), alpha: 0.25 + rnd() * 0.36, color: j % 6 === 0 ? DEEP : j % 5 === 0 ? SKY : INK });
+  }
+  mg.clearRect(0, 0, 120, 60); mg.font = '700 32px Georgia, serif'; mg.textAlign = 'center'; mg.fillStyle = DEEP; mg.fillText(o.word, 60, 40);
+  const data = mg.getImageData(0, 0, 120, 60).data;
+  for (let y = 8; y < 46; y += 0.95) for (let x = 12; x < 108; x += 0.95) {
+    if (data[((y | 0) * 120 + (x | 0)) * 4 + 3] > 110) o.dots.push({ x: x - 60 + (rnd() - 0.5) * 0.45, y: y - 29 + (rnd() - 0.5) * 0.45, r: 0.31 + rnd() * 0.42, a: 0.42 + rnd() * 0.5 });
+  }
+}
+// Tine-like displacement: only eastern vertices move; dx cannot be negative.
+function ringPath(o, ring, growth, drift, k) {
+  const p = new Path2D(); let open = false;
+  for (let i = 0; i < ring.points.length; i++) {
+    const v = ring.points[i], gate = smooth((v.x - 8) / 36);
+    if (drift > 0 && v.x <= 8) { open = false; continue; }
+    const line = Math.exp(-Math.pow((v.y + 5) / (k === 0 ? 23 : 32), 2));
+    const dx = drift * gate * line * (k === 0 ? 92 : 163) * (0.35 + ring.f * 0.65);
+    const dy = drift * gate * Math.sin(v.y / 16) * (k === 0 ? 3 : 17) * ring.f;
+    const x = o.x + v.x * growth + dx, y = o.y + v.y * growth + dy;
+    if (open) p.lineTo(x, y); else p.moveTo(x, y);
+    open = true;
+  }
+  if (!drift) p.closePath();
+  return p;
+}
+let opacity = 1;
+function deposit(path, color, width, alpha) {
+  g.strokeStyle = color; g.globalAlpha = alpha * opacity * 0.065;
+  g.lineWidth = width + 2.2; g.stroke(path);
+  g.globalAlpha = alpha * opacity; g.lineWidth = width; g.stroke(path);
+  g.globalAlpha *= 0.22; g.lineWidth = width * 0.55; g.setLineDash([0.35, 1.15, 0.65, 1.8]); g.stroke(path); g.setLineDash([]);
+}
+// CAT's added membranes unfurl into SAT and remain. Original rings stay underneath.
+const folds = [];
+for (let j = 0; j < 19; j++) {
+  const f = j / 18, points = [];
+  for (let i = 0; i <= 180; i++) {
+    const a = -Math.PI * 0.91 + i / 180 * Math.PI * 1.82, r = 39 + f * 32;
+    points.push({ x: 493 + Math.cos(a) * r + 9 * Math.sin(a * 3 + f) + 5 * Math.sin(a * 5 + 0.4),
+      y: 202 + Math.sin(a) * r * 1.02 + 5 * Math.sin(a * 4 + f),
+      sx: 324 + (Math.cos(a) + 1) * (10 + f * 7), sy: 195 + Math.sin(a) * (19 + f * 23) });
+  }
+  folds.push({ points, warm: j === 3 || j === 8 || j === 13, width: 0.4 + rnd() * 0.65, alpha: 0.32 + rnd() * 0.18 });
+}
+function draw(seconds) {
+  const t = ((seconds % CYCLE) + CYCLE) % CYCLE; window.__t = t;
+  opacity = 1 - ease(t, 9.2, 10);
+  g.globalAlpha = 1; g.drawImage(paper, 0, 0, W, H); g.lineCap = 'round'; g.lineJoin = 'round';
+  const fromThe = ease(t, 2.3, 4.6), fromCat = ease(t, 3.6, 7.5);
+  for (const [k, o] of islands.entries()) {
+    const growth = ease(t, o.start, o.start + 1.75), appear = ease(t, o.start, o.start + 0.5);
+    if (!appear) continue;
+    for (const r of o.rings) {
+      deposit(ringPath(o, r, 0.04 + growth * 0.96, 0, k), r.color, r.width, r.alpha * appear);
+      const drift = k === 0 ? fromThe : k === 1 ? fromCat : 0;
+      if (drift > 0 && r.f > 0.34 && (k === 1 || Math.round(r.f * 28) % 3 === 0))
+        deposit(ringPath(o, r, 1, drift, k), r.color, r.width * 0.75, r.alpha * drift * 0.63);
+    }
+  }
+  const flow = ease(t, 3.45, 7.6), show = ease(t, 2.8, 3.6);
+  for (const f of folds) {
+    const p = new Path2D();
+    for (const [i, v] of f.points.entries()) {
+      const x = v.sx + (v.x - v.sx) * flow, y = v.sy + (v.y - v.sy) * flow;
+      if (i) p.lineTo(x, y); else p.moveTo(x, y);
+    }
+    deposit(p, f.warm ? WARM : INK, f.width, f.alpha * show * (f.warm ? 0.9 : 0.6));
+  }
+  for (const o of islands) {
+    const a = ease(t, o.start + 0.55, o.start + 1.65); g.fillStyle = DEEP;
+    for (const d of o.dots) {
+      g.globalAlpha = opacity * a * d.a; g.beginPath(); g.arc(o.x + d.x, o.y + d.y, d.r, 0, TAU); g.fill();
+    }
+  }
+  g.globalAlpha = 1;
+}
+const params = new URLSearchParams(location.search), frozen = params.has('t'), requested = Number(params.get('t'));
+if (frozen) draw(Number.isFinite(requested) ? requested : 0);
+else if (matchMedia('(prefers-reduced-motion: reduce)').matches) draw(8.4);
+else {
+  const start = performance.now(); draw(0);
+  function frame(now) { draw((now - start) / 1000); requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

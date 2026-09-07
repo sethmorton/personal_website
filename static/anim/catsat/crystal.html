@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">Each new facet takes its angle from the ones before it. The old facets are already set.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 23; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const INK = [40,97,122], LOCK = [46, 88, 143], SKY = [113,146,158], WARM = [172,139,80];
+const mixs = (a, b, t, al) => `rgba(${a[0] + (b[0] - a[0]) * t | 0},${a[1] + (b[1] - a[1]) * t | 0},${a[2] + (b[2] - a[2]) * t | 0},${al.toFixed(2)})`;
+const SKYA = []; for (let i = 0; i < 6; i++) SKYA.push(mixs(SKY, SKY, 0, 0.2 + i * 0.16));
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v, smooth = u => u * u * (3 - 2 * u);
+
+// ---- the crystal: NC convex cells chained left to right, each sharing its left edge with the one before ----
+const NC = 5, NV = 6, PITCH = 95, X0 = 82, CY = 196, GAP = 6.4, INSET = 3, NP = 44;
+const FORM = 1.4, PERIOD = 8.6, DRIFT_AT = 8.2, DRIFT = 1.5, LIFE = DRIFT_AT + DRIFT, DEFECT = DRIFT_AT - NC * FORM;
+const WORDS = ['THE', 'CAT', 'SAT', 'ON', 'THE'];
+const F = n => new Float32Array(n);
+function crystal() {
+  return { born: -99, vx: F(NC * NV), vy: F(NC * NV), ix: F(NC * NV), iy: F(NC * NV), nx: F(NC * NV), ny: F(NC * NV),
+    cx: F(NC), cy: F(NC), ang: F(NC), sx: F(NP), sy: F(NP), qx: F(NP), qy: F(NP), rx: F(NP), ry: F(NP), tx: F(NP), ty: F(NP), st: F(NP), du: F(NP), def: F(4) };
+}
+const K = [crystal(), crystal()], bx = F(NC + 1), by0 = F(NC + 1), by1 = F(NC + 1);
+let CT0 = 0, CT1 = 0, CE1 = 0;
+function clip(k, c, px, py, dx, dy) {                    // Cyrus-Beck: the line p + t*d inside cell c is t in [CT0, CT1]; CE1 = edge it leaves through
+  CT0 = -1e9; CT1 = 1e9;
+  for (let i = 0; i < NV; i++) {
+    const o = c * NV + i, nx = k.nx[o], ny = k.ny[o], den = nx * dx + ny * dy, num = nx * (k.vx[o] - px) + ny * (k.vy[o] - py);
+    if (den > 1e-9) { if (num / den > CT0) CT0 = num / den; } else if (den < -1e-9) { if (num / den < CT1) { CT1 = num / den; CE1 = i; } } else if (num > 0) return false;
+  }
+  return CT1 > CT0;
+}
+function build(k, t) {
+  k.born = t; k.st.fill(-1);
+  for (let b = 0; b <= NC; b++) { const hh = 52 + rnd() * 14, sh = (rnd() - 0.5) * 20; bx[b] = X0 + b * PITCH + (rnd() - 0.5) * 14; by0[b] = CY - hh + sh; by1[b] = CY + hh + sh; }
+  for (let c = 0; c < NC; c++) {
+    const o = c * NV, mx = (bx[c] + bx[c + 1]) / 2, tb = rnd() < 0.3 ? 3 : 10 + rnd() * 16, bb = rnd() < 0.3 ? 3 : 10 + rnd() * 16;   // a flat bulge reads as a pentagon
+    k.vx[o] = bx[c]; k.vy[o] = by0[c]; k.vx[o + 1] = mx + (rnd() - 0.5) * 22; k.vy[o + 1] = Math.min(by0[c], by0[c + 1]) - tb;
+    k.vx[o + 2] = bx[c + 1]; k.vy[o + 2] = by0[c + 1]; k.vx[o + 3] = bx[c + 1]; k.vy[o + 3] = by1[c + 1];
+    k.vx[o + 4] = mx + (rnd() - 0.5) * 22; k.vy[o + 4] = Math.max(by1[c], by1[c + 1]) + bb; k.vx[o + 5] = bx[c]; k.vy[o + 5] = by1[c];
+    let cx = 0, cy = 0; for (let i = 0; i < NV; i++) { cx += k.vx[o + i]; cy += k.vy[o + i]; } k.cx[c] = cx / NV; k.cy[c] = cy / NV;
+    for (let i = 0; i < NV; i++) {                       // inward unit normals
+      const a = o + i, b = o + (i + 1) % NV, dx = k.vx[b] - k.vx[a], dy = k.vy[b] - k.vy[a], L = Math.hypot(dx, dy);
+      let nx = -dy / L, ny = dx / L; if (nx * (k.cx[c] - k.vx[a]) + ny * (k.cy[c] - k.vy[a]) < 0) { nx = -nx; ny = -ny; }
+      k.nx[a] = nx; k.ny[a] = ny;
+    }
+    for (let i = 0; i < NV; i++) {                       // inner outline: neighbouring edges pushed INSET inward, intersected
+      const a = o + (i + NV - 1) % NV, b = o + i, b2 = o + (i + 1) % NV;
+      const ax = k.vx[a] + k.nx[a] * INSET, ay = k.vy[a] + k.ny[a] * INSET, adx = k.vx[b] - k.vx[a], ady = k.vy[b] - k.vy[a];
+      const qx = k.vx[b] + k.nx[b] * INSET, qy = k.vy[b] + k.ny[b] * INSET, bdx = k.vx[b2] - k.vx[b], bdy = k.vy[b2] - k.vy[b];
+      const s = ((qx - ax) * bdy - (qy - ay) * bdx) / (adx * bdy - ady * bdx);
+      k.ix[b] = ax + adx * s; k.iy[b] = ay + ady * s;
+    }
+    // the facet angle: inherited from every earlier cell, recent ones weighing most, plus a small twist of its own
+    if (c === 0) k.ang[0] = 0.6 + (rnd() - 0.5) * 0.6;
+    else { let sw = 0, sa = 0; for (let j = 0; j < c; j++) { const w = Math.pow(0.55, c - 1 - j); sw += w; sa += w * k.ang[j]; }
+      k.ang[c] = Math.min(1.35, Math.max(0.1, sa / sw + (rnd() - 0.5) * 0.5)); }
+  }
+  // the defect: the facet of the last cell that leaves through the shared edge nearest its middle; it starts partway along and walks left to that edge
+  const c = NC - 1, ux = Math.cos(k.ang[c]), uy = Math.sin(k.ang[c]), my = (k.vy[c * NV] + k.vy[c * NV + 5]) / 2;
+  k.def[0] = k.cx[c]; k.def[1] = k.cy[c]; k.def[2] = k.vx[c * NV]; k.def[3] = my;
+  for (let m = -12, best = 1e9; m <= 12; m++) {
+    const s = m * GAP, px = k.cx[c] - uy * s, py = k.cy[c] + ux * s;
+    if (!clip(k, c, px, py, -ux, -uy) || CE1 !== NV - 1 || CT1 - CT0 < 30) continue;
+    const ex = px - ux * CT1, ey = py - uy * CT1, d = Math.abs(ey - my); if (d > best) continue; best = d;
+    const run = Math.min(48, (CT1 - CT0) * 0.75); k.def[2] = ex; k.def[3] = ey; k.def[0] = ex + ux * run; k.def[1] = ey + uy * run;
+  }
+}
+
+let T = 0, dots = 0;
+// dotted outline revealed outward from the shared (left) edge; every dot walks a small loop with amplitude amp
+function outline(k, c, X, Y, p, amp, sz, first) {
+  const o = c * NV; let Lp = 0, q = 0;
+  for (let i = 0; i < NV - 1; i++) Lp += Math.hypot(X[o + (i + 1) % NV] - X[o + i], Y[o + (i + 1) % NV] - Y[o + i]);
+  const lim = p * Lp / 2;
+  for (let i = 0; i < NV; i++) {
+    const shared = i === NV - 1; if (shared && !first) break;
+    const a = o + i, b = o + (i + 1) % NV, L = Math.hypot(X[b] - X[a], Y[b] - Y[a]), n = Math.max(1, Math.round(L / 3.6));
+    for (let m = 0; m < n; m++) {
+      const t = (m + 0.5) / n, d = q + L * t, dd = shared ? 0 : d < Lp - d ? d : Lp - d; if (dd > lim) continue;
+      const h = a * 7.3 + m * 2.39, s = sz * (0.4 + 0.6 * Math.min(1, (lim - dd) / 14));   // the newest dots arrive small
+      g.fillRect(X[a] + (X[b] - X[a]) * t + Math.sin(T * 1.3 + h) * amp - s / 2, Y[a] + (Y[b] - Y[a]) * t + Math.cos(T + h * 1.7) * amp - s / 2, s, s); dots++;
+    }
+    q += L;
+  }
+}
+// facets: parallel dot-dashes at the cell's angle, clipped to the cell and to the growth front at xrev
+function hatch(k, c, xrev, amp, walk) {
+  const a = k.ang[c], ux = Math.cos(a), uy = Math.sin(a), cx = k.cx[c], cy = k.cy[c];
+  g.lineWidth = 1.5; g.lineCap = 'round'; g.setLineDash([0.1, 3.2]); g.lineDashOffset = walk; g.beginPath();
+  for (let m = -16; m <= 16; m++) {
+    const s = m * GAP + Math.sin(T * 0.5 + m * 0.7 + c) * amp, px = cx - uy * s, py = cy + ux * s;
+    if (!clip(k, c, px, py, ux, uy)) continue;
+    const t0 = CT0, t1 = Math.min(CT1, (xrev - px) / ux); if (t1 <= t0) continue;
+    g.moveTo(px + ux * t0, py + uy * t0); g.lineTo(px + ux * t1, py + uy * t1); dots += (t1 - t0) / 3.2;
+  }
+  g.stroke(); g.setLineDash([]);
+}
+// a SKY dash leaves a facet of an earlier cell (recent cells favoured) along that cell's angle and lands on a facet of the new cell along the new one
+function spawn(k, i, c, p, at) {
+  let j = c - 1; while (j > 0 && rnd() < 0.4) j--;
+  const aj = k.ang[j], vx = Math.cos(aj), vy = Math.sin(aj), a = k.ang[c], ux = Math.cos(a), uy = Math.sin(a);
+  k.sx[i] = k.cx[j]; k.sy[i] = k.cy[j]; k.tx[i] = k.cx[c]; k.ty[i] = k.cy[c];
+  for (let n = 0; n < 6; n++) {
+    const s = Math.round((rnd() - 0.5) * 18) * GAP, px = k.cx[j] - vy * s, py = k.cy[j] + vx * s;
+    if (!clip(k, j, px, py, vx, vy)) continue;
+    const t = CT0 + (CT1 - CT0) * (0.5 + 0.5 * rnd()); k.sx[i] = px + vx * t; k.sy[i] = py + vy * t; break;
+  }
+  for (let n = 0; n < 6; n++) {
+    const s = Math.round((rnd() - 0.5) * 18) * GAP, px = k.cx[c] - uy * s, py = k.cy[c] + ux * s;
+    if (!clip(k, c, px, py, ux, uy)) continue;
+    const t = CT0 + (CT1 - CT0) * rnd() * Math.max(0.3, p); k.tx[i] = px + ux * t; k.ty[i] = py + uy * t; break;
+  }
+  k.qx[i] = k.sx[i] + vx * 45; k.qy[i] = k.sy[i] + vy * 45; k.rx[i] = k.tx[i] - ux * 45; k.ry[i] = k.ty[i] - uy * 45;
+  k.st[i] = at; k.du[i] = 0.9 + rnd() * 0.4;
+}
+function particles(k, A) {
+  const c = Math.min(NC - 1, A / FORM | 0), p = clamp01((A - c * FORM) / FORM), forming = c > 0 && A < NC * FORM && p < 0.7;
+  for (let i = 0; i < NP; i++) {
+    const f = k.st[i] < 0 ? 2 : (A - k.st[i]) / k.du[i];
+    if (f >= 1) { if (forming) spawn(k, i, c, p, A + rnd() * 0.4); continue; }
+    if (f < 0) continue;
+    const e = smooth(f), a = 1 - e, w0 = a * a * a, w1 = 3 * a * a * e, w2 = 3 * a * e * e, w3 = e * e * e;
+    const x = w0 * k.sx[i] + w1 * k.qx[i] + w2 * k.rx[i] + w3 * k.tx[i], y = w0 * k.sy[i] + w1 * k.qy[i] + w2 * k.ry[i] + w3 * k.ty[i];
+    let dx = a * a * (k.qx[i] - k.sx[i]) + 2 * a * e * (k.rx[i] - k.qx[i]) + e * e * (k.tx[i] - k.rx[i]);
+    let dy = a * a * (k.qy[i] - k.sy[i]) + 2 * a * e * (k.ry[i] - k.qy[i]) + e * e * (k.ty[i] - k.ry[i]);
+    const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+    g.fillStyle = SKYA[Math.min(1, f * 2.5, (1 - f) * 2.5) * 5.99 | 0];
+    for (let d = 0; d < 4; d++) { g.fillRect(x - dx * d * 3.2 - 1, y - dy * d * 3.2 - 1, 2, 2); dots++; }
+  }
+}
+function defect(k, A) {
+  const u = (A - NC * FORM) / DEFECT; if (u < 0 || u >= 1) return;
+  const mv = smooth(clamp01((u - 0.15) / 0.5)), x = k.def[0] + (k.def[2] - k.def[0]) * mv, y = k.def[1] + (k.def[3] - k.def[1]) * mv;
+  const al = u < 0.12 ? u / 0.12 : u > 0.74 ? 1 - (u - 0.74) / 0.26 : 1, r = 1.4 + Math.min(1, u * 5) * 2.4;
+  g.fillStyle = mixs(WARM, WARM, 0, al * 0.95);
+  for (let q = 0; q < 6; q++) { const a = q * 1.047 + T * 0.7, rr = r * (0.55 + 0.45 * ((q * 7) % 3) / 2); g.fillRect(x + Math.cos(a) * rr - 1.1, y + Math.sin(a) * rr - 1.1, 2.2, 2.2); dots++; }
+}
+function stub(k, A) {                                    // where the next cell would attach
+  const c = Math.min(NC - 1, A / FORM | 0), p = clamp01((A - c * FORM) / FORM); if (p < 0.9 || A >= DRIFT_AT) return;
+  const o = c * NV, mx = (k.vx[o + 2] + k.vx[o + 3]) / 2, my = (k.vy[o + 2] + k.vy[o + 3]) / 2;
+  g.fillStyle = mixs(INK, INK, 0, 0.15 + 0.8 * (0.5 + 0.5 * Math.sin(T * 3.4)));
+  for (let i = 1; i <= 5; i++) { g.fillRect(mx + i * 4.2 + Math.sin(T + i) * 0.5 - 1, my + Math.cos(T * 0.8 + i * 1.7) * 0.5 - 1, 2, 2); dots++; }
+}
+function drawCrystal(k) {
+  const A = T - k.born; if (A < 0 || A >= LIFE) return;
+  const drift = A > DRIFT_AT ? -(0.5 - 0.5 * Math.cos(Math.PI * (A - DRIFT_AT) / DRIFT)) * 760 : 0;
+  g.save(); g.translate(drift + Math.sin(T * 0.31) * 1.2, Math.cos(T * 0.23) * 1.2);
+  g.font = '12px Georgia'; g.textAlign = 'center'; g.letterSpacing = '2px';
+  for (let c = 0; c < NC; c++) {
+    const p = clamp01((A - c * FORM) / FORM); if (p <= 0) break;
+    const lockT = k.born + (c + 1) * FORM, lk = c < NC - 1 ? clamp01((T - lockT) / 0.5) : 0, amp = 0.8 - 0.62 * lk;   // locked: dots stop walking, ink sets darker
+    const o = c * NV; let xl = 1e9, xr = -1e9; for (let i = 0; i < NV; i++) { if (k.vx[o + i] < xl) xl = k.vx[o + i]; if (k.vx[o + i] > xr) xr = k.vx[o + i]; }
+    g.strokeStyle = mixs(INK, LOCK, lk, 0.4 + 0.18 * lk);
+    hatch(k, c, p >= 1 ? 1e9 : xl + (xr - xl) * p * 1.1, amp, -Math.min(T, lockT) * 2.4 - c * 1.37);
+    g.fillStyle = mixs(INK, LOCK, lk, 0.8 + 0.2 * lk); outline(k, c, k.vx, k.vy, p, amp, 1.9, c === 0);
+    if (lk > 0) { g.fillStyle = mixs(LOCK, LOCK, 0, lk * 0.85); outline(k, c, k.ix, k.iy, 1, 0.18, 1.4, true); }
+    g.fillStyle = mixs(INK, LOCK, lk, 0.6 * p); g.fillText(WORDS[c], k.cx[c], k.cy[c] + 4);
+  }
+  particles(k, A); defect(k, A); stub(k, A);
+  g.restore();
+}
+
+let idx = 0, nextBirth = 0.4, last = performance.now();
+function frame(now) {
+  const dt = Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now; T += dt;
+  if (T >= nextBirth) { build(K[idx], nextBirth); idx ^= 1; nextBirth += PERIOD; }
+  g.clearRect(0, 0, W, H); dots = 0;
+  drawCrystal(K[0]); drawCrystal(K[1]);
+  window.__dots = dots | 0; window.__T = T;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

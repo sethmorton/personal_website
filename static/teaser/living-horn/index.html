@@ -1,0 +1,192 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>living horn</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  html, body { margin: 0; background: #fafaf9; overflow: hidden; }
+  body { width: 1080px; height: 1080px; position: relative; }
+  canvas { position: absolute; left: 0; top: 0; width: 1080px; height: 1080px; }
+</style>
+<canvas id="ov" width="1080" height="1080"></canvas>
+<script>
+// The Holmdel horn plate, displaced by a divergence-free field of orbiting vortices.
+// The field is a single function of (position, s) shared by the GPU warp and the CPU streamlines;
+// s runs once around a closed loop over the 10 s, so the frame at 10 s equals the frame at 0 s.
+const W = 1080, DURATION = 10, NV = 12;
+const MOUTH = { x: 0.68 * W, y: 0.37 * W };
+const ACCENTS = ['#285bb5', '#285bb5', '#e6aa32', '#e6aa32', '#139b98', '#7549b5', '#e23b2a'];
+
+const rng = (seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(1962);
+const ss = (a, b, x) => { x = Math.min(1, Math.max(0, (x - a) / (b - a))); return x * x * (3 - 2 * x); };
+const bump = (a, b, x) => x <= a || x >= b ? 0 : Math.sin(Math.PI * (x - a) / (b - a)) ** 2;
+
+// Ten vortices seeded from the horn mouth: phase = angle around the mouth, sign alternating so
+// opposite sides of the frame compensate. Orbits are integer loops of the master phase s.
+const vorts = [];
+for (let k = 0; k < 10; k++) {
+  const ang = k * Math.PI * 2 / 10 + 0.3 + rng() * 0.4, rad = (0.22 + rng() * 0.4) * W;
+  vorts.push({
+    bx: MOUTH.x + Math.cos(ang) * rad, by: MOUTH.y + Math.sin(ang) * rad,
+    sigma: (0.13 + rng() * 0.12) * W, amp: (k % 2 ? 1 : -1) * (0.015 + rng() * 0.008) * W,
+    orbit: (0.05 + rng() * 0.08) * W, loops: 1 + k % 2, phase: ang, mod: 1 + (k * 3) % 2
+  });
+}
+
+// Master phase s(t): still until 0.3 s, moving until ~8 s (87% of the loop), frozen 8-9 s, one kick 9-10 s (last 13%).
+const vMain = t => ss(0.3, 1.4, t) * (1 - ss(6.6, 8.1, t)), vKick = t => bump(9.0, 9.9, t);
+const N = 2000, sTab = new Float64Array(N + 1);
+{
+  let a = 0, b = 0; const ma = [], mb = [];
+  for (let i = 0; i <= N; i++) { const t = i * DURATION / N; a += vMain(t); b += vKick(t); ma.push(a); mb.push(b); }
+  for (let i = 0; i <= N; i++) sTab[i] = 0.87 * ma[i] / a + 0.13 * mb[i] / b;
+}
+const phase = t => { const x = Math.min(N, Math.max(0, t / DURATION * N)), i = Math.floor(x); return i >= N ? sTab[N] : sTab[i] + (sTab[i + 1] - sTab[i]) * (x - i); };
+const ampEnv = t => 0.55 + 0.45 * ss(0.3, 1.8, t) - 0.28 * ss(7.0, 8.8, t) - 0.17 * ss(9.0, 10, t);
+const mouthEnv = t => ss(0.3, 1.5, t) * (1 - ss(5.2, 6.8, t)) + 0.4 * bump(9.0, 9.9, t);
+
+// Field parameters for time t: NV vec4s of (cx, cy, sigma, amp) in pixels.
+const field = new Float32Array(NV * 4);
+function setField(t) {
+  const s = phase(t), A = ampEnv(t), tau = Math.PI * 2 * s;
+  vorts.forEach((v, k) => {
+    field[k * 4] = v.bx + Math.cos(tau * v.loops + v.phase) * v.orbit;
+    field[k * 4 + 1] = v.by + Math.sin(tau * v.loops + v.phase) * v.orbit;
+    field[k * 4 + 2] = v.sigma;
+    field[k * 4 + 3] = A * v.amp * (0.7 + 0.3 * Math.cos(tau * v.mod + v.phase));
+  });
+  field[40] = MOUTH.x; field[41] = MOUTH.y; field[42] = 0.075 * W; field[43] = mouthEnv(t) * 0.03 * W;
+  field[44] = MOUTH.x + 0.05 * W; field[45] = MOUTH.y + 0.03 * W; field[46] = 0.05 * W; field[47] = -mouthEnv(t) * 0.012 * W;
+}
+// Displacement at screen point (x, y). Same formula as the shader.
+function disp(x, y, out) {
+  let dx = 0, dy = 0;
+  for (let k = 0; k < NV; k++) {
+    const rx = x - field[k * 4], ry = y - field[k * 4 + 1], sg = field[k * 4 + 2], a = field[k * 4 + 3];
+    if (!a) continue;
+    const g = Math.exp(-(rx * rx + ry * ry) / (2 * sg * sg)) * a / sg;
+    dx += -ry * g; dy += rx * g;
+  }
+  out[0] = dx; out[1] = dy;
+}
+
+// --- WebGL warp of the plate ---
+// Offscreen: headless screenshots stall on a composited WebGL canvas, so the warp is copied into the 2D canvas.
+const glc = document.createElement('canvas'); glc.width = glc.height = W;
+const gl = glc.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false });
+const VS = `#version 300 es
+void main(){ vec2 p = vec2(gl_VertexID==1 ? 3. : -1., gl_VertexID==2 ? 3. : -1.); gl_Position = vec4(p,0.,1.); }`;
+const FS = `#version 300 es
+precision highp float;
+uniform sampler2D plate; uniform vec4 vort[${NV}]; out vec4 o;
+void main(){
+  vec2 p = vec2(gl_FragCoord.x, ${W}. - gl_FragCoord.y);
+  vec2 d = vec2(0.);
+  for (int i = 0; i < ${NV}; i++) {
+    vec4 v = vort[i]; vec2 r = p - v.xy;
+    float g = exp(-dot(r, r) / (2. * v.z * v.z)) * v.w / v.z;
+    d += vec2(-r.y, r.x) * g;
+  }
+  vec2 uv = 0.5 + ((p - d) / ${W}. - 0.5) / 1.06;
+  o = texture(plate, uv);
+}`;
+function shader(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+const prog = gl.createProgram();
+gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+const uVort = gl.getUniformLocation(prog, 'vort');
+gl.viewport(0, 0, W, W);
+
+function texture(img) {
+  const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tx;
+}
+
+// --- overlay: streamline strokes + paper grain ---
+const ov = document.getElementById('ov').getContext('2d');
+// Horn + cabin silhouette in plate-normalized coords; strokes never enter it, nor any inked (dark) area.
+const HORN = [[0.20, 0.36], [0.42, 0.28], [0.58, 0.24], [0.72, 0.14], [0.86, 0.13], [1.0, 0.15], [1.0, 0.64], [0.78, 0.80], [0.55, 0.80], [0.40, 0.60], [0.20, 0.52]];
+const CABIN = [[0, 0.23], [0.22, 0.25], [0.22, 0.52], [0, 0.52]];
+function inPoly(poly, x, y) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+const LUM = 160, lumCv = document.createElement('canvas'); lumCv.width = lumCv.height = LUM;
+let lum; // plate luminance at LUM resolution, 0..255
+function blocked(x, y) { // plate-space pixel coordinates
+  const u = x / W, v = y / W;
+  if (u < 0 || v < 0 || u >= 1 || v > 0.5) return true;
+  if (inPoly(HORN, u, v) || inPoly(CABIN, u, v)) return true;
+  return lum[Math.floor(v * LUM) * LUM + Math.floor(u * LUM)] < 200;
+}
+const strokes = [];
+{
+  const births = Array.from({ length: 380 }, () => 2 + rng() * 4).sort((a, b) => a - b);
+  let i = 0;
+  while (strokes.length < 380) {
+    const x = rng() * W, y = rng() * 0.5 * W;
+    strokes.push({ x, y, birth: births[i++], len: 28 + rng() * 55, width: 2.6 + rng() * 1.6, color: ACCENTS[Math.floor(rng() * ACCENTS.length)], dash: rng() * 8 });
+  }
+}
+const grain = document.createElement('canvas'); grain.width = grain.height = W;
+{
+  const g = grain.getContext('2d'), id = g.createImageData(W, W), d = id.data;
+  for (let i = 0; i < W * W; i++) { const r = rng(); d[i * 4] = 74; d[i * 4 + 1] = 106; d[i * 4 + 2] = 143; d[i * 4 + 3] = r < 0.2 ? r * 110 : 0; }
+  g.putImageData(id, 0, 0);
+}
+
+const tmp = [0, 0];
+function drawStrokes(t) {
+  ov.drawImage(glc, 0, 0);
+  const fade = 1 - ss(8.3, 9.6, t);
+  if (fade <= 0 || t < 2) return;
+  ov.lineCap = 'round'; ov.lineJoin = 'round';
+  for (const s of strokes) {
+    const a = ss(s.birth, s.birth + 0.6, t) * fade;
+    if (a <= 0) continue;
+    let x = s.x, y = s.y, n = 0; const pts = [];
+    for (let l = 0; l < s.len; l += 3) {
+      disp(x, y, tmp);
+      if (blocked(x - tmp[0], y - tmp[1])) break;
+      pts.push(x, y); n++;
+      const m = Math.hypot(tmp[0], tmp[1]); if (m < 0.4) break;
+      x += 3 * tmp[0] / m; y += 3 * tmp[1] / m;
+    }
+    if (n < 4) continue;
+    ov.globalAlpha = 0.88 * a; ov.strokeStyle = s.color; ov.lineWidth = s.width;
+    ov.setLineDash([2.4, 5.2]); ov.lineDashOffset = s.dash;
+    ov.beginPath(); ov.moveTo(pts[0], pts[1]);
+    for (let i = 2; i < pts.length; i += 2) ov.lineTo(pts[i], pts[i + 1]);
+    ov.stroke();
+  }
+  ov.setLineDash([]);
+}
+
+let plates;
+window.render = function (t) {
+  setField(t);
+  gl.bindTexture(gl.TEXTURE_2D, plates[Math.floor(t * 10) % 3]);
+  gl.uniform4fv(uVort, field);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  drawStrokes(t);
+  ov.globalAlpha = 1; ov.drawImage(grain, 0, 0);
+};
+
+Promise.all(['horn_ink', 'horn_ink1', 'horn_ink2'].map(n => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `../plates/${n}.png`; })))
+  .then(async imgs => {
+    await document.fonts.ready;
+    plates = imgs.map(texture);
+    const c = lumCv.getContext('2d'); c.drawImage(imgs[0], 0, 0, LUM, LUM);
+    const d = c.getImageData(0, 0, LUM, LUM).data; lum = new Uint8Array(LUM * LUM);
+    for (let i = 0; i < LUM * LUM; i++) lum[i] = (d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2]) / 3;
+    window.render(0);
+    window.ready = { duration: DURATION };
+  });
+</script>

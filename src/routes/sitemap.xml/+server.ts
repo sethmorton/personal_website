@@ -16,7 +16,8 @@ const routes = [
 	'/blog/biotech_has_a_distribution_problem',
 	'/blog/memory_isnt_learning',
 	'/blog/what_you_attend_to_cannot_be_static',
-	'/blog/the_geometry_of_surprise'
+	'/blog/the_geometry_of_surprise',
+	'/blog/the_shape_of_inference'
 ];
 
 const escapeXml = (value: string) =>

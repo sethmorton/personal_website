@@ -16,7 +16,7 @@
 {#if selectedBlogPost === null}
 	<p>Not found</p>
 {:else}
-	<div class="min-h-screen bg-stone-50">
+	<div class="min-h-screen">
 		{#if BLOG_META[slug]}
 			<SEO
 				title={`${BLOG_META[slug].title} (Draft)`}
@@ -32,6 +32,7 @@
 		<BlogPost
 			content={selectedBlogPost.content}
 			publishDate={`Draft · ${selectedBlogPost.date}`}
+			image={selectedBlogPost.image ?? `/blog/${slug}.webp`}
 			onClose={() => goto('/blog/drafts')}
 		/>
 	</div>

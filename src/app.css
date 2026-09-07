@@ -1,8 +1,9 @@
+@import './lib/styles/theme.css';
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 body,
 html {
@@ -10,17 +11,11 @@ html {
 	padding: 0;
 	height: 100%;
 	width: 100%;
-	font-family: 'Literata', Georgia, 'Times New Roman', serif;
+	font-family: var(--font-body);
+	background: var(--paper);
+	color: var(--ink);
 	font-kerning: normal;
 	text-rendering: optimizeLegibility;
-}
-
-/* The display face is Archivo used expanded: composes with Tailwind's
-   `font-display` (family) so every display heading gets the civic width. */
-@layer utilities {
-	.font-display {
-		font-stretch: 122%;
-	}
 }
 
 /* Cross-page crossfade (View Transitions API, progressive enhancement). */
@@ -30,7 +25,7 @@ html {
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-	animation-duration: 180ms;
+	animation-duration: var(--motion-fast);
 	animation-timing-function: ease;
 }
 
@@ -38,5 +33,130 @@ html {
 	::view-transition-old(root),
 	::view-transition-new(root) {
 		animation: none;
+	}
+}
+
+/* Shared page structure and content hierarchy. */
+.site-page {
+	width: 100%;
+	max-width: var(--page-width);
+	margin: 0 auto;
+	padding: var(--space-page) 24px;
+}
+.page-nav {
+	margin-bottom: var(--space-section);
+	font: var(--text-ui) / 1.5 var(--font-ui);
+}
+.page-header {
+	margin-bottom: var(--space-section);
+}
+.page-title {
+	font: 400 var(--text-page-title) / 1.1 var(--font-display);
+	letter-spacing: -0.035em;
+	text-wrap: balance;
+}
+.page-description {
+	margin-top: 12px;
+	color: var(--muted);
+	font: var(--text-ui) / 1.6 var(--font-ui);
+}
+.section-label {
+	color: var(--muted);
+	font: 500 var(--text-ui) / 1.5 var(--font-ui);
+}
+.entry-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.page-footer {
+	margin-top: var(--space-section);
+	font: var(--text-ui) / 1.5 var(--font-ui);
+}
+.text-link {
+	color: var(--blue);
+	text-underline-offset: 4px;
+	transition: color var(--motion-fast);
+}
+.text-link:hover {
+	color: var(--accent-hover);
+	text-decoration: underline;
+}
+a:focus-visible,
+button:focus-visible {
+	outline: 2px solid var(--blue);
+	outline-offset: 5px;
+}
+
+.entry-link {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	padding: var(--entry-space, var(--space-item)) 0;
+}
+.entry-title {
+	font: 400 var(--entry-title-size, var(--text-entry)) / 1.25 var(--font-display);
+	color: var(--ink);
+	transition: color var(--motion-fast);
+}
+.entry-description {
+	margin-top: 3px;
+	color: var(--muted);
+	font: 400 var(--entry-description-size, var(--text-ui)) / 1.5 var(--font-ui);
+}
+.entry-meta {
+	display: block;
+	margin-top: 4px;
+	color: var(--muted);
+	font: var(--text-meta) / 1.5 var(--font-ui);
+}
+.entry-link svg {
+	flex-shrink: 0;
+	color: var(--blue);
+	opacity: 0.45;
+	transition:
+		transform var(--motion-fast),
+		opacity var(--motion-fast);
+}
+.entry-link:focus-visible .entry-title {
+	color: var(--blue);
+}
+.entry-link:focus-visible svg {
+	opacity: 1;
+}
+@media (hover: hover) {
+	.entry-link:hover .entry-title {
+		color: var(--blue);
+	}
+	.entry-link:hover svg {
+		opacity: 1;
+		transform: translate(2px, -2px);
+	}
+}
+@keyframes site-enter {
+	from {
+		opacity: 0;
+		transform: translateY(5px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+.reveal {
+	animation: site-enter var(--motion-enter) var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+	.reveal {
+		animation: none;
+	}
+	.entry-title,
+	.entry-link svg,
+	.text-link {
+		transition: none;
+	}
+	.entry-link:hover svg {
+		transform: none;
 	}
 }

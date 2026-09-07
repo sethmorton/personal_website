@@ -19,3 +19,10 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Local render caches
+__pycache__/
+*.pyc
+.frames/
+.preview-frames/
+.render-cache/

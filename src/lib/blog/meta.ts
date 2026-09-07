@@ -55,6 +55,13 @@ export const BLOG_META: Record<string, BlogMeta> = {
 			'We train models to score the move and never to track what the move leaves reachable. Why that gap separates generating from discovering, and what it would take to train a model that thinks in paths.',
 		type: 'article'
 	},
+	the_shape_of_inference: {
+		image: '/blog/the_shape_of_inference.webp',
+		title: 'The Shape of Inference',
+		description:
+			'Penzias and Wilson made a discovery without a single new measurement. Why autoregression, chain of thought, and agent harnesses cannot do that, and why the next architectures will settle over a persistent state instead of only moving forward.',
+		type: 'article'
+	},
 	what_you_attend_to_cannot_be_static: {
 		title: 'What You Attend To Cannot Be Static',
 		description:

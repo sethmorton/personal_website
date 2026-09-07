@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Shape of Inference: hero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { position: relative; width: 1080px; height: 1080px; overflow: hidden; }
+  canvas { position: absolute; left: 0; top: 0; }
+</style>
+<script type="importmap">{ "imports": { "three": "../../anim/lib/three.module.js" } }</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// The attention teaser painted as geometry: a paper plane lit from the upper left, ~60000 tapered impasto strokes
+// as one InstancedMesh casting shadows onto each other. The causal mask fills row by row from under the paper, an
+// orange token lands on the diagonal, the mask floods and every stroke swings from "forward" into a three-vortex
+// curl field while the relief itself rises with the swirl, so the shadows move across the whole surface. The title
+// fades in on a plane above the paint, the strokes realign and sink, and t=10 equals t=0.
+import * as THREE from 'three';
+
+const W = 1080, N = 48, DUR = 10, PER = 26, TOK = 40;
+const HOLD = new URLSearchParams(location.search).get('boil') === '0';   // GIF path: micro-breathing reseeds at 1 Hz instead of every frame
+const cx = j => j + .5 - N / 2, cy = i => N / 2 - (i + .5);            // cell units, y up, row 0 at the top
+const TX = cx(TOK), TY = cy(TOK);
+// Point vortices (attention's, in cell units: 19 px per cell): the token, one in the upper triangle, one lower left.
+const VORT = [{ x: TX, y: TY, g: 1, r: 2.9, R: 3.0 }, { x: cx(36), y: cy(11), g: -.6, r: 2.4, R: 1.4 }, { x: cx(9), y: cy(33), g: .5, r: 2.4, R: 1.4 }];
+const DMAX = Math.hypot(TX - cx(0) + .5, TY - cy(0) - .5);
+const T = { scanRow: .05, scanEnd: 3.0, land: 3.1, flood: 4.0, floodDur: .6, swing: 4.3, glow: 4.55, vortex: 4.9, title: 7.0, titleOut: 8.7, unswing: 9.0, leave: 9.2, drain: 9.3, empty: 9.4 };
+const HEX = { paper: '#fafaf9', prussian: '#1f3f6e', cobalt: '#285bb5', ultramarine: '#3b4fa8', cerulean: '#5fa8d3', turquoise: '#4fb3a5', viridian: '#2e8b6a', violet: '#6d4fa8', chrome: '#f2c14e', cadmium: '#e8a72a', ochre: '#c7902e', orange: '#e0762b', vermilion: '#e23b2a' };
+const C = Object.fromEntries(Object.entries(HEX).map(([k, v]) => { const c = new THREE.Color(v); return [k, [c.r, c.g, c.b]]; }));   // linear
+
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const cd = u => u <= 0 ? 0 : 1 - (1 + 9.7 * u) * Math.exp(-9.7 * u);   // critically damped step, settles in ~0.6 s
+const lerp = (a, b, u) => a + (b - a) * u;
+const rng = seed => () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+function fieldAt(x, y) {
+  let vx = 0, vy = 0;
+  for (const v of VORT) {
+    const dx = x - v.x, dy = y - v.y, r = Math.hypot(dx, dy) || 1, s = v.g / (r + v.r) * 5.26;
+    vx += -dy / r * s; vy += dx / r * s;
+  }
+  return [Math.atan2(vy, vx), Math.hypot(vx, vy)];
+}
+function phase(t) {   // swirl turns steadily, then slows from T.title on to a metastable drift
+  const w0 = 2.6, w1 = .5, a = T.title, b = a + 1;
+  if (t < a) return w0 * t;
+  if (t < b) { const u = t - a; return w0 * a + w0 * u - (w0 - w1) * u * u / 2; }
+  return w0 * a + (w0 + w1) / 2 + w1 * (t - b);
+}
+function stars(t) {
+  const token = cd(t - T.land) * (1 - ease((t - T.leave) / .45)), bloom = cd(t - T.swing);
+  const vortex = cd(t - T.vortex) * (1 - ease((t - T.unswing + .1) / .4));
+  return [token * (.5 + .5 * bloom), vortex, vortex];
+}
+
+// ---- scene
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, W, false);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(HEX.paper);
+
+const VIEW = N + 2 * 4.44, FOV = 20, DIST = VIEW / (2 * Math.tan(FOV / 2 * Math.PI / 180)), TILT = 7 * Math.PI / 180;
+const camera = new THREE.PerspectiveCamera(FOV, 1, DIST * .5, DIST * 1.5);
+camera.up.set(0, 1, 0);
+
+// Paper: warm off-white with a fine multiply grain.
+const grain = document.createElement('canvas'); grain.width = grain.height = 256;
+{
+  const g = grain.getContext('2d'), r = rng(1889), img = g.createImageData(256, 256);
+  for (let k = 0; k < 256 * 256; k++) { const v = 244 + (r() + r() - 1) * 14; img.data[4 * k] = img.data[4 * k + 1] = img.data[4 * k + 2] = v; img.data[4 * k + 3] = 255; }
+  g.putImageData(img, 0, 0);
+}
+const grainTex = new THREE.CanvasTexture(grain); grainTex.wrapS = grainTex.wrapT = THREE.RepeatWrapping; grainTex.repeat.set(6, 6); grainTex.colorSpace = THREE.SRGBColorSpace;
+const paper = new THREE.Mesh(new THREE.PlaneGeometry(90, 90), new THREE.MeshStandardMaterial({ color: 0xfaf7f0, map: grainTex, roughness: .95 }));
+paper.receiveShadow = true; scene.add(paper);
+
+// Light: one low sun from the upper left (30 deg elevation) with a fitted shadow frustum, a dim sky, a chrome halo light.
+const sun = new THREE.DirectionalLight(0xfff4e6, 3.0);
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -.0004; sun.shadow.normalBias = .012;
+const sunDir = (az, el, out) => out.set(Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el));
+const AZ0 = 135 * Math.PI / 180, EL = 30 * Math.PI / 180;
+{
+  const d = sunDir(AZ0, EL, new THREE.Vector3()).multiplyScalar(120); sun.position.copy(d); sun.target.position.set(0, 0, 0);
+  sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
+  const cam = sun.shadow.camera, m = new THREE.Matrix4().lookAt(sun.position, sun.target.position, new THREE.Vector3(0, 0, 1)).setPosition(sun.position).invert();
+  const b = new THREE.Box3(), h = N / 2 + 2.5;
+  for (const x of [-h, h]) for (const y of [-h, h]) for (const z of [-.6, 1.2]) b.expandByPoint(new THREE.Vector3(x, y, z).applyMatrix4(m));
+  cam.left = b.min.x - 1; cam.right = b.max.x + 1; cam.bottom = b.min.y - 1; cam.top = b.max.y + 1; cam.near = -b.max.z - 1; cam.far = -b.min.z + 1;
+  cam.updateProjectionMatrix();
+}
+scene.add(sun, sun.target);
+scene.add(new THREE.HemisphereLight(0xdfe8f5, 0xb9a48a, .55));
+const halo = new THREE.PointLight(HEX.chrome, 0, 0, 2); scene.add(halo);
+
+// Stroke: a box tapered to a point at the tail, slightly rounded at the head, domed on top. Length 1, width .28, thick .06.
+const strokeGeo = new THREE.BoxGeometry(1, .28, .06, 4, 2, 1);
+{
+  const pos = strokeGeo.attributes.position, taper = [0, .78, 1, 1, .82], dome = [0, .8, 1, .95, .6];
+  for (let k = 0; k < pos.count; k++) {
+    const x = pos.getX(k), y = pos.getY(k), z = pos.getZ(k), s = Math.round((x + .5) * 4);
+    pos.setY(k, y * taper[s]);
+    if (z > 0) pos.setZ(k, z + .026 * dome[s] * (1 - (y / .14) ** 2 * .8));
+  }
+  strokeGeo.computeVertexNormals();
+}
+const FIELD = 0, TOKEN = 1, STAR = 2;
+const nField = N * N * PER, nToken = 48, nStar = 12, n = nField + nToken + 2 * nStar;
+const px = new Float32Array(n), py = new Float32Array(n), fAng = new Float32Array(n), fStr = new Float32Array(n), fTheta = new Float32Array(n);
+const dTok = new Float32Array(n), dV1 = new Float32Array(n), dV2 = new Float32Array(n), dist = new Float32Array(n), restZ = new Float32Array(n);
+const lenJ = new Float32Array(n), roll = new Float32Array(n), jitA = new Float32Array(n), ph = new Float32Array(n), jitT = new Float32Array(n), vort = new Float32Array(n);
+const row = new Uint8Array(n), upper = new Uint8Array(n), kind = new Uint8Array(n), base = new Array(n);
+{
+  const r = rng(48), r2 = rng(7);
+  const cellBase = [];
+  for (let k = 0; k < N * N; k++) { const u = r2(); cellBase[k] = u < .62 ? C.prussian : u < .9 ? C.cobalt : C.ultramarine; }
+  let k = 0;
+  const init = (x, y, kd) => {
+    px[k] = x; py[k] = y; kind[k] = kd;
+    [fAng[k], fStr[k]] = fieldAt(x, y);
+    fTheta[k] = Math.atan2(y - TY, x - TX);
+    dTok[k] = Math.hypot(x - TX, y - TY); dV1[k] = Math.hypot(x - VORT[1].x, y - VORT[1].y); dV2[k] = Math.hypot(x - VORT[2].x, y - VORT[2].y);
+    dist[k] = dTok[k] / DMAX;
+    vort[k] = clamp(fStr[k] / 1.6);
+    lenJ[k] = .6 + .8 * r(); roll[k] = (r() - .5) * .3; jitA[k] = (r() - .5) * .24; ph[k] = r() * Math.PI * 2; jitT[k] = r() * .03;
+  };
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) for (let q = 0; q < PER; q++) {
+    init(cx(j) + (r() - .5) * .92, cy(i) + (r() - .5) * .92, FIELD);
+    row[k] = i; upper[k] = j > i ? 1 : 0; restZ[k] = .03 + r() * .04;
+    const u = r(), b = cellBase[i * N + j];
+    base[k] = u < .12 ? C.cerulean : u < .18 ? C.violet : b.map(v => v * (.85 + .3 * r()));
+    k++;
+  }
+  // Token: a raised cluster of vermilion and orange strokes on the diagonal cell, stacked highest at the centre.
+  for (let q = 0; q < nToken; q++) {
+    const a = r() * Math.PI * 2, rr = Math.sqrt(r()) * .62;
+    init(TX + Math.cos(a) * rr, TY + Math.sin(a) * rr, TOKEN);
+    restZ[k] = .12 + (1 - rr / .62) * .22 + r() * .03; lenJ[k] = .45 + .35 * r(); base[k] = r() < .55 ? C.vermilion : C.orange; k++;
+  }
+  // Stars: a ring of chrome strokes at each secondary vortex, lying along the field.
+  for (const v of [VORT[1], VORT[2]]) for (let q = 0; q < nStar; q++) {
+    const a = (q + .5) / nStar * Math.PI * 2 + (r() - .5) * .3, rr = .55 + (r() - .5) * .15;
+    init(v.x + Math.cos(a) * rr, v.y + Math.sin(a) * rr, STAR);
+    restZ[k] = .11 + r() * .03; lenJ[k] = .5 + .2 * r(); base[k] = q % 2 ? C.cadmium : C.chrome; k++;
+  }
+}
+const strokes = new THREE.InstancedMesh(strokeGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .5, metalness: 0 }), n);
+strokes.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
+strokes.castShadow = strokes.receiveShadow = true; strokes.frustumCulled = false;
+scene.add(strokes);
+const M = strokes.instanceMatrix.array, COL = strokes.instanceColor.array;
+
+// Title: canvas texture on a plane above the paint, ink prussian on a soft paper wash.
+const titleCanvas = document.createElement('canvas'); titleCanvas.width = 2048; titleCanvas.height = 1024;
+const titleTex = new THREE.CanvasTexture(titleCanvas); titleTex.colorSpace = THREE.SRGBColorSpace; titleTex.anisotropy = 8;
+const TITLE_W = .72 * VIEW;
+const title = new THREE.Mesh(new THREE.PlaneGeometry(TITLE_W, TITLE_W / 2), new THREE.MeshBasicMaterial({ map: titleTex, transparent: true, opacity: 0, toneMapped: false, depthWrite: false }));
+title.position.set(0, .6, 1.4); title.renderOrder = 10; title.visible = false; scene.add(title);
+function drawTitle() {
+  const g = titleCanvas.getContext('2d'), w = titleCanvas.width, h = titleCanvas.height;
+  g.clearRect(0, 0, w, h); g.textAlign = 'center'; g.textBaseline = 'middle';
+  const lines = [['650 expanded 140px Archivo', 'The Shape of Inference', 440], ['400 54px "IBM Plex Mono"', 'sethmorton.com/blog/the_shape_of_inference', 606]];
+  g.font = lines[0][0];
+  const rx = g.measureText(lines[0][1]).width * .8, ry = rx * .42, yc = 520;
+  g.save(); g.translate(w / 2, yc); g.scale(1, ry / rx);
+  const wash = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+  wash.addColorStop(0, 'rgba(250,250,249,.88)'); wash.addColorStop(.55, 'rgba(250,250,249,.62)'); wash.addColorStop(1, 'rgba(250,250,249,0)');
+  g.fillStyle = wash; g.fillRect(-rx, -rx, 2 * rx, 2 * rx); g.restore();
+  g.fillStyle = HEX.prussian;
+  for (const [font, text, y] of lines) { g.font = font; g.fillText(text, w / 2, y); }
+  titleTex.needsUpdate = true;
+}
+
+// ---- per-frame
+const mix3 = (out, a, b, u) => { out[0] = a[0] + (b[0] - a[0]) * u; out[1] = a[1] + (b[1] - a[1]) * u; out[2] = a[2] + (b[2] - a[2]) * u; };
+const col = [0, 0, 0], tmp = [0, 0, 0], warm = [0, 0, 0];
+const TAU = Math.PI * 2;
+
+function update(t) {
+  const phi = stars ? phase(t) : 0, S = stars(t), breathe = 1 + .08 * Math.sin(phi * 1.3);
+  const unswing = cd(t - T.unswing), glowT = t - T.glow, drainT = t - T.drain, emptyT = t - T.empty;
+  const br = TAU * 1.5 * (HOLD ? Math.floor(t) : t), tokenIn = cd(t - T.land), tokenOut = ease((t - T.leave) / .4), starP = cd(t - T.vortex) * (1 - ease((t - T.unswing + .1) / .4));
+  for (let k = 0; k < n; k++) {
+    const kd = kind[k], x = px[k], y = py[k];
+    // Presence: rise from under the paper with a critically damped spring, sink the same way at the end.
+    let p, z;
+    if (kd === FIELD) {
+      const i = row[k];
+      p = upper[k] ? Math.min(cd(t - T.flood - T.floodDur * dist[k] - jitT[k]), 1 - ease((drainT - .5 * i / N) / .1))
+        : cd(t - i * T.scanRow - jitT[k]) * (1 - ease((emptyT - .45 * (N - 1 - i) / N) / .05));
+    } else p = kd === TOKEN ? tokenIn * (1 - tokenOut) : starP;
+    if (p <= 0) { M[16 * k + 14] = -2; continue; }   // parked under the paper, matrix otherwise stale but hidden
+    // Swing weight: the turn sweeps outward from the token, delayed by distance, and undoes itself at T.unswing.
+    const w = kd === FIELD ? cd(t - T.swing - .45 * dist[k]) * (1 - unswing) : 1;
+    const crest = Math.sin(fTheta[k] * 3 + dTok[k] / 2.9 - phi + fAng[k] * .5);
+    const wob = .22 * Math.sin(x / 4.7 + phi * .35) * Math.cos(y / 5.8 - phi * .2);
+    const angle = (fAng[k] + wob) * w + jitA[k] + .04 * Math.sin(br + ph[k]);
+    const rise = w * (.02 + .04 * vort[k]) * (.65 + .35 * crest);
+    const zr = restZ[k] + rise + .004 * Math.sin(br * 1.1 + ph[k] * 2);
+    z = kd === TOKEN ? zr + (1 - tokenIn) * 3 - tokenOut * (zr + .6) : lerp(-.4, zr, p);
+    // Colour: base blues, swung into the field palette, warmed around each star, orange glow along the landing row/col.
+    if (kd === FIELD) {
+      const s = vort[k];
+      if (crest > 0) mix3(tmp, C.cobalt, C.turquoise, ease((crest - .35) / .5) * (.35 + .65 * s));
+      else mix3(tmp, C.ultramarine, C.violet, ease((-crest - .3) / .5) * (.5 + .5 * s));
+      mix3(tmp, tmp, C.cerulean, clamp((5.8 - dTok[k]) / 5.8) * .6);
+      mix3(col, base[k], tmp, w);
+      for (let q = 0; q < 3; q++) {
+        if (S[q] <= 0) continue;
+        const d = q === 0 ? dTok[k] : q === 1 ? dV1[k] : dV2[k], u = clamp(1 - d / (2 * VORT[q].R * breathe));
+        if (u > 0) { mix3(warm, C.ochre, C.chrome, u); mix3(col, col, warm, u * u * S[q] * .95); }
+      }
+      const i = row[k], j = Math.floor(x + N / 2);
+      if (i === TOK || j === TOK) {
+        const u = glowT - .4 * Math.abs((i === TOK ? j : i) - TOK) / (N - 1);
+        mix3(col, col, C.orange, cd(u * 2.5) * (1 - ease((u - .2) / .5)) * .95);
+      }
+    } else { col[0] = base[k][0]; col[1] = base[k][1]; col[2] = base[k][2]; }
+    COL[3 * k] = col[0]; COL[3 * k + 1] = col[1]; COL[3 * k + 2] = col[2];
+    // Matrix = T * Rz(angle) * Rx(roll) * S, written straight into the attribute.
+    const c = Math.cos(angle), s = Math.sin(angle), cr = Math.cos(roll[k]), sr = Math.sin(roll[k]);
+    const sx = .95 * lenJ[k] * (1 + .1 * w), sy = .95 * (1 + .1 * w), sz = 1, o = 16 * k;
+    M[o] = c * sx; M[o + 1] = s * sx; M[o + 2] = 0; M[o + 3] = 0;
+    M[o + 4] = -s * cr * sy; M[o + 5] = c * cr * sy; M[o + 6] = sr * sy; M[o + 7] = 0;
+    M[o + 8] = s * sr * sz; M[o + 9] = -c * sr * sz; M[o + 10] = cr * sz; M[o + 11] = 0;
+    M[o + 12] = x; M[o + 13] = y; M[o + 14] = z; M[o + 15] = 1;
+  }
+  strokes.instanceMatrix.needsUpdate = true; strokes.instanceColor.needsUpdate = true;
+
+  // Halo light rides the diagonal with the newest row, glides to the token, parks, fades with it, reforms at row 0.
+  let hi, hs;
+  if (t < T.scanEnd) { hi = Math.min(N - 1, t / T.scanRow); hs = t < 2.4 ? 1 : 1 - .35 * ease((t - 2.4) / .3); }
+  else if (t < T.leave + .45) { const u = ease((t - T.scanEnd) / (T.land - T.scanEnd)); hi = lerp(N - 1, TOK, u); hs = (.65 + .35 * cd(t - T.land) + .5 * cd(t - T.swing)) * (1 - ease((t - T.leave) / .45)); }
+  else { hi = 0; hs = cd(t - T.empty - .35); }
+  halo.position.set(cx(hi), cy(hi), 1.6); halo.intensity = 9 * hs;
+
+  // Title
+  const a = Math.min(ease((t - T.title) / .4), 1 - ease((t - T.titleOut) / .4));
+  title.visible = a > 0; title.material.opacity = a;
+
+  // Camera drifts around a small circle (1.5 % of the width across the film); the sun swings a few degrees. Both loop.
+  const u = TAU * t / DUR, dr = .0075 * VIEW;
+  const ox = dr * Math.sin(u), oy = dr * Math.cos(u);
+  camera.position.set(ox, oy - DIST * Math.sin(TILT), DIST * Math.cos(TILT));
+  camera.lookAt(ox, oy, 0);
+  sunDir(AZ0 + .06 * Math.sin(u + 1), EL + .03 * Math.sin(u * 2), sun.position).multiplyScalar(120);
+}
+
+window.render = t => {
+  t = ((t % DUR) + DUR) % DUR;
+  update(t);
+  renderer.render(scene, camera);
+};
+
+window.ready = (async () => {
+  await Promise.all([document.fonts.load('650 expanded 140px Archivo'), document.fonts.load('400 54px "IBM Plex Mono"')]);
+  drawTitle();
+  const frozen = new URLSearchParams(location.search).get('t');
+  render(frozen === null ? 0 : Number(frozen) || 0);
+  return { duration: DUR, strokes: n, fonts: [document.fonts.check('650 expanded 140px Archivo'), document.fonts.check('400 54px "IBM Plex Mono"')] };
+})();
+</script>
+</body>
+</html>

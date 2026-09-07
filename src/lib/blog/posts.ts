@@ -10,6 +10,8 @@ import memoryIsntLearningContent from '$lib/blog/content/memory_isnt_learning.tx
 import whatYouAttendToCannotBeStaticContent from '$lib/blog/content/what_you_attend_to_cannot_be_static.txt?raw';
 import theGeometryOfSurpriseContent from '$lib/blog/content/the_geometry_of_surprise.txt?raw';
 import pathsNotPointsContent from '$lib/blog/content/paths_not_points.txt?raw';
+import inferenceFilm from '$lib/blog/media/the-shape-of-inference.mp4?url';
+import theShapeOfInferenceContent from '$lib/blog/content/the_shape_of_inference.txt?raw';
 
 export type BlogPostEntry = {
 	title: string;
@@ -18,6 +20,8 @@ export type BlogPostEntry = {
 	content: string;
 	/** Hero illustration. Defaults to `/blog/<slug>.webp` when omitted. */
 	image?: string;
+	/** Optional short film, loaded only when opened. */
+	teaser?: string;
 };
 
 export const publishedBlogPosts: BlogPostEntry[] = [
@@ -86,6 +90,13 @@ export const publishedBlogPosts: BlogPostEntry[] = [
 		slug: 'the_geometry_of_surprise',
 		date: '2026-04-23',
 		content: theGeometryOfSurpriseContent
+	},
+	{
+		title: 'The Shape of Inference',
+		slug: 'the_shape_of_inference',
+		date: '2026-09-07',
+		content: theShapeOfInferenceContent,
+		teaser: inferenceFilm
 	}
 ];
 

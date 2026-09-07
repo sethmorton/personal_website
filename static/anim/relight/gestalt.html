@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">Not one dot moved. The call changed which of them belonged together.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 23; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const INK = [40,97,122], DEEP = [35,72,95], SKY = [113,146,158], PALE = [155,173,176], WARM = [172,139,80];
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(2)})`;
+const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t | 0, a[1] + (b[1] - a[1]) * t | 0, a[2] + (b[2] - a[2]) * t | 0];
+const clamp01 = u => u < 0 ? 0 : u > 1 ? 1 : u;
+
+// ---- the stage and four readings: smooth scalar fields, each a different way of grouping the same dots ----
+const SX = 560, SY = 340, OX = (W - SX) / 2, OY = (H - SY) / 2, NR = 4;
+function evalReading(R, x, y) {
+  let v = 0;
+  for (const p of R) {
+    const dx = x - p.x, dy = y - p.y;
+    if (p.ring) { const d = Math.hypot(dx, dy) - p.r; v += 0.95 * Math.exp(-d * d / (2 * p.w * p.w)); }
+    else v += Math.exp(-(dx * dx / (2 * p.sx * p.sx) + dy * dy / (2 * p.sy * p.sy)));
+  }
+  return v > 1 ? 1 : v;
+}
+// a centre where the previous reading was quiet: what was background becomes the figure
+function quietSpot(prev, others, sep, mx, my) {
+  let bx = 0, by = 0, best = -1e9;
+  for (let k = 0; k < 60; k++) {
+    const x = mx + rnd() * (SX - 2 * mx), y = my + rnd() * (SY - 2 * my);
+    let score = 0; for (const R of prev) score -= evalReading(R, x, y) * 3;
+    for (const o of others) score += Math.min(0, Math.hypot(x - o.x, y - o.y) - sep) * 0.06;
+    if (score > best) { best = score; bx = x; by = y; }
+  }
+  return { ring: false, x: bx, y: by, sx: 0, sy: 0, r: 0, w: 0 };
+}
+const readings = [[], [], [], []];
+for (let i = 0; i < 3; i++) { const p = quietSpot([], readings[0], 170, 95, 80); p.sx = 44 + rnd() * 14; p.sy = 40 + rnd() * 14; readings[0].push(p); }
+readings[1].push({ ring: true, x: SX / 2 + (rnd() - 0.5) * 40, y: SY / 2 + (rnd() - 0.5) * 30, r: 98 + rnd() * 10, w: 17, sx: 0, sy: 0 });
+readings[1].push({ ring: false, x: readings[1][0].x, y: readings[1][0].y, sx: 27, sy: 27, r: 0, w: 0 });
+{ const a = quietSpot([readings[1]], readings[2], 0, 130, 85); a.sx = 70; a.sy = 36; readings[2].push(a);   // one wide, one tall
+  const b = quietSpot([readings[1]], readings[2], 230, 90, 100); b.sx = 38; b.sy = 68; readings[2].push(b); }
+for (let i = 0; i < 3; i++) { const p = quietSpot([readings[2], readings[0]], readings[3], 170, 90, 80); p.sx = 40 + rnd() * 12; p.sy = 46 + rnd() * 16; readings[3].push(p); }
+
+// ---- the dots: a jittered grid that never moves; every reading's value at every dot is known in advance ----
+const SP = 7.5, COLS = Math.floor(SX / SP), ROWS = Math.floor(SY / SP), N = COLS * ROWS;
+const DX0 = OX + (SX - (COLS - 1) * SP) / 2, DY0 = OY + (SY - (ROWS - 1) * SP) / 2;
+const dx = new Float32Array(N), dy = new Float32Array(N), ph = new Float32Array(N), wv = new Float32Array(N), wr = new Float32Array(N);
+const dv = new Float32Array(N * NR), dd = new Float32Array(N), bk = new Uint8Array(N);
+for (let r = 0, i = 0; r < ROWS; r++) for (let cc = 0; cc < COLS; cc++, i++) {
+  dx[i] = DX0 + cc * SP + (rnd() - 0.5) * 3; dy[i] = DY0 + r * SP + (rnd() - 0.5) * 3;
+  ph[i] = rnd() * 6.283; wv[i] = 0.3 + rnd() * 0.5; wr[i] = 0.5 + rnd() * 0.7;
+  for (let k = 0; k < NR; k++) dv[i * NR + k] = evalReading(readings[k], dx[i] - OX, dy[i] - OY);
+}
+const NB = 10, dotFill = [], dotSz = new Float32Array(NB);
+for (let b = 0; b < NB; b++) { const t = b / (NB - 1); dotFill.push(rgba(mix(PALE, INK, t), 0.42 + 0.45 * t)); dotSz[b] = 1.25 + 0.55 * t; }
+const DEEPA = [], WARMA = []; for (let k = 0; k <= 16; k++) { DEEPA.push(rgba(DEEP, k / 16)); WARMA.push(rgba(WARM, k / 16)); }
+const ISO_LO = rgba(SKY, 0.85), ISO_HI = rgba(INK, 0.8);
+
+// ---- contour lattice: same four readings sampled on a 5 px lattice, blended per frame, marched as walking dots ----
+const CELL = 5, GX = SX / CELL, GY = SY / CELL, NX = GX + 1, NY = GY + 1, NL = NX * NY;
+const LV = new Float32Array(NL * NR), LD = new Float32Array(NL), F = new Float32Array(NL);
+for (let j = 0, q = 0; j < NY; j++) for (let i = 0; i < NX; i++, q++) for (let k = 0; k < NR; k++) LV[q * NR + k] = evalReading(readings[k], i * CELL, j * CELL);
+const TBL = [[], [3, 0], [0, 1], [3, 1], [1, 2], [3, 0, 1, 2], [0, 2], [3, 2], [2, 3], [0, 2], [0, 1, 2, 3], [1, 2], [1, 3], [0, 1], [3, 0], []];
+const ex = new Float64Array(4), ey4 = new Float64Array(4);
+let T = 0, marks = 0;
+function contour(iso, sz) {
+  for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
+    const q = j * NX + i, a = F[q], b = F[q + 1], cc = F[q + NX + 1], d = F[q + NX];
+    const code = (a > iso) | (b > iso) << 1 | (cc > iso) << 2 | (d > iso) << 3;
+    const t = TBL[code]; if (!t.length) continue;
+    ex[0] = i + (iso - a) / (b - a); ey4[0] = j; ex[1] = i + 1; ey4[1] = j + (iso - b) / (cc - b);
+    ex[2] = i + (iso - d) / (cc - d); ey4[2] = j + 1; ex[3] = i; ey4[3] = j + (iso - a) / (d - a);
+    for (let k = 0; k < t.length; k += 2) {
+      const x0 = OX + ex[t[k]] * CELL, y0 = OY + ey4[t[k]] * CELL, x1 = OX + ex[t[k + 1]] * CELL, y1 = OY + ey4[t[k + 1]] * CELL;
+      const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / 3.8));
+      for (let m = 0; m < n; m++) { const p = (m + 0.5) / n, x = x0 + (x1 - x0) * p, y = y0 + (y1 - y0) * p;
+        const wx = Math.sin(T * 1.1 + x * 0.21 + y * 0.13) * 0.7, wy = Math.cos(T * 0.9 + x * 0.11 - y * 0.23) * 0.7;
+        g.fillRect(x + wx - sz / 2, y + wy - sz / 2, sz, sz); marks++; }
+    }
+  }
+}
+
+// ---- the call: a dotted line from the right edge lands on the new figure; a front spreads and dots change sides ----
+const HOLD = 3, LINE_T = 0.9, SPEED = 160, FADE = 1.2;
+let t0 = 0, cur = 0, nxt = 1, cx = 0, cy = 0, ey = 0, kx = 0, ky = 0, lineLen = 0, spread = 0, cycleLen = 0;
+function plan() {
+  const p = readings[nxt][0];
+  cx = OX + p.x + (rnd() - 0.5) * 24; cy = OY + p.y + (rnd() - 0.5) * 24;
+  ey = OY + 30 + rnd() * (SY - 60); kx = cx + (W - cx) * 0.6; ky = ey + (cy - ey) * 0.15;
+  lineLen = Math.hypot(W - kx, ey - ky) + Math.hypot(kx - cx, ky - cy);
+  let maxD = 0;
+  for (let i = 0; i < N; i++) { dd[i] = Math.hypot(dx[i] - cx, dy[i] - cy); if (dd[i] > maxD) maxD = dd[i]; }
+  for (let j = 0, q = 0; j < NY; j++) for (let i = 0; i < NX; i++, q++) LD[q] = Math.hypot(OX + i * CELL - cx, OY + j * CELL - cy);
+  spread = maxD / SPEED + FADE; cycleLen = HOLD + LINE_T + spread;
+}
+plan();
+function callLine(t, tf) {
+  const hp = clamp01((t - HOLD) / LINE_T), head = hp * hp * (3 - 2 * hp);
+  const tp = clamp01(tf / (spread - 0.6)), tail = tp * tp * (3 - 2 * tp);
+  if (head <= tail) return;
+  g.fillStyle = DEEPA[16];
+  const n = Math.round(lineLen / 4.4), walk = (T * 0.55) % 1;
+  for (let k = 0; k < n; k++) {
+    const u = (k + walk) / n; if (u > head || u < tail) continue;
+    const a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c2 = u * u;
+    const x = a * W + b * kx + c2 * cx, y = a * ey + b * ky + c2 * cy, sz = 1.6 + 0.5 * u;
+    g.fillRect(x + Math.sin(T * 1.3 + k * 0.9) * 0.6 - sz / 2, y + Math.cos(T + k * 1.7) * 0.6 - sz / 2, sz, sz); marks++;
+  }
+  if (tf > 0 && tf < 2.4) {                              // a few warm specks where the call landed
+    g.fillStyle = WARMA[(16 * (1 - tf / 2.4)) | 0];
+    for (let q = 0; q < 4; q++) { const a = q * 1.57 + T * 0.8, rr = 2 + Math.min(1, tf) * 2.5;
+      g.fillRect(cx + Math.cos(a) * rr - 1, cy + Math.sin(a) * rr - 1, 2, 2); marks++; }
+  }
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now; T += dt;
+  let t = T - t0;
+  if (t >= cycleLen) { t0 += cycleLen; t -= cycleLen; cur = nxt; nxt = (nxt + 1) % NR; plan(); }
+  const tf = t - HOLD - LINE_T;
+  g.clearRect(0, 0, W, H); marks = 0;
+  // dots: blend the two readings by the front weight; those changing sides at the front are drawn DEEP
+  for (let i = 0; i < N; i++) {
+    const u = clamp01((tf - dd[i] / SPEED) / FADE), e = u * u * (3 - 2 * u);
+    const va = dv[i * NR + cur], vb = dv[i * NR + nxt], v = va + (vb - va) * e;
+    const s = clamp01((v - 0.08) / 0.7);
+    bk[i] = e > 0.25 && e < 0.65 && Math.abs(vb - va) > 0.22 ? NB : (s * (NB - 1) + 0.5) | 0;
+  }
+  for (let b = 0; b <= NB; b++) {
+    g.fillStyle = b < NB ? dotFill[b] : DEEPA[16]; const sz = b < NB ? dotSz[b] : 1.9;
+    for (let i = 0; i < N; i++) if (bk[i] === b) {
+      const a = ph[i] + T * wv[i];
+      g.fillRect(dx[i] + Math.cos(a) * wr[i] - sz / 2, dy[i] + Math.sin(a * 1.3 + ph[i]) * wr[i] * 0.8 - sz / 2, sz, sz); marks++;
+    }
+  }
+  // contours of the blended field, two levels
+  for (let q = 0; q < NL; q++) { const u = clamp01((tf - LD[q] / SPEED) / FADE), e = u * u * (3 - 2 * u); F[q] = LV[q * NR + cur] + (LV[q * NR + nxt] - LV[q * NR + cur]) * e; }
+  g.fillStyle = ISO_LO; contour(0.24, 1.3);
+  g.fillStyle = ISO_HI; contour(0.58, 1.5);
+  callLine(t, tf);
+  window.__marks = marks; window.__T = T; window.__ct = t; window.__cur = cur;
+  if (!window.__manual) requestAnimationFrame(frame);
+}
+window.__frame = frame;
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

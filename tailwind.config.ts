@@ -9,9 +9,10 @@ export default {
 	theme: {
 		extend: {
 			fontFamily: {
-				serif: ['Literata', 'Georgia', 'Times New Roman', 'serif'],
-				display: ['Archivo', 'system-ui', 'sans-serif'],
-				mono: ['IBM Plex Mono', 'ui-monospace', 'monospace']
+				serif: ['var(--font-body)'],
+				display: ['var(--font-display)'],
+				sans: ['var(--font-ui)'],
+				mono: ['var(--font-code)']
 			},
 			typography: {
 				DEFAULT: {

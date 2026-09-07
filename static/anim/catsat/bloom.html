@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="Three blue watercolour washes reserve THE, CAT, SAT. Pigment travels only rightward from earlier words and settles into SAT."></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2, CYCLE = 10.8;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 83; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const PAPER = '#fafaf9', DEEP = '#1f4f8f', SKY = '#6e9ece', WARM = '#c96c3e';
+const clamp = v => Math.max(0, Math.min(1, v));
+const ease = v => { v = clamp(v); return v * v * (3 - 2 * v); };
+function surface() {
+  const c = document.createElement('canvas'); c.width = W * DPR; c.height = H * DPR;
+  const g = c.getContext('2d'); g.scale(DPR, DPR); return { c, g };
+}
+function ellipse(ctx, x, y, rx, ry, a = 0) {
+  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, a, 0, Math.PI * 2); ctx.fill();
+}
+function outline(x, y, rx, ry, phase) {
+  const p = [];
+  for (let i = 0; i < 28; i++) {
+    const a = i * Math.PI * 2 / 28;
+    const r = 1 + 0.09 * Math.sin(3 * a + phase) + 0.055 * Math.cos(7 * a - phase) + (rnd() - 0.5) * 0.085;
+    p.push([x + Math.cos(a) * rx * r, y + Math.sin(a) * ry * r]);
+  }
+  return p;
+}
+function deform(points, scale) {
+  const out = [];
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i], b = points[(i + 1) % points.length];
+    const dx = b[0] - a[0], dy = b[1] - a[1], z = (rnd() - 0.5) * scale;
+    out.push(a, [(a[0] + b[0]) / 2 - dy * z, (a[1] + b[1]) / 2 + dx * z]);
+  }
+  return out;
+}
+function polygon(ctx, points) {
+  ctx.beginPath(); ctx.moveTo(...points[0]);
+  for (let i = 1; i < points.length; i++) ctx.lineTo(...points[i]);
+  ctx.closePath();
+}
+function reserve(ctx, word, x, y, soft) {
+  ctx.save(); ctx.globalCompositeOperation = 'destination-out';
+  ctx.globalAlpha = 0.97; ctx.fillStyle = '#000'; ctx.font = '700 35px Georgia, serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.filter = `blur(${soft}px)`; ctx.fillText(word, x, y + 2);
+  ctx.restore();
+}
+const words = [
+  { word: 'THE', x: 132, y: 199, rx: 75, ry: 58, phase: 1.7 },
+  { word: 'CAT', x: 314, y: 203, rx: 78, ry: 64, phase: 3.2 },
+  { word: 'SAT', x: 505, y: 199, rx: 81, ry: 66, phase: 5.1 }
+];
+// Paper and pigment geometry are seeded and baked once; no evolving simulation.
+const paper = surface();
+paper.g.fillStyle = PAPER; paper.g.fillRect(0, 0, W, H);
+for (let i = 0; i < 19000; i++) {
+  paper.g.fillStyle = i % 3 ? 'rgba(74,106,143,0.016)' : 'rgba(255,255,255,0.5)';
+  ellipse(paper.g, rnd() * W, rnd() * H, 0.15 + rnd() * 0.75, 0.1 + rnd() * 0.22, rnd());
+}
+function wash(w) {
+  const s = surface(), h = s.g;
+  let edge = outline(w.x, w.y, w.rx, w.ry, w.phase);
+  edge = deform(deform(edge, 0.65), 0.7); w.edge = edge;
+  for (let i = 0; i < 72; i++) {
+    const points = deform(deform(edge, 0.7), 0.85);
+    h.fillStyle = i % 4 === 0 ? SKY : DEEP;
+    h.globalAlpha = 0.021; polygon(h, points); h.fill();
+  }
+  h.save(); polygon(h, edge); h.clip();
+  for (let i = 0; i < 160; i++) {
+    const x = w.x + (rnd() - 0.5) * w.rx * 2.1, y = w.y + (rnd() - 0.5) * w.ry * 2.1;
+    const cloud = deform(outline(x, y, 9 + rnd() * 31, 6 + rnd() * 25, rnd() * 6), 0.8);
+    h.globalAlpha = 0.016 + rnd() * 0.018; h.fillStyle = i % 4 ? DEEP : PAPER;
+    h.filter = 'blur(2px)'; polygon(h, cloud); h.fill();
+  }
+  h.filter = 'none';
+  // Uneven pigment settlement along a few stretches of the actual wet shore.
+  h.fillStyle = DEEP;
+  for (let i = 0; i < 1700; i++) {
+    const j = Math.floor(rnd() * edge.length), a = edge[j], b = edge[(j + 1) % edge.length];
+    const u = rnd(), inward = Math.pow(rnd(), 2) * 0.1;
+    const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u;
+    h.globalAlpha = 0.025 + rnd() * 0.17;
+    ellipse(h, x + (w.x - x) * inward, y + (w.y - y) * inward, 0.2 + rnd() * 0.85, 0.15 + rnd() * 0.65);
+  }
+  // Diluted blossoms leave a light interior and broken, pigment-heavy shores.
+  for (let j = 0; j < 3; j++) {
+    const a = j * 1.73 + w.phase, x = w.x + Math.cos(a) * w.rx * 0.62;
+    const y = w.y + Math.sin(a) * w.ry * 0.61;
+    const bloom = deform(deform(outline(x, y, 10 + rnd() * 14, 8 + rnd() * 12, a), 0.6), 0.7);
+    h.fillStyle = PAPER; h.globalAlpha = 0.065; h.filter = 'blur(1.2px)'; polygon(h, bloom); h.fill();
+    h.filter = 'none'; h.strokeStyle = DEEP; h.globalAlpha = 0.055; h.lineWidth = 0.55; h.stroke();
+  }
+  // Paper tooth breaks pigment into flecks, denser at the rim.
+  for (let i = 0; i < 4400; i++) {
+    const a = rnd() * Math.PI * 2, r = i % 3 ? Math.sqrt(rnd()) : 0.86 + rnd() * 0.17;
+    const x = w.x + Math.cos(a) * w.rx * r, y = w.y + Math.sin(a) * w.ry * r;
+    h.fillStyle = i % 4 ? DEEP : PAPER; h.globalAlpha = 0.025 + rnd() * 0.12;
+    ellipse(h, x, y, 0.15 + rnd() * 0.64, 0.12 + rnd() * 0.4, rnd() * 3);
+  }
+  h.restore();
+  h.globalAlpha = 1;
+  if (w.word === 'SAT') {
+    const dry = surface(); dry.g.drawImage(s.c, 0, 0, W, H);
+    reserve(dry.g, w.word, w.x, w.y, 0.08); w.dry = dry.c;
+  }
+  reserve(h, w.word, w.x, w.y, 0.38);
+  return s.c;
+}
+for (const w of words) w.base = wash(w);
+const catAddition = surface();
+catAddition.g.drawImage(words[1].base, 0, 0, W, H);
+const enrichment = surface();
+enrichment.g.drawImage(words[2].dry, 0, 0, W, H);
+reserve(enrichment.g, 'SAT', 505, 199, 0.15);
+const additions = surface(), stain = [];
+for (let i = 0; i < 500; i++) {
+  const u = rnd(), x = 400 + u * 132;
+  const width = 2.5 + 25 * ease((x - 418) / 58);
+  const y = 213 + 11 * Math.sin(u * 5.5) + (rnd() - 0.5) * width * 2;
+  stain.push({ x, y, rx: 1.2 + rnd() * 5.2, ry: 0.5 + rnd() * 3.6,
+    a: rnd() * 2, alpha: 0.025 + rnd() * 0.055, delay: 2.3 + u * 3.7 + rnd() * 0.65 });
+}
+const blossoms = [];
+for (let i = 0; i < 26; i++) {
+  const u = rnd(), x = 431 + u * 75, y = 223 - u * 10 + (rnd() - 0.5) * 29;
+  const points = deform(deform(outline(x, y, 7 + rnd() * 12, 5 + rnd() * 10, rnd() * 6), 0.65), 0.65);
+  const path = new Path2D(); path.moveTo(...points[0]);
+  for (const p of points) path.lineTo(...p); path.closePath();
+  blossoms.push({ path, delay: 3.7 + u * 2.3, alpha: 0.07 + rnd() * 0.055 });
+}
+const fibres = [];
+for (let i = 0; i < 320; i++) {
+  const u = rnd();
+  fibres.push({ x: 374 + u * 66, y: 211 + Math.sin(u * 4) * 7 + (rnd() - 0.5) * (4 + u * 10),
+    rx: 1 + rnd() * 3.5, ry: 0.2 + rnd() * 0.65, delay: 2 + u * 1.9, alpha: 0.04 + rnd() * 0.13 });
+}
+const earlier = [];
+for (let i = 0; i < 140; i++) {
+  const u = rnd(); earlier.push({ x: 215 + u * 49, y: 210 + Math.sin(u * 4.2) * 6 + (rnd() - 0.5) * 6,
+    r: 0.3 + rnd() * 1.1, delay: 0.65 + u * 1.45 });
+}
+function draw(t) {
+  t = ((t % CYCLE) + CYCLE) % CYCLE; window.__t = t;
+  g.globalAlpha = 1; g.drawImage(paper.c, 0, 0, W, H);
+  const fade = ease(t / 0.6) * (1 - ease((t - 9.8) / 1));
+  g.globalAlpha = fade;
+  for (const w of words) g.drawImage(w.base, 0, 0, W, H);
+  const h = additions.g; h.clearRect(0, 0, W, H);
+  h.globalAlpha = ease((t - 2) / 1.5) * 0.085; h.drawImage(catAddition.c, 0, 0, W, H);
+  h.fillStyle = SKY;
+  for (const p of earlier) {
+    h.globalAlpha = 0.12 * ease((t - p.delay) / 0.9);
+    ellipse(h, p.x, p.y, p.r * 1.8, p.r * 0.45);
+  }
+  // Source pools stay intact: every incoming mark is an additional deposit.
+  h.fillStyle = DEEP;
+  for (const p of fibres) {
+    h.globalAlpha = p.alpha * ease((t - p.delay) / 1.1);
+    ellipse(h, p.x, p.y, p.rx, p.ry);
+  }
+  const dry = ease((t - 6.2) / 2.7), rich = ease((t - 4.3) / 3.5);
+  h.globalAlpha = rich * 0.52; h.drawImage(enrichment.c, 0, 0, W, H);
+  h.fillStyle = WARM; h.strokeStyle = WARM;
+  for (const b of blossoms) {
+    const arrive = ease((t - b.delay) / 1.6);
+    h.globalAlpha = b.alpha * arrive * (1 - 0.16 * dry); h.fill(b.path);
+    h.globalAlpha = (0.04 + dry * 0.08) * arrive; h.lineWidth = 1.1 - dry * 0.6; h.stroke(b.path);
+  }
+  for (const p of stain) {
+    const arrive = ease((t - p.delay) / 1.4);
+    h.globalAlpha = p.alpha * arrive * (1 - dry * 0.12);
+    ellipse(h, p.x, p.y, p.rx, p.ry, p.a);
+  }
+  h.globalAlpha = 1;
+  reserve(h, 'CAT', 314, 203, 0.38); reserve(h, 'SAT', 505, 199, 0.38 - dry * 0.3);
+  g.drawImage(additions.c, 0, 0, W, H); g.globalAlpha = 1;
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) {
+  draw(Number.isFinite(Number(frozen)) ? Number(frozen) : 0);
+} else if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  draw(9);
+} else {
+  const start = performance.now(); draw(0);
+  function frame(now) { draw((now - start) / 1000); requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

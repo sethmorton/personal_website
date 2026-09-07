@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="A sheet of blue and slate ink gathers around three fixed ochre facts. Each landing sends a slow wave in every direction, folding the already warped sheet. Dark folds accumulate and all three facts remain."></canvas>
+<div class="cap">Each new fact folds the whole sheet; the next fact meets everything it has already become.</div>
+</div>
+<script>
+const started = performance.now();
+const W = 640, H = 400, D = 2, CYCLE = 10.8, FPS = 24;
+const PAPER = '#f7f4ec', INK = '#28617a', HOT = '#ac8b50';
+const SHEET_TONES = ['#6b8c88', '#28617a', '#23485f']; // Open fibers, body, compressed folds.
+const c = document.getElementById('c'); c.width = W * D; c.height = H * D;
+const g = c.getContext('2d', { willReadFrequently: true }); g.scale(D, D);
+let seed = 731;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+function layer(scale = D) {
+  const canvas = document.createElement('canvas'); canvas.width = W * scale; canvas.height = H * scale;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true }); ctx.scale(scale, scale); return { canvas, ctx };
+}
+function grain(ctx, x, y, r) { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, Math.PI * 2); }
+const paper = layer();
+paper.ctx.fillStyle = PAPER; paper.ctx.fillRect(0, 0, W, H);
+paper.ctx.globalCompositeOperation = 'multiply'; paper.ctx.fillStyle = INK;
+for (let i = 0; i < 15000; i++) {
+  paper.ctx.globalAlpha = (8 + rnd() * 4) / 255; paper.ctx.beginPath();
+  grain(paper.ctx, rnd() * W, rnd() * H, .12 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .5); paper.ctx.fill();
+}
+paper.ctx.strokeStyle = INK; paper.ctx.lineWidth = .25; paper.ctx.globalAlpha = .035;
+for (let i = 0; i < 140; i++) {
+  const x = rnd() * W, y = rnd() * H;
+  paper.ctx.beginPath(); paper.ctx.moveTo(x, y); paper.ctx.lineTo(x + 2 + rnd() * 5, y + rnd() - .5); paper.ctx.stroke();
+}
+const facts = [
+  { x: 231, y: 163, time: 2.65, pull: -42, swirl: 25, sigma: 68 },
+  { x: 416, y: 227, time: 5, pull: -44, swirl: -27, sigma: 75 },
+  { x: 321, y: 257, time: 7.15, pull: -34, swirl: 19, sigma: 61 }
+];
+function kernel(x, y, f) {
+  const dx = x - f.x, dy = y - f.y, d = Math.hypot(dx, dy) + .001;
+  const q = d * d / (2 * f.sigma * f.sigma);
+  const w = d / f.sigma * (Math.exp(.5 - q) + .16 / (1 + q));
+  return [(f.pull * dx - f.swirl * dy) / d * w, (f.pull * dy + f.swirl * dx) / d * w, d / 180];
+}
+function schedule(x, y) {
+  const changes = [];
+  for (const f of facts) {
+    const delta = kernel(x, y, f); changes.push(delta); x += delta[0]; y += delta[1];
+  }
+  return changes;
+}
+const grains = [];
+for (let row = 0; row < 44; row++) for (let col = 0; col < 72; col++) {
+  if (rnd() < .12) continue;
+  const x = 76 + (col + (row & 1) * .5) * 6.6 + (rnd() - .5) * 8;
+  const y = 83 + row * 5.35 + (rnd() - .5) * 7 + Math.sin(x / 61) * 3;
+  const edge = ease((x - 72) / 18) * ease((557 - x) / 19) * ease((y - 76) / 15) * ease((326 - y) / 17);
+  const r = .19 + rnd() ** 2 * .78, tone = rnd();
+  grains.push({ x, y, r, tone, edge, born: .05 + .95 * rnd() + .45 * (x - 76) / 480,
+    length: 1.2 + rnd() * 4.5, angle: -.24 + rnd() * .48, phase: rnd() * 6.28,
+    changes: schedule(x, y), probeX: schedule(x + 2, y), probeY: schedule(x, y + 2) });
+}
+const N = grains.length, px = new Float32Array(N), py = new Float32Array(N), density = new Float32Array(N), angle = new Float32Array(N);
+function positions(t) {
+  for (let i = 0; i < N; i++) {
+    const p = grains[i]; let x = p.x, y = p.y, xx = x + 2, xy = y, yx = x, yy = y + 2;
+    for (let k = 0; k < facts.length; k++) {
+      const d = p.changes[k], dx = p.probeX[k], dy = p.probeY[k];
+      const u = ease((t - facts[k].time - d[2]) / .85);
+      const ux = ease((t - facts[k].time - dx[2]) / .85), uy = ease((t - facts[k].time - dy[2]) / .85);
+      x += d[0] * u; y += d[1] * u;
+      xx += dx[0] * ux; xy += dx[1] * ux; yx += dy[0] * uy; yy += dy[1] * uy;
+    }
+    px[i] = x; py[i] = y;
+    density[i] = Math.min(3, 1 / Math.max(.18, Math.abs((xx - x) * (yy - y) - (xy - y) * (yx - x)) / 4));
+    angle[i] = Math.atan2(xy - y, xx - x) + p.angle;
+  }
+}
+function sheet(ctx, t, alpha, ghost = false) {
+  positions(t);
+  if (ghost) {
+    ctx.fillStyle = INK; ctx.globalAlpha = alpha; ctx.beginPath();
+    for (let i = 0; i < N; i++) if (t > grains[i].born) grain(ctx, px[i], py[i], grains[i].r * .9);
+    ctx.fill(); return;
+  }
+  // A wash settles first; dry grains and broken hatching follow on the same homes.
+  for (let pass = 0; pass < 2; pass++) for (let level = 0; level < 3; level++) {
+    ctx.fillStyle = SHEET_TONES[level];
+    ctx.filter = pass ? 'none' : 'blur(1.1px)';
+    for (let tone = 0; tone < 3; tone++) {
+      ctx.globalAlpha = alpha * (pass ? .52 + tone * .16 : .11 + level * .045); ctx.beginPath();
+      for (let i = 0; i < N; i++) {
+        const p = grains[i], bucket = density[i] > 1.45 ? 2 : density[i] > .8 ? 1 : 0;
+        if (bucket !== level || Math.floor(p.tone * 3) !== tone) continue;
+        const show = ease((t - p.born - (pass ? .32 : 0)) / .6) * p.edge;
+        if (!show) continue;
+        const r = (pass ? p.r : 2 + p.r * 2) * show;
+        grain(ctx, px[i], py[i], r);
+        if (pass && p.tone > .2) {
+          const dx = Math.cos(angle[i]) * p.length, dy = Math.sin(angle[i]) * p.length;
+          for (let j = 1; j < 6; j++) {
+            const u = j / 5, jitter = Math.sin(p.phase + j * 3) * .22;
+            grain(ctx, px[i] + dx * u, py[i] + dy * u + jitter, r * (.7 - u * .34));
+          }
+        }
+      }
+      ctx.fill();
+    }
+  }
+  ctx.filter = 'none'; ctx.globalAlpha = 1;
+}
+const blooms = facts.map(f => {
+  const dots = [];
+  for (let i = 0; i < 420; i++) {
+    const a = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * (6.5 + .7 * Math.sin(a * 5 + f.x) + .9 * Math.cos(a * 7));
+    dots.push({ x: Math.cos(a) * r, y: Math.sin(a) * r * .8, r: .12 + rnd() * .48, birth: rnd() * .65 });
+  }
+  return dots;
+});
+function accents(ctx, t) {
+  ctx.fillStyle = HOT;
+  for (let k = 0; k < facts.length; k++) {
+    const f = facts[k], age = t - f.time;
+    if (age <= 0) continue;
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.globalAlpha = pass ? .97 : .16; ctx.beginPath();
+      for (const p of blooms[k]) {
+        const reach = ease((age - p.birth) / .35);
+        if (reach) grain(ctx, f.x + p.x * (.6 + .4 * reach), f.y + p.y * (.6 + .4 * reach), p.r * reach * (pass ? 1 : 1.8));
+      }
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+const history = layer(1);
+let frame = -1;
+function replay(t) {
+  const target = Math.floor(Math.min(t, 10.4) * FPS);
+  if (target < frame || frame < 0) { history.ctx.clearRect(0, 0, W, H); frame = -1; }
+  while (frame < target) {
+    frame++;
+    history.ctx.globalCompositeOperation = 'destination-out'; history.ctx.globalAlpha = 18 / 255;
+    history.ctx.fillRect(0, 0, W, H); history.ctx.globalCompositeOperation = 'source-over';
+    sheet(history.ctx, frame / FPS, .028, true);
+  }
+}
+function draw(t) {
+  t = ((t % CYCLE) + CYCLE) % CYCLE; window.__t = t;
+  replay(t);
+  g.globalAlpha = 1; g.drawImage(paper.canvas, 0, 0, W, H);
+  g.globalAlpha = .45 * (1 - ease((t - 10.4) / .5)); g.drawImage(history.canvas, 0, 0, W, H);
+  sheet(g, t, 1); accents(g, t);
+  g.globalAlpha = ease((t - 10) / .8); g.drawImage(paper.canvas, 0, 0, W, H); g.globalAlpha = 1;
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) draw(Number(frozen) || 0);
+else {
+  const epoch = performance.now();
+  const tick = now => { draw((now - epoch) / 1000); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+window.__renderMs = performance.now() - started;
+</script>
+</body>
+</html>

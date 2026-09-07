@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 31; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v, smooth = u => u * u * (3 - 2 * u);
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const INK = [74, 106, 143], DEEP = [31, 79, 143], SKY = [110, 158, 206], PALE = [182, 194, 210], WARM = [201, 108, 62];
+const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t | 0, a[1] + (b[1] - a[1]) * t | 0, a[2] + (b[2] - a[2]) * t | 0];
+
+// ---- the river: a band across the lower two thirds, banks gently meandering ----
+const yTop = x => 150 + 9 * Math.sin(x * 0.011 + 1.2), yBot = x => 386 - 6 * Math.sin(x * 0.009 + 0.4);
+const UMAX = 52;
+
+// ---- the reeds: three words standing in the water, each also an elliptical obstacle to the current ----
+const WORDS = ['THE', 'CAT', 'SAT'], FONT = '700 58px Georgia, serif', BASE = 290, CY = 268;
+const off = document.createElement('canvas'); off.width = W; off.height = H; const og = off.getContext('2d');
+og.font = FONT; og.textAlign = 'center'; og.fillStyle = '#000';
+const CX = [122, 320, 518], obs = [];
+WORDS.forEach((t, k) => { og.fillText(t, CX[k], BASE); obs.push({ cx: CX[k], cy: CY, a: og.measureText(t).width / 2 + 7, b: 27 }); });
+const mask = og.getImageData(0, 0, W, H).data;
+const inWord = (x, y) => x >= 0 && x < W && y >= 0 && y < H && mask[((y | 0) * W + (x | 0)) * 4 + 3] > 100;
+const GRID = 1.8, rx = [], ry = [], rk = [], rc = [], rs = [], rph = [], rt = [];     // reed stems: home, word, colour, size, phase, tip standing above the mass
+for (let r = 0, y = 230; y < 300; y += GRID, r++) for (let x = 40 + (r & 1) * GRID / 2; x < 600; x += GRID) {
+  if (!inWord(x, y)) continue;
+  rx.push(x + (rnd() - 0.5) * 0.9); ry.push(y + (rnd() - 0.5) * 0.9); rk.push(x < 220 ? 0 : x < 420 ? 1 : 2);
+  rc.push(rnd() < 0.45 ? 1 : 0); rs.push(1.2 + rnd() * 0.5); rph.push(rnd() * 6.283); rt.push(!inWord(x, y - GRID) && rnd() < 0.4 ? 2 + rnd() * 6 : 0);
+}
+const NR = rx.length;
+const REEDCOL = [rgba(INK, 0.9), rgba(DEEP, 0.9)];
+
+// ---- flow field: laminar profile across the band, potential-flow deflection round each word, a slow wake behind it ----
+let VU = 0, VV = 0, VW = 0;
+function vel(x, y) {
+  const yt = yTop(x), yb = yBot(x), yc = (yt + yb) / 2, hw = (yb - yt) / 2, eta = (y - yc) / hw;
+  const prof = Math.abs(eta) < 1 ? 0.2 + 0.8 * (1 - eta * eta) : 0.12;
+  let u = UMAX * prof, v = u * (yTop(x + 1) - yTop(x - 1) + yBot(x + 1) - yBot(x - 1)) / 4, wk = 0;
+  for (const o of obs) {
+    const dx = (x - o.cx) / o.a, dy = (y - o.cy) / o.b, r2 = dx * dx + dy * dy, q = o.b / o.a;
+    if (r2 < 1) { u = UMAX * 0.3 * prof; v += UMAX * 1.5 * (dy >= 0 ? 0.3 + dy : -0.3 + dy) * q; continue; }   // slide over, never back
+    const f = UMAX * prof / (r2 * r2);
+    u -= f * (dx * dx - dy * dy); v -= f * 2 * dx * dy * q;
+    if (dx > 0.6) { const back = (x - o.cx - o.a) / 210, wid = 1.05 * (1 - back * 0.7);
+      if (back < 1 && Math.abs(dy) < wid) { const w = (1 - back) * (1 - Math.pow(Math.abs(dy) / wid, 3)); wk = Math.max(wk, w); u *= 1 - 0.45 * w; } }
+  }
+  if (u < UMAX * 0.3) u = UMAX * 0.3;                                       // no stagnation, no upstream drift
+  VU = u; VV = v; VW = wk;
+}
+// streamlines: integrated once, parameterised by time, so every dot on one is a pure lookup later.
+// 112 enter from the left margin; 14 more per word rise out of the reed bed itself, so the water behind each word is never empty
+const DT = 1 / 24, lines = [];
+function streamline(x, y, e, w) {
+  const px = [], py = [], pw = [], tx = [], ty = []; let steps = 0;
+  while (x < W + 14 && steps++ < 24 * 70) { px.push(x); py.push(y); vel(x, y); pw.push(VW); tx.push(VU * DT); ty.push(VV * DT); x += VU * DT; y += VV * DT; }
+  lines.push({ px: Float32Array.from(px), py: Float32Array.from(py), pw: Float32Array.from(pw), tx: Float32Array.from(tx), ty: Float32Array.from(ty), n: px.length, e, w });
+}
+for (let i = 0; i < 112; i++) { const s = (i + 0.5) / 112; streamline(-14, yTop(-14) + 1 + (yBot(-14) - yTop(-14) - 2) * s + (rnd() - 0.5) * 1.5, s * 2 - 1, 1); }
+for (const o of obs) for (let i = 0; i < 14; i++) { const s = (i + 0.5) / 14 * 2 - 1; streamline(o.cx + o.a + 1 + rnd() * 3, o.cy + o.b * 0.85 * s, s * 0.35, 0.55); }
+const NDOT = 3600, wgt = lines.map(L => { const p = 0.08 + 0.92 * (1 - L.e * L.e); return L.n * p * p * L.w; });   // dense channel, sparse speckled banks
+let tot = 0; for (const w of wgt) tot += w;
+const dl = new Uint8Array(NDOT), dph = new Float32Array(NDOT), dsm = new Float32Array(NDOT), dq = new Float32Array(NDOT), dsz = new Float32Array(NDOT), dink = new Uint8Array(NDOT);
+for (let j = 0, li = 0, acc = 0; j < NDOT; j++) {
+  while (li < lines.length - 1 && acc + wgt[li] < (j + 0.5) / NDOT * tot) acc += wgt[li++];
+  dl[j] = li; dph[j] = rnd() * lines[li].n; dsm[j] = 0.9 + rnd() * 0.2; dq[j] = rnd() * 6.283; dsz[j] = 1.2 + rnd() * 0.6;
+  dink[j] = Math.abs(lines[li].e) < 0.6 && rnd() < 0.5 ? 1 : 0;
+}
+const DOTCOL = [rgba(SKY, 0.72), rgba(INK, 0.6)];
+
+// ---- deposits: grains leaving one word's wake ride the current and lodge in the next word downstream. never upstream. ----
+function crossing(L, x) { for (let i = 0; i < L.n; i++) if (L.px[i] > x) return i; return -1; }
+function deposits(from, to, count, t0, t1, col) {
+  const src = obs[from], dst = obs[to], cand = [];
+  const xs = src.cx + src.a + 4, xe = dst.cx - dst.a - 16;
+  lines.forEach((L, li) => { const i0 = crossing(L, xs), i1 = crossing(L, xe); if (i0 >= 0 && i1 > i0 && Math.abs(L.py[i0] - src.cy) < src.b * 0.95) cand.push([li, i0, i1]); });
+  const homes = []; for (let i = 0; i < NR; i++) if (rk[i] === to) homes.push(i);
+  const d = { col, n: count, li: new Uint8Array(count), i0: new Int32Array(count), i1: new Int32Array(count), td: new Float32Array(count),
+              hx: new Float32Array(count), hy: new Float32Array(count), ph: new Float32Array(count) };
+  for (let j = 0; j < count; j++) {
+    const [li, i0, i1] = cand[(rnd() * cand.length) | 0]; d.li[j] = li; d.i0[j] = i0; d.i1[j] = i1;
+    d.td[j] = t0 + (t1 - t0) * smooth(rnd()); d.ph[j] = rnd() * 6.283;
+    const h = homes[(rnd() * homes.length) | 0]; d.hx[j] = rx[h] + (rnd() - 0.5) * 2.2; d.hy[j] = ry[h] + (rnd() - 0.5) * 2.2;
+  }
+  return d;
+}
+const CYCLE = 11, FADE_AT = 10.2;
+const DEP = [deposits(1, 2, 220, 1.4, 5.8, WARM), deposits(0, 1, 36, 0.8, 3.8, mixc(DEEP, INK, 0.3))];   // CAT -> SAT warm; THE -> CAT a little deeper ink
+
+// ---- fixed ground: bank gravel and the dust above the water ----
+const bank = []; for (let x = -4; x < W + 4; x += 2.6) for (const side of [-1, 1]) {
+  const y = side < 0 ? yTop(x) : yBot(x), off = Math.pow(rnd(), 1.6) * 9 * -side;
+  bank.push(x + (rnd() - 0.5) * 2, y + off, 0.9 + rnd() * 0.9, rnd() * 6.283);
+}
+const dust = []; for (let i = 0; i < 230; i++) { const x = rnd() * W; dust.push(x, 6 + rnd() * (yTop(x) - 22), 0.7 + rnd() * 0.8, rnd() * 6.283); }
+const DUSTCOL = rgba(PALE, 0.55), BANKCOL = rgba(mixc(INK, PALE, 0.35), 0.75);
+
+let marks = 0;
+function draw(T) {
+  const t = T % CYCLE, fade = t > FADE_AT ? 1 - smooth((t - FADE_AT) / (CYCLE - FADE_AT)) : 1;
+  g.clearRect(0, 0, W, H); marks = 0;
+  g.fillStyle = DUSTCOL;
+  for (let i = 0; i < dust.length; i += 4) { const s = dust[i + 2] * (0.75 + 0.25 * Math.sin(T * 0.5 + dust[i + 3])); g.fillRect(dust[i] - s / 2, dust[i + 1] - s / 2, s, s); marks++; }
+  g.fillStyle = BANKCOL;
+  for (let i = 0; i < bank.length; i += 4) { const s = bank[i + 2], wob = Math.sin(T * 0.7 + bank[i + 3]) * 0.35; g.fillRect(bank[i] + wob - s / 2, bank[i + 1] - s / 2, s, s); marks++; }
+  g.lineCap = 'round';
+  for (let pass = 0; pass < 2; pass++) {                                    // water: each grain a short streak along its own current line, longer where the water runs faster
+    g.strokeStyle = DOTCOL[pass]; g.lineWidth = pass ? 1.5 : 1.25; g.beginPath();
+    for (let j = 0; j < NDOT; j++) {
+      if (dink[j] !== pass) continue;
+      const L = lines[dl[j]], f = (dph[j] + T * 24 * dsm[j]) % L.n, i = f | 0, i2 = i + 1 < L.n ? i + 1 : i, u = f - i;
+      const wk = L.pw[i], a = T * 1.1 + dq[j], amp = 0.5 + 3.2 * wk;
+      const x = L.px[i] + (L.px[i2] - L.px[i]) * u + Math.cos(a) * amp * 0.6, y = L.py[i] + (L.py[i2] - L.py[i]) * u + Math.sin(a) * amp;
+      if (inWord(x, y)) continue;                                            // water slips under the reeds
+      const k = dsz[j] * 0.7, tx = L.tx[i] * k, ty = L.ty[i] * k; g.moveTo(x - tx, y - ty); g.lineTo(x + tx, y + ty); marks++;
+    }
+    g.stroke();
+  }
+  for (let k = 0; k < 2; k++) {                                              // reeds: tight masses of dark stems, swaying by a hair, a few tips standing proud
+    g.fillStyle = REEDCOL[k];
+    for (let i = 0; i < NR; i++) { if (rc[i] !== k) continue; const s = rs[i], h = s * 2.2, e = rt[i];
+      g.fillRect(rx[i] + Math.sin(T * 0.9 + rph[i]) * (0.45 + e * 0.12) - s / 2, ry[i] + Math.cos(T * 0.7 + rph[i] * 1.3) * 0.3 - h / 2 - e, s, h + e); marks++; }
+  }
+  for (const d of DEP) {                                                     // deposits: warm out of the wake, along the current, lodged downstream
+    for (let j = 0; j < d.n; j++) {
+      const dt = t - d.td[j]; if (dt < 0) continue;
+      const L = lines[d.li[j]], f = d.i0[j] + dt * 24, i1 = d.i1[j];
+      const warm = smooth(clamp(dt / 0.8)), col = rgba(mixc(SKY, d.col, warm), fade);   // a grain turns warm only after it has left the wake
+      if (f < i1) { const i = f | 0, u = f - i, wk = L.pw[i], a = T * 1.1 + d.ph[j], amp = 0.5 + 2.6 * wk;
+        const x = L.px[i] + (L.px[i + 1] - L.px[i]) * u + Math.cos(a) * amp * 0.6, y = L.py[i] + (L.py[i + 1] - L.py[i]) * u + Math.sin(a) * amp, tx = L.tx[i] * 1.2, ty = L.ty[i] * 1.2;
+        g.strokeStyle = col; g.lineWidth = 1.7; g.beginPath(); g.moveTo(x - tx, y - ty); g.lineTo(x + tx, y + ty); g.stroke(); }
+      else { const e = smooth(clamp((f - i1) / (24 * 1.2))), m = 1 - e, x0 = L.px[i1], y0 = L.py[i1];
+        const x = m * x0 + e * (d.hx[j] + Math.sin(T * 0.9 + d.ph[j]) * 0.45), y = m * y0 + e * d.hy[j] + m * Math.sin(T * 1.1 + d.ph[j]) * 0.8, s = 1.5 + e * 0.4, h = s * (1 + 1.2 * e);
+        g.fillStyle = col; g.fillRect(x - s / 2, y - h / 2, s, h); }
+      marks++;
+    }
+  }
+  window.__marks = marks; window.__t = t;
+}
+const q = new URLSearchParams(location.search).get('t');
+if (q !== null) draw(parseFloat(q));
+else { let T = 0, last = performance.now();
+  (function frame(now) { T += Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now; draw(T); requestAnimationFrame(frame); })(last); }
+</script>
+</body>
+</html>

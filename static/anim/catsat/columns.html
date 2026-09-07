@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="THE, CAT, and SAT build separate ink columns upward through seven layers, one token at a time. Each wet head reads only earlier, frozen columns at the same height. CAT contributes warmth that changes SAT at the fifth layer. SAT's top lifts into a prediction."></canvas>
+<div class="cap">Tokens arrive across the page; meaning builds upward, reading the past at each layer.</div>
+</div>
+<script>
+const W = 640, H = 400, D = 2, CYCLE = 12, BASE = 316, HEIGHT = 238;
+const PAPER = '#f7f4ec', INK = '#28617a', DEEP = '#23485f', PALE = '#9badb0', WARM = '#ac8b50';
+const c = document.getElementById('c'); c.width = W * D; c.height = H * D;
+const g = c.getContext('2d'); g.scale(D, D);
+let seed = 731;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+const xs = [132, 314, 508], starts = [.3, 3.2, 6.6], ends = [2.6, 6, 9.6], dryAt = [3.2, 6.6, 10.6];
+const colors = [PALE, WARM, DEEP];
+const levels = [.11, .24, .37, .5, .66, .82, 1];
+const stages = [0, .075, .21, .365, .515, .675, .835, 1];
+function depthClock(k, t) {
+  const q = clamp((t - starts[k]) / (ends[k] - starts[k]));
+  let i = 0;
+  while (i < 6 && q >= stages[i + 1]) i++;
+  return i + clamp((q - stages[i]) / (stages[i + 1] - stages[i]));
+}
+function layer() {
+  const canvas = document.createElement('canvas'); canvas.width = W * D; canvas.height = H * D;
+  const ctx = canvas.getContext('2d'); ctx.scale(D, D); return { canvas, ctx };
+}
+function grain(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+function centre(k, u) { return xs[k] + Math.sin(u * 8 + k) * (3 + k) + Math.sin(u * 21 + k) * 1.3; }
+function width(k, u) {
+  const lobe = 1 + .09 * Math.sin(u * 43 + k) + .04 * Math.sin(u * 79);
+  return ([3.2, 4.6, 6.6][k] + [5.6, 11.8, 21][k] * Math.sqrt(u)) * lobe;
+}
+function heightAt(k, t) {
+  const step = depthClock(k, t);
+  const i = Math.min(6, Math.floor(step)), f = step - i;
+  return mix(i ? levels[i - 1] : 0, levels[i], ease(f / .23));
+}
+const columns = xs.map((x, k) => {
+  const paint = layer(), warm = layer(), pale = layer();
+  for (let lane = 0; lane < 42; lane++) {
+    const v = (lane + .5) / 21 - 1;
+    for (let j = 0; j < 600; j++) {
+      const u = rnd(), y = BASE - u * HEIGHT;
+      const xx = centre(k, u) + width(k, u) * (v + .12 * Math.sin(u * 31 + v * 5)) + (rnd() + rnd() - 1) * .55;
+      const alpha = (.09 + rnd() * .15) * (1 - .65 * Math.abs(v) ** 6) * (.6 + .4 * u);
+      paint.ctx.fillStyle = rnd() < .08 ? INK : colors[k]; paint.ctx.globalAlpha = alpha;
+      grain(paint.ctx, xx, y, .22 + rnd() * .48);
+      if (k === 2 && u > .635 && v > -.67 + .16 * Math.sin(u * 28)) {
+        warm.ctx.fillStyle = WARM; warm.ctx.globalAlpha = alpha * ease((u - .635) / .045) * .85;
+        grain(warm.ctx, xx, y, .3 + rnd() * .63);
+      }
+      if (k === 1 && u > .11 && Math.abs(v + .22 - .28 * Math.sin(u * 17)) < .1 + .23 * u && Math.sin(u * 93 + v * 35) + Math.sin(u * 171 - v * 7) > -.8) {
+        pale.ctx.fillStyle = PALE; pale.ctx.globalAlpha = alpha * (.5 + 1.2 * u);
+        grain(pale.ctx, xx, y, .35 + .25 * u);
+      }
+    }
+  }
+  const wet = layer(); wet.ctx.filter = 'blur(1.1px)'; wet.ctx.drawImage(paint.canvas, 0, 0, W, H);
+  wet.ctx.globalAlpha = .7; wet.ctx.drawImage(paint.canvas, 0, 0, W, H); wet.ctx.filter = 'none';
+  if (k === 1) {
+    const soft = layer(); soft.ctx.filter = 'blur(.8px)'; soft.ctx.drawImage(pale.canvas, 0, 0, W, H);
+    pale.ctx.globalAlpha = .6; pale.ctx.drawImage(soft.canvas, 0, 0, W, H);
+  }
+  const motes = Array.from({ length: 580 }, () => ({ u: rnd(), v: rnd() * 2 - 1, phase: rnd() * 6.28, r: .2 + rnd() * .55 }));
+  const deposits = levels.map((u, i) => {
+    const stain = layer(), cx = centre(k, u), cy = BASE - u * HEIGHT;
+    for (let j = 0; j < 15; j++) {
+      const xx = cx + (rnd() - .5) * width(k, u) * 1.3, yy = cy + (rnd() - .5) * 10;
+      const r = 2 + rnd() * (3 + k * 2);
+      const color = k === 1 && j < 5 || k === 2 && j < 3 ? PALE : k === 2 && (i >= 4 || j < 6) ? WARM : colors[k];
+      const bloom = stain.ctx.createRadialGradient(xx, yy, .2, xx, yy, r);
+      bloom.addColorStop(0, color + '19'); bloom.addColorStop(.53, color + '38'); bloom.addColorStop(.8, color + '29'); bloom.addColorStop(1, color + '00');
+      stain.ctx.fillStyle = bloom; grain(stain.ctx, xx, yy, r);
+    }
+    return stain.canvas;
+  });
+  const word = layer(); word.ctx.font = '700 32px Georgia, serif'; word.ctx.textAlign = 'center';
+  word.ctx.fillStyle = k === 1 ? WARM : INK; word.ctx.fillText(['THE', 'CAT', 'SAT'][k], x, 354);
+  word.ctx.globalCompositeOperation = 'source-atop';
+  for (let j = 0; j < 1000; j++) {
+    word.ctx.globalAlpha = .12 + rnd() * .3; word.ctx.fillStyle = j % 4 ? PALE : DEEP;
+    grain(word.ctx, x - 40 + rnd() * 80, 328 + rnd() * 29, .3 + rnd() * 1.25);
+  }
+  return { paint: paint.canvas, wet: wet.canvas, warm: warm.canvas, pale: pale.canvas, motes, deposits, word: word.canvas };
+});
+function reveal(image, k, h, alpha) {
+  const y = BASE - h * HEIGHT;
+  g.globalAlpha = alpha; g.save(); g.beginPath(); g.rect(xs[k] - 52, y + 6, 104, BASE - y + 7); g.clip();
+  g.drawImage(image, 0, 0, W, H); g.restore();
+  for (let j = -6; j < 6; j++) {
+    g.globalAlpha = alpha * ease((j + 6) / 12);
+    g.drawImage(image, (xs[k] - 52) * D, (y + j) * D, 104 * D, D, xs[k] - 52, y + j, 104, 1);
+  }
+}
+function column(k, t) {
+  if (t <= starts[k]) return;
+  const s = columns[k], h = heightAt(k, t), dry = ease((t - ends[k]) / (dryAt[k] - ends[k]));
+  const local = Math.min(t, dryAt[k]), life = 1 - dry;
+  reveal(s.wet, k, h, .9); reveal(s.paint, k, h, .5 + .4 * dry);
+  if (k === 1) reveal(s.pale, k, h, .95);
+  if (k === 2) reveal(s.warm, k, h, ease((t - 8.59) / .16));
+  for (let i = 0; i < 7; i++) {
+    const landing = starts[k] + (ends[k] - starts[k]) * mix(stages[i], stages[i + 1], .92);
+    g.globalAlpha = ease((t - landing) / .13) * (.68 + .15 * Math.sin(local * 2 + i) * life);
+    g.drawImage(s.deposits[i], 0, 0, W, H);
+  }
+  for (const p of s.motes) {
+    const u = (p.u + local * .032) % 1;
+    if (u > h) continue;
+    const v = p.v + Math.sin(local * 2.1 + p.phase + u * 17) * .08;
+    g.fillStyle = k === 2 && u >= .66 && p.v > -.3 && t > 8.6 ? WARM : colors[k];
+    g.globalAlpha = (.32 + dry * .12) * ease((h - u) / .03);
+    grain(g, centre(k, u) + width(k, u) * v, BASE - u * HEIGHT, p.r * (1 + life * .22));
+  }
+  g.globalAlpha = ease((t - starts[k]) / .24); g.drawImage(s.word, 0, 0, W, H);
+  g.globalAlpha = 1;
+}
+const hairs = Array.from({ length: 7 }, () => ({ offset: (rnd() - .5) * 3, phase: rnd() * 6.28 }));
+function readY(k, source, y, q) { return y - (source ? 4 : -4) * Math.sin(Math.PI * q) ** .8; }
+function reads(k, t) {
+  if (!k || t < starts[k] || t >= ends[k]) return;
+  const step = depthClock(k, t), i = Math.min(6, Math.floor(step)), age = step - i;
+  if (age < .23) return;
+  const u = levels[i], y = BASE - HEIGHT * u, destination = centre(k, u) - width(k, u) * .45;
+  const reach = ease((age - .23) / .28), retreat = ease((age - .56) / .42);
+  const fade = 1 - ease((age - .91) / .09);
+  for (let source = 0; source < k; source++) {
+    const origin = centre(source, u) + width(source, u) + 5;
+    g.fillStyle = colors[source];
+    for (const hair of hairs) for (let j = 0; j < 230; j++) {
+      const q = clamp((j + .45 * Math.sin(j * 5.3 + hair.phase)) / 229);
+      if (q > reach) continue;
+      const x = mix(destination, origin, q), spread = Math.sin(Math.PI * q) * (.8 + 1.4 * (1 - q));
+      const yy = readY(k, source, y, q) + hair.offset * spread + Math.sin(q * 25 + hair.phase) * .3;
+      g.globalAlpha = fade * (.4 + .25 * Math.sin(Math.PI * q));
+      grain(g, x, yy, .3 + .38 * (1 - q));
+    }
+    if (age > .56) {
+      const q = 1 - retreat, x = mix(origin, destination, retreat), yy = readY(k, source, y, q);
+      const r = .8 + 1.8 * retreat + 3 * ease((age - .84) / .14);
+      const bloom = g.createRadialGradient(x, yy, .2, x, yy, r * 2.1);
+      bloom.addColorStop(0, colors[source] + 'c4'); bloom.addColorStop(.55, colors[source] + '72'); bloom.addColorStop(1, colors[source] + '00');
+      g.fillStyle = bloom; g.globalAlpha = 1; grain(g, x, yy, r * 2.1);
+    }
+  }
+  g.globalAlpha = 1;
+}
+const wisps = Array.from({ length: 420 }, () => ({ u: rnd(), v: rnd() * 2 - 1, r: .2 + rnd() * .45 }));
+function prediction(t) {
+  if (t < 9.6 || t >= 11.2) return;
+  const age = ease((t - 9.6) / .6), lift = ease((t - 10.15) / .75) * 16;
+  g.fillStyle = INK;
+  for (const p of wisps) {
+    if (p.u > age) continue;
+    const x = centre(2, 1) + Math.sin(p.u * 5) * 8 + p.v * width(2, 1) * (1 - p.u) ** 4;
+    const y = BASE - HEIGHT - p.u * 53 - lift;
+    g.globalAlpha = .4 * (1 - p.u) * (1 - ease((t - 10.35) / .7)); grain(g, x, y, p.r);
+  }
+  g.globalAlpha = 1;
+}
+function draw(t) {
+  t = ((t % CYCLE) + CYCLE) % CYCLE; window.__t = t;
+  g.reset(); g.scale(D, D);
+  g.fillStyle = PAPER; g.fillRect(0, 0, W, H);
+  // reads first so a thread passing a dry column runs behind it, at the same layer height, never over it
+  for (let k = 0; k < 3; k++) reads(k, t);
+  for (let k = 0; k < 3; k++) column(k, t);
+  prediction(t);
+  g.globalAlpha = ease((t - 11.2) / .8); g.fillStyle = PAPER; g.fillRect(0, 0, W, H); g.globalAlpha = 1;
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) draw(Number(frozen) || 0);
+else {
+  const epoch = performance.now();
+  const tick = now => { draw((now - epoch) / 1000); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>

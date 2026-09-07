@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">Each layer is made from what lies beneath it. Once buried, a layer never changes.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 23; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v, ease = u => u * u * (3 - 2 * u);
+const SKY = 'rgb(110,158,206)', SKY2 = 'rgba(113,146,158,0.7)', PALE = 'rgba(155,173,176,0.9)';
+
+// ---- the section: five word layers form upward one at a time, then the whole column subsides and a new one begins ----
+// everything is a pure function of stack-local time s, so the loop can never drift
+const NL = 5, LH = 50, BASE = 392, X0 = 58, X1 = 598, LF = 1.5, OFF = 0.5, SINK0 = 8.5, SINKD = 2.4, PERIOD = 9.6, RJ0 = 6.7;
+const WORDS = ['THE', 'CAT', 'SAT', 'ON', 'THE'], SLANT = [0.75, -0.65, 0.9, -0.8, 0.6];
+const formT = k => OFF + k * LF, lithT = k => k < NL - 1 ? formT(k + 2) : 1e9;   // buried once the layer above is complete
+
+// boundary j is the top of layer j (j = -1 is the floor): two gentle waves that breathe until the layer beneath is buried
+const bA = [], bF = [], bP = [], bA2 = [], bF2 = [], bP2 = [];
+for (let j = 0; j <= NL; j++) { bA.push(2.5 + rnd() * 2); bF.push(0.012 + rnd() * 0.012); bP.push(rnd() * 6.28); bA2.push(1 + rnd()); bF2.push(0.03 + rnd() * 0.03); bP2.push(rnd() * 6.28); }
+function bTop(j, x, s) {
+  const i = j + 1, tw = Math.min(s, lithT(j < 0 ? 0 : j));
+  return BASE - i * LH + bA[i] * Math.sin(x * bF[i] + bP[i] + Math.sin(tw * 0.31 + bP2[i]) * 0.25) + bA2[i] * Math.sin(x * bF2[i] + bP2[i] - tw * 0.2);
+}
+
+// grains: each forming layer lifts NG grains out of the layers below it, halving the share per layer of depth
+const NG = 64, gsrc = new Int8Array(NL * NG), gsx = new Float32Array(NL * NG), gsy = new Float32Array(NL * NG), gtx = new Float32Array(NL * NG),
+  gty = new Float32Array(NL * NG), gt0 = new Float32Array(NL * NG), gdu = new Float32Array(NL * NG), gsw = new Float32Array(NL * NG);
+for (let k = 0, n = 0; k < NL; k++) for (let i = 0; i < NG; i++, n++) {
+  let j = -1;                                                               // -1: bedrock below the canvas
+  if (k > 0) { let r = rnd() * (2 - Math.pow(0.5, k - 1)); for (j = k - 1; j > 0; j--) { r -= Math.pow(0.5, k - 1 - j); if (r <= 0) break; } }
+  gsrc[n] = j; gsx[n] = X0 + 20 + rnd() * (X1 - X0 - 40); gsy[n] = 0.15 + rnd() * 0.7;
+  gtx[n] = Math.min(X1 - 12, Math.max(X0 + 12, gsx[n] + (rnd() - 0.5) * 90)); gty[n] = 0.15 + rnd() * 0.7;
+  gt0[n] = rnd() * 0.72; gdu[n] = 0.55 + rnd() * 0.3; gsw[n] = (rnd() - 0.5) * 10;
+}
+const NR = 5, rx = [], ry = [];                                             // the grains that try to go back down
+for (let i = 0; i < NR; i++) { rx.push(X0 + 60 + rnd() * (X1 - X0 - 120)); ry.push(0.2 + rnd() * 0.6); }
+
+let dots = 0, dashes = 0;
+function band(k, s, dy, fade, lfade) {
+  const p = clamp((s - formT(k)) / LF); if (p <= 0) return;
+  const lt = lithT(k), lf = clamp((s - lt) / 0.7), tw = Math.min(s, lt);     // tw: walking time, frozen at burial
+  g.save(); g.beginPath();
+  for (let x = X0; x <= X1; x += 6) g.lineTo(x, bTop(k, x, s) + dy);
+  for (let x = X1; x >= X0; x -= 6) g.lineTo(x, bTop(k - 1, x, s) + dy);
+  g.closePath(); g.clip();
+  // hatching of dot-dashes at the layer's own slant; sparse and gappy while forming, dense once settled
+  const q = (1 - p) * (1 - p), gp = 2.5 + q * 9;
+  g.setLineDash([0.1, gp, 0.1, gp, 0.1, gp, 0.1, 9 + q * 24]);
+  g.lineWidth = 1.5; g.lineCap = 'round';
+  g.strokeStyle = `rgba(${74 - 26 * lf | 0},${106 - 16 * lf | 0},143,${((0.3 + 0.36 * p + 0.1 * lf) * fade).toFixed(2)})`;
+  const sl = SLANT[k], yB = BASE - k * LH + 9 + dy, L = LH + 18, step = 5 * Math.sqrt(1 + sl * sl);
+  for (let x0 = X0 - Math.max(0, sl * L) - 4, m = 0; x0 < X1 - Math.min(0, sl * L) + 4; x0 += step, m++) {
+    g.lineDashOffset = -(tw * 2.4 + m * 1.37); g.beginPath();
+    for (let v = 0; v <= 12; v++) {
+      const f = v / 12, w = Math.sin(v * 0.9 + tw * 0.8 + m * 0.7) * 0.7;
+      g.lineTo(x0 + sl * L * f + w, yB - L * f + w * sl);
+    }
+    g.stroke(); dashes += 24;
+  }
+  g.setLineDash([]); g.restore();
+  // the padlock: a still, continuous pale seam along the top of a buried layer
+  if (lf > 0) {
+    g.fillStyle = `rgba(155,173,176,${(lf * fade).toFixed(2)})`;
+    for (let x = X0; x <= X1; x += 2.6) { g.fillRect(x - 0.75 + Math.sin(x * 3.7) * 0.3, bTop(k, x, s) + dy - 0.75, 1.5, 1.5); dots++; }
+  }
+  const la = clamp((p - 0.7) / 0.3) * 0.62 * lfade;
+  if (la > 0) { g.fillStyle = `rgba(40,97,122,${la.toFixed(2)})`; g.fillText(WORDS[k], 50, (bTop(k, X0, s) + bTop(k - 1, X0, s)) / 2 + dy + 4); }
+}
+function grains(k, s, dy) {
+  const t0 = formT(k);
+  for (let i = 0, n = k * NG; i < NG; i++, n++) {
+    const t = (s - t0 - gt0[n]) / gdu[n]; if (t < 0) continue;
+    const j = gsrc[n], sx = gsx[n], tx = gtx[n];
+    const sy = j < 0 ? BASE + 12 + gsy[n] * 30 : bTop(j - 1, sx, s) + (bTop(j, sx, s) - bTop(j - 1, sx, s)) * gsy[n];
+    const ty = bTop(k - 1, tx, s) + (bTop(k, tx, s) - bTop(k - 1, tx, s)) * gty[n];
+    if (t >= 1) {                                                           // landed: sits, then becomes the layer
+      const a = 1 - (t - 1) * gdu[n] / 0.7; if (a <= 0) continue;
+      g.fillStyle = `rgba(113,146,158,${a.toFixed(2)})`; g.fillRect(tx - 1.1, ty + dy - 1.1, 2.2, 2.2); dots++; continue;
+    }
+    for (let m = 8; m >= 0; m--) {                                          // rising grain with a thin trail behind it
+      const tt = t - m * 0.06; if (tt < 0) continue;
+      const e = ease(tt), x = sx + (tx - sx) * e + Math.sin(e * 3.1416) * gsw[n], y = sy + (ty - sy) * e + dy, sz = m ? 1.7 - m * 0.13 : 2.4;
+      g.fillStyle = m > 4 ? PALE : m ? SKY2 : SKY;
+      g.fillRect(x - sz / 2, y - sz / 2, sz, sz); dots++;
+    }
+  }
+}
+function rejects(s, dy) {                                                    // a few grains from the newest layer try to sink: stopped at the seam
+  for (let i = 0; i < NR; i++) {
+    const t = s - RJ0 - i * 0.12; if (t < 0 || t > 1.6) continue;
+    const x = rx[i], y0 = bTop(2, x, s) + (bTop(3, x, s) - bTop(2, x, s)) * ry[i], y1 = bTop(2, x, s) - 1.4;
+    const e = ease(clamp(t / 0.55)), y = y0 + (y1 - y0) * e + dy, wm = clamp((t - 0.45) / 0.15), a = 1 - clamp((t - 1.2) / 0.4);
+    for (let m = 1; m <= 5 && t < 0.8; m++) { const tt = t - m * 0.06; if (tt < 0) continue;
+      g.fillStyle = m > 2 ? PALE : SKY2; g.fillRect(x - 0.7, y0 + (y1 - y0) * ease(clamp(tt / 0.55)) + dy - 0.7, 1.4, 1.4); dots++; }
+    g.fillStyle = `rgba(${31 + 170 * wm | 0},${79 + 29 * wm | 0},${143 - 81 * wm | 0},${a.toFixed(2)})`;
+    const sz = 2.6 + wm * 0.6; g.fillRect(x - sz / 2 + Math.sin(t * 3 + i) * 0.4 * wm, y - sz / 2, sz, sz); dots++;
+  }
+}
+function caret(s, dy) {                                                      // blinking dotted caret in the band being written
+  let cb = 0; for (let k = 0; k < NL; k++) if ((s - formT(k)) / LF >= 0.7) cb = k + 1;
+  const bl = (T % 1.1) / 1.1, a = Math.min(clamp(bl * 10), clamp((0.6 - bl) * 10)); if (a <= 0) return;
+  const cy = cb < NL ? (bTop(cb, X0, s) + bTop(cb - 1, X0, s)) / 2 + dy : BASE - (cb + 0.5) * LH + dy;
+  g.fillStyle = `rgba(40,97,122,${a.toFixed(2)})`;
+  for (let i = 0; i < 6; i++) { g.fillRect(45.2, cy - 8 + i * 3.2, 1.6, 1.6); dots++; }
+}
+function stack(s) {
+  const sp = clamp((s - SINK0) / SINKD); if (sp >= 1) return;
+  const e = ease(sp), dy = e * 330, fade = 1 - clamp((e - 0.6) * 2.5) * 0.5, lfade = 1 - clamp(sp * 2.5);
+  for (let k = 0; k < NL; k++) band(k, s, dy, fade, lfade);
+  for (let k = 0; k < NL; k++) if (s >= formT(k) && s < formT(k) + LF + 0.8) grains(k, s, dy);
+  rejects(s, dy);
+  if (sp < 0.3) caret(s, dy);
+}
+
+g.font = '11px ui-monospace, Menlo, Consolas, monospace'; g.textAlign = 'right'; if ('letterSpacing' in g) g.letterSpacing = '1.5px';
+let T = 0, last = performance.now();
+function frame(now) {
+  const dt = Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now; T += dt;
+  g.clearRect(0, 0, W, H); dots = 0; dashes = 0;
+  const u = T % PERIOD;
+  if (u < SINK0 + SINKD - PERIOD) stack(u + PERIOD);                       // the old column still sinking out
+  stack(u);
+  window.__dots = dots; window.__dashes = dashes; window.__T = T;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

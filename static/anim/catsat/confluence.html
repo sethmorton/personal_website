@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="An ink stream is built one word at a time. THE creates a pale trickle; CAT reads it and adds warm ink; SAT reads mostly that warmth and adds deep blue. The stream grows wider with each contribution, ending just past SAT. Nothing exists before THE."></canvas>
+<div class="cap">Each word draws from the context so far, then adds its own thread. The stream grows one word at a time.</div>
+</div>
+<script>
+const started = performance.now();
+const W = 640, H = 400, D = 2, CYCLE = 11.5;
+const PAPER = '#f7f4ec', INK = '#28617a', DEEP = '#23485f', SKY = '#71929e', PALE = '#9badb0', WARM = '#ac8b50';
+const c = document.getElementById('c'); c.width = W * D; c.height = H * D;
+const g = c.getContext('2d'); g.scale(D, D);
+let seed = 731;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+const centre = x => 265 + 11 * Math.sin(x / 90 + .35) - 7 * Math.sin(x / 46);
+const entries = [132, 346, 548], born = [.35, 2.45, 5.2], writes = [.6, 4.35, 7.55], colors = [PALE, WARM, DEEP];
+const END = 592;
+function head(t) {
+  if (t < 2.45) return mix(entries[0], 213, ease((t - 1) / .85));
+  if (t < 5.2) return mix(213, 368, ease((t - 2.45) / 1.05));
+  return mix(368, END, ease((t - 5.2) / 1.15));
+}
+function front(k, t) { return Math.min(head(t), entries[k] + Math.max(0, t - writes[k] - .7) * 150); }
+function layer() {
+  const canvas = document.createElement('canvas'); canvas.width = W * D; canvas.height = H * D;
+  const ctx = canvas.getContext('2d'); ctx.scale(D, D); return { canvas, ctx };
+}
+function grain(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+
+// There is no river beneath these contributions: each new strand is another width of water.
+function strandY(k, x) {
+  const second = ease((x - entries[1]) / 32), third = ease((x - entries[2]) / 21);
+  const braid = 7.5 * Math.sin((x - entries[1]) / 38 + .85);
+  if (k === 0) return centre(x) - second * braid - third * 7;
+  if (k === 1) return centre(x) + braid - third * 7;
+  return centre(x) + ease((x - entries[2]) / 23) * (14 + 2 * Math.sin((x - entries[2]) / 21));
+}
+const strands = entries.map((entry, k) => {
+  const paint = layer(), lanes = [];
+  for (let i = 0; i < 32; i++) {
+    const v = (i + .5) / 32 * 2 - 1, ys = new Float32Array(END - entry + 1);
+    for (let j = 0; j < ys.length; j++) {
+      const x = entry + j;
+      ys[j] = strandY(k, x) + (v * 7.5 + .8 * Math.sin(x / 18 + v * 5) * Math.sin(Math.PI * v)) * ease((x - entry) / 14);
+    }
+    lanes.push({ v, ys });
+    for (let j = 0; j < (END - entry) * 1.7; j++) {
+      const x = entry + rnd() * (END - entry), ix = Math.min(ys.length - 2, x - entry | 0);
+      const y = mix(ys[ix], ys[ix + 1], x - entry - ix) + (rnd() + rnd() - 1) * 1.1;
+      paint.ctx.fillStyle = rnd() < .12 ? INK : colors[k];
+      paint.ctx.globalAlpha = (.14 + rnd() * .21) * (k === 1 ? .75 : 1) * (1 - .55 * Math.abs(v) ** 6);
+      grain(paint.ctx, x, y, .3 + rnd() * .72);
+    }
+  }
+  const wet = layer(); wet.ctx.filter = 'blur(.8px)'; wet.ctx.drawImage(paint.canvas, 0, 0, W, H);
+  wet.ctx.drawImage(paint.canvas, 0, 0, W, H); wet.ctx.filter = 'none';
+  paint.ctx.globalAlpha = .62; paint.ctx.drawImage(wet.canvas, 0, 0, W, H); paint.ctx.globalAlpha = 1;
+  const motes = Array.from({ length: Math.round((END - entry) * 1.5) }, () => ({ lane: lanes[rnd() * lanes.length | 0], phase: rnd() * (END - entry + 30), speed: 23 + rnd() * 13, r: .2 + rnd() * .55, a: .18 + rnd() * .34 }));
+  return { entry, lanes, paint: paint.canvas, motes };
+});
+function at(s, l, x) {
+  const f = clamp((x - s.entry) / (END - s.entry)) * (l.ys.length - 1), i = Math.min(l.ys.length - 2, f | 0);
+  return mix(l.ys[i], l.ys[i + 1], f - i);
+}
+function water(k, t) {
+  const s = strands[k], end = front(k, t), length = end - s.entry;
+  if (length <= 0) return;
+  const solid = Math.max(s.entry, end - 13);
+  if (solid > s.entry) g.drawImage(s.paint, s.entry * D, 0, (solid - s.entry) * D, H * D, s.entry, 0, solid - s.entry, H);
+  for (let x = solid; x < end; x += 1) {
+    const w = Math.min(1, end - x); g.globalAlpha = ease((end - x) / 13);
+    g.drawImage(s.paint, x * D, 0, w * D, H * D, x, 0, w, H);
+  }
+  g.fillStyle = k === 0 ? INK : colors[k];
+  for (const p of s.motes) {
+    const x = s.entry + (p.phase + t * p.speed) % (END - s.entry + 30);
+    if (x >= end) continue;
+    g.globalAlpha = p.a * ease((end - x) / 9);
+    grain(g, x, at(s, p.lane, x), p.r);
+  }
+  g.globalAlpha = 1;
+}
+
+const words = ['THE', 'CAT', 'SAT'].map((text, k) => {
+  const x = [112, 314, 514][k], mask = layer();
+  mask.ctx.font = '700 40px Georgia, serif'; mask.ctx.textAlign = 'center'; mask.ctx.fillText(text, x, 139);
+  const base = layer(); base.ctx.drawImage(mask.canvas, 0, 0, W, H);
+  base.ctx.globalCompositeOperation = 'source-in'; base.ctx.fillStyle = k === 1 ? WARM : INK;
+  base.ctx.fillRect(0, 0, W, H); base.ctx.globalCompositeOperation = 'source-atop';
+  for (let j = 0; j < 1100; j++) {
+    base.ctx.globalAlpha = .12 + rnd() * .3; base.ctx.fillStyle = j % 4 ? PALE : DEEP;
+    grain(base.ctx, x - 48 + rnd() * 96, 107 + rnd() * 34, .3 + rnd() * 1.25);
+  }
+  base.ctx.globalAlpha = 1;
+  const stains = [];
+  for (let pass = 0; pass < 3; pass++) {
+    const stain = layer();
+    for (let j = 0; j < 13; j++) {
+      const xx = x - 39 + rnd() * 76, yy = 111 + rnd() * 27, r = 2 + rnd() * 8;
+      const bloom = stain.ctx.createRadialGradient(xx, yy, .5, xx, yy, r);
+      bloom.addColorStop(0, k === 2 && j % 5 ? '#ac8b50c9' : '#9badb0b3');
+      bloom.addColorStop(.65, k === 2 && j % 5 ? '#ac8b509c' : '#9badb07a');
+      bloom.addColorStop(1, k === 2 && j % 5 ? '#ac8b5000' : '#9badb000');
+      stain.ctx.fillStyle = bloom; grain(stain.ctx, xx, yy, r);
+    }
+    stain.ctx.globalCompositeOperation = 'destination-in'; stain.ctx.drawImage(mask.canvas, 0, 0, W, H);
+    stains.push(stain.canvas);
+  }
+  return { x, base: base.canvas, stains };
+});
+function bezier(p, u, axis) {
+  const m = 1 - u; return m * m * m * p[axis] + 3 * m * m * u * p[axis + 2] + 3 * m * u * u * p[axis + 4] + u * u * u * p[axis + 6];
+}
+const contacts = [];
+for (let k = 0; k < 3; k++) {
+  const x = words[k].x + 6, end = entries[k];
+  contacts.push({ k, lift: false, start: writes[k], duration: .7, color: colors[k], p: [x, 138, mix(x, end, .25), 189, mix(x, end, .65), 227, end, strandY(k, end)] });
+}
+for (const [k, source, x0, x1, start] of [[1, 0, 277, 302, 3.35], [2, 1, 455, 493, 6.25], [2, 1, 467, 512, 7.25], [2, 1, 475, 533, 8.25], [2, 0, 443, 481, 6.85]]) {
+  contacts.push({ k, source, lift: true, start, duration: .95, color: colors[source], p: [x0, strandY(source, x0), x0 + 7, 209, x1 - 6, 173, x1, 136] });
+}
+const hairs = Array.from({ length: 11 }, () => ({ offset: (rnd() - .5) * 14, phase: rnd() * 6.28 }));
+function contact(p, t) {
+  const age = (t - p.start) / p.duration;
+  if (age < 0) return;
+  const reach = ease(age), alpha = p.lift ? .17 + .75 * (1 - ease((age - 1) / .8)) : .95;
+  g.fillStyle = p.color;
+  for (const h of hairs) for (let j = 0; j < 145; j++) {
+    const u = j / 144 * reach, fan = Math.sin(Math.PI * u);
+    const x = bezier(p.p, u, 0) + h.offset / 7 * Math.min(5, (p.p[6] - p.p[0]) * .12) * fan;
+    const y = bezier(p.p, u, 1), pulse = .48 + .52 * (1 + Math.sin(u * 14 - t * 7 + h.phase * .2)) / 2;
+    g.globalAlpha = alpha * pulse * .52;
+    grain(g, x, y + Math.sin(u * 26 + h.phase) * .45, .24 + .15 * pulse);
+  }
+  g.globalAlpha = 1;
+}
+function draw(t) {
+  t = ((t % CYCLE) + CYCLE) % CYCLE; window.__t = t;
+  g.globalAlpha = 1; g.fillStyle = PAPER; g.fillRect(0, 0, W, H);
+  for (let k = 0; k < 3; k++) water(k, t);
+  for (const p of contacts) contact(p, t);
+  for (let k = 0; k < 3; k++) {
+    const visible = ease((t - born[k]) / .5);
+    g.globalAlpha = visible; g.drawImage(words[k].base, 0, 0, W, H);
+    if (!k) continue;
+    for (let pass = 0; pass < 3; pass++) {
+      g.globalAlpha = visible * ease((t - (k === 1 ? 4.15 + pass * .15 : 7.15 + pass)) / .65) * (k === 1 ? .23 : .86);
+      g.drawImage(words[k].stains[pass], 0, 0, W, H);
+    }
+  }
+  g.globalAlpha = ease((t - 10.4) / 1.1); g.fillStyle = PAPER; g.fillRect(0, 0, W, H); g.globalAlpha = 1;
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) draw(Number(frozen) || 0);
+else {
+  const epoch = performance.now();
+  const tick = now => { draw((now - epoch) / 1000); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+window.__renderMs = performance.now() - started;
+</script>
+</body>
+</html>

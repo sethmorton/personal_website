@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="Three upward currents carry THE, CAT and SAT. Earlier words add threads to later currents; warm CAT threads remain in the wider SAT current."></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2, CYCLE = 10;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 71; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const PAPER = '#fafaf9', INK = '#4a6a8f', DEEP = '#1f4f8f', SKY = '#6e9ece', PALE = '#b6c2d2', WARM = '#c96c3e';
+const clamp = x => Math.max(0, Math.min(1, x)), smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const X = [143, 300, 457], words = ['THE', 'CAT', 'SAT'];
+const mask = document.createElement('canvas'); mask.width = W * DPR; mask.height = H * DPR;
+const mg = mask.getContext('2d'); mg.scale(DPR, DPR); mg.font = '700 24px Georgia, serif'; mg.textAlign = 'center'; mg.fillStyle = PAPER;
+for (let k = 0; k < 3; k++) mg.fillText(words[k], X[k] + 21, 341);
+const letters = mg.getImageData(0, 0, W * DPR, H * DPR).data;
+function reserved(x, y) {
+  if (y < 318 || y > 342 || x < 0 || x >= W) return false;
+  return letters[((y * DPR | 0) * W * DPR + (x * DPR | 0)) * 4 + 3] > 80;
+}
+// Each streamline has a nonnegative horizontal velocity. The fine sine terms
+// never overcome its rightward drift; clamping also routes pigment past reserves.
+const streams = [], STEP = 1.05;
+const drift = y => { const u = (412 - y) / 424; return 44 * u + 4 * Math.sin(u * 6) + 32 * smooth((366 - y) / 73); };
+function strand(k, lane, kind = 0, j = 0) {
+  const ph = rnd() * Math.PI * 2, pts = [], start = kind === 1 ? 1.8 + j * 0.055 : kind === 2 ? 1.1 + j * 0.10 : 0;
+  const bottom = kind ? (kind === 1 ? 275 + j * 2 : 291 - j * 5) : 412;
+  let lastX = -Infinity;
+  for (let y = bottom; y >= -12; y -= STEP) {
+    const u = (412 - y) / 424;
+    let x;
+    if (!kind) {
+      x = X[k] + lane * 32 + drift(y) + 2.8 * Math.sin(u * 6 + ph) + 0.65 * Math.sin(u * 19 + ph);
+    } else {
+      const v = smooth((bottom - y) / (kind === 1 ? 140 : k === 1 ? 132 : 220));
+      const source = kind === 1 ? 357 + j * 0.65 : 214 + j * 1.2;
+      const target = X[k] + (kind === 1 ? 8 : 31) + lane * (kind === 1 ? 50 : 5) + drift(y);
+      x = source + (target - source) * v + (1 - v) * (bottom - y) * 0.022;
+      x += v * (3.4 * Math.sin(u * 7 + ph) + 0.6 * Math.sin(u * 18 + ph));
+    }
+    x = Math.max(lastX, x);
+    while (reserved(x, y) || reserved(x + 0.65, y)) x += 0.65;
+    lastX = x;
+    pts.push({ x, y, radius: 0.27 + rnd() * 0.48, alpha: (0.32 + rnd() * 0.58) * (0.72 + 0.28 * Math.sin(y * 0.13 + ph)) });
+  }
+  streams.push({ pts, kind, start, ph, lane, color: kind === 2 ? PALE : (rnd() < 0.36 ? DEEP : INK), speed: 24 + rnd() * 10,
+    particles: Array.from({ length: kind ? 25 : 32 }, () => ({ s: rnd(), r: 0.34 + rnd() * 0.48, a: 0.30 + rnd() * 0.46 })) });
+}
+for (let k = 0; k < 3; k++) for (let j = 0; j < 40; j++) strand(k, (j + rnd() * 0.7) / 39.7 * 2 - 1);
+for (let j = 0; j < 3; j++) strand(1, j / 3, 2, j);
+for (let j = 0; j < 2; j++) strand(2, j / 2, 2, j + 3);
+for (let j = 0; j < 10; j++) strand(2, Math.pow(j / 9, 1.4), 1, j);
+const dust = Array.from({ length: 95 }, () => ({ x: rnd() * 620, y: rnd() * 430, r: 0.3 + rnd() * 0.45, a: 0.06 + rnd() * 0.12, v: 4 + rnd() * 4 }));
+// Original pigment is cached; tributary deposits reveal progressively.
+// Live deposits (4215 total) carry motion along the same sampled flow field.
+function dot(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+const core = document.createElement('canvas'); core.width = c.width; core.height = c.height;
+const cg = core.getContext('2d'); cg.scale(DPR, DPR);
+// Pigment collects around the letter reserves, drying to a softly mottled edge.
+for (let k = 0; k < 3; k++) for (let j = 0; j < 2600; j++) {
+  const dx = (rnd() + rnd() + rnd() - 1.5) * 26, dy = (rnd() + rnd() - 1) * 23;
+  const x = X[k] + 21 + dx, y = 331 + dy;
+  if (reserved(x, y)) continue;
+  cg.fillStyle = j % 4 ? INK : DEEP; cg.globalAlpha = 0.09 + rnd() * 0.11;
+  dot(cg, x, y, 0.35 + rnd() * 0.75);
+}
+for (const s of streams) if (!s.kind) {
+  cg.fillStyle = s.color;
+  for (const p of s.pts) {
+    cg.globalAlpha = p.alpha * 0.52; dot(cg, p.x, p.y, p.radius);
+    cg.globalAlpha = p.alpha * 0.065; dot(cg, p.x, p.y, p.radius * 3.3);
+  }
+}
+function point(s, f) {
+  const z = clamp(f) * (s.pts.length - 1), i = Math.min(s.pts.length - 2, z | 0), p = s.pts[i], q = s.pts[i + 1], u = z - i;
+  return { x: p.x + (q.x - p.x) * u, y: p.y + (q.y - p.y) * u };
+}
+const warms = Array.from({ length: 17 }, (_, i) => { const u = i / 16; return `rgb(${74 + (201 - 74) * u | 0},${106 + (108 - 106) * u | 0},${143 + (62 - 143) * u | 0})`; });
+function pigment(s, y) { return s.kind === 1 ? warms[Math.round(smooth((190 - y) / 60) * 16)] : s.color; }
+function draw(seconds) {
+  const t = ((seconds % CYCLE) + CYCLE) % CYCLE;
+  window.__t = t;
+  const fade = smooth(t / 0.7) * (1 - smooth((t - 9.2) / 0.8));
+  g.globalAlpha = 1; g.fillStyle = PAPER; g.fillRect(0, 0, W, H);
+  g.globalAlpha = fade; g.drawImage(core, 0, 0, W, H);
+  for (const s of streams) {
+    const progress = s.kind ? clamp((t - s.start) / 4.5) : 1;
+    if (s.kind) {
+      for (let i = 0; i < s.pts.length * progress; i++) {
+        const p = s.pts[i], edge = smooth((progress - i / s.pts.length) * 24);
+        g.fillStyle = pigment(s, p.y); g.globalAlpha = fade * edge * p.alpha * (s.kind === 1 ? 0.80 : 0.44); dot(g, p.x, p.y, p.radius * (s.kind === 1 ? 1.15 : 1));
+        g.globalAlpha = fade * edge * p.alpha * 0.06; dot(g, p.x, p.y, p.radius * 3.3);
+      }
+    }
+    for (const d of s.particles) {
+      const f = (d.s + t * s.speed / (s.pts.length * STEP)) % 1;
+      if (f > progress) continue;
+      const p = point(s, f), edge = s.kind ? smooth((progress - f) * 24) : 1;
+      const a = fade * edge * d.a * smooth(f * 35) * smooth((1 - f) * 35);
+      g.fillStyle = pigment(s, p.y);
+      for (let n = 0; n < 3; n++) {
+        const q = point(s, Math.max(0, f - n * 0.0028));
+        g.globalAlpha = a * (1 - n * 0.27); dot(g, q.x, q.y, d.r * (1 - n * 0.13));
+      }
+    }
+  }
+  g.fillStyle = PALE;
+  for (const d of dust) {
+    const y = 415 - (d.y + t * d.v) % 430;
+    g.globalAlpha = fade * d.a * smooth((415 - y) / 20) * smooth((y + 15) / 20);
+    dot(g, d.x + t * 0.35, y, d.r);
+  }
+  // Letter reserves are part of the paper, with no separate label layer.
+  g.globalAlpha = fade; g.drawImage(mask, 0, 0, W, H); g.globalAlpha = 1;
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) draw(Number.isFinite(Number(frozen)) ? Number(frozen) : 0);
+else if (matchMedia('(prefers-reduced-motion: reduce)').matches) draw(7);
+else {
+  const epoch = performance.now();
+  const frame = now => { draw((now - epoch) / 1000); requestAnimationFrame(frame); };
+  draw(0); requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

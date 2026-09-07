@@ -1,0 +1,30 @@
+[
+  {
+    "file": "apollo-deployment.jpg",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "file": "apollo-open.jpg",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "file": "walking-city.jpg",
+    "url": "https://static.universaleverything.com/wp-content/uploads/2022/11/11105028/Lifeforms-by-Universal-Everything-Walking-City-scaled.jpg",
+    "bytes": 2086154
+  },
+  {
+    "file": "universe.jpg",
+    "url": "https://dkyhanv6paotz.cloudfront.net/live/fit-in/265x413/medias/nfb_tube/jackets/412101_Universe-NotreUnivers_en_keyart_2x3.jpg",
+    "bytes": 18337
+  },
+  {
+    "file": "ibm-think.png",
+    "url": "https://cdn.sanity.io/images/uk7b627p/production/2c9302ab99c6041a0be1f5cfd6d1c8dba3760fe7-4096x2076.png?w=1000&q=85&auto=format",
+    "bytes": 253467
+  },
+  {
+    "file": "ibm-think-motion.jpg",
+    "url": "https://image.mux.com/CInEBLxhE1RZ9cI7GDtqFJWnbq25DsKbdsGDF01901OuY/thumbnail.jpg?time=3&width=1000",
+    "bytes": 19082
+  }
+]

@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c"></canvas>
+<div class="cap">The same discovery, twice. A note is a copy of a copy of a copy. The living map just changes.</div>
+</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+let seed = 23; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const INK = [40,97,122], DEEP = [35,72,95], SKY = [113,146,158], PALE = [155,173,176];
+const ease = u => (u = u < 0 ? 0 : u > 1 ? 1 : u, u * u * (3 - 2 * u));
+const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const mix = (a, b, t) => { const m = lerp(a, b, t); return `rgb(${m[0] | 0},${m[1] | 0},${m[2] | 0})`; };
+// ---- the problem as understood: 3 gaussians (u, v, sigma, amp) in map units, same aspect everywhere ----
+const ASP = 100 / 118, NP = 12;
+const base = new Float32Array([0.34, 0.42, 0.145, 1.0, 0.66, 0.6, 0.12, 0.85, 0.63, 0.32, 0.095, 0.6]);
+function field(P, u, v) {
+  let f = 0;
+  for (let i = 0; i < NP; i += 4) { const du = u - P[i], dv = (v - P[i + 1]) * ASP; f += P[i + 3] * Math.exp(-(du * du + dv * dv) / (2 * P[i + 2] * P[i + 2])); }
+  return f;
+}
+// a note: the previous copy described in words and redrawn, every number a little off
+function derive(src, dst) {
+  for (let i = 0; i < NP; i += 4) {
+    dst[i] = src[i] + (rnd() - 0.5) * 0.17; dst[i + 1] = src[i + 1] + (rnd() - 0.5) * 0.17;   // +-10 px placement
+    dst[i + 2] = src[i + 2] * (1 + (rnd() - 0.5) * 0.36); dst[i + 3] = src[i + 3] * (1 + (rnd() - 0.5) * 0.24);
+  }
+}
+
+// ---- the maps: four copies degrading in resolution, lattice, contour count and tone; one living map ----
+const copies = [
+  { x: 22, y: 82, w: 118, h: 100, gx: 30, gy: 25, nl: 7, q: 0, sz: 1.5, wob: 0.5, fade: 0 },
+  { x: 180, y: 82, w: 118, h: 100, gx: 15, gy: 13, nl: 6, q: 2.5, sz: 1.7, wob: 0.35, fade: 0.15 },
+  { x: 22, y: 214, w: 118, h: 100, gx: 10, gy: 8, nl: 5, q: 4, sz: 2.0, wob: 0.3, fade: 0.32 },
+  { x: 180, y: 214, w: 118, h: 100, gx: 7, gy: 6, nl: 3, q: 6, sz: 2.4, wob: 0.25, fade: 0.48 },
+];
+const living = { x: 345, y: 86, w: 270, h: 229, gx: 54, gy: 46, nl: 12, q: 0, sz: 1.6, wob: 0.55, fade: 0 };
+for (const m of [...copies, living]) {
+  m.lev = new Float32Array(m.nl); m.col = [];
+  for (let k = 0; k < m.nl; k++) {
+    const t = m.nl > 1 ? k / (m.nl - 1) : 0.5; m.lev[k] = 0.12 + 1.13 * t;
+    const tone = k >= m.nl - 2 && m.nl > 6 ? DEEP : INK;
+    m.col.push(mix(lerp(PALE, tone, 0.35 + 0.65 * t), PALE, m.fade));
+  }
+}
+const O = [], N = [], wipe = new Float32Array(4), P0 = new Float32Array(NP);   // old / new params per copy, wipe progress
+for (let k = 0; k < 4; k++) { O.push(new Float32Array(NP)); N.push(new Float32Array(NP)); }
+const Rold = new Float32Array(base), Rnew = new Float32Array(base), Rcur = new Float32Array(base);
+N[0].set(base); for (let k = 1; k < 4; k++) derive(N[k - 1], N[k]);
+for (let k = 0; k < 4; k++) { O[k].set(N[k]); wipe[k] = 1; }
+
+// ---- marching squares straight to wobbling dots, optionally snapped to a toner lattice, clipped to a y band ----
+const F = new Float32Array(55 * 47);
+const CASES = [[-1], [3, 2, -1], [2, 1, -1], [3, 1, -1], [0, 1, -1], [3, 0, 1, 2, -1], [0, 2, -1], [3, 0, -1],
+               [3, 0, -1], [0, 2, -1], [3, 2, 0, 1, -1], [0, 1, -1], [3, 1, -1], [2, 1, -1], [3, 2, -1], [-1]];
+const ex = new Float64Array(4), ey = new Float64Array(4);
+let T = 0, dots = 0;
+function dotLine(x1, y1, x2, y2, m, l, h, ya, yb) {
+  const L = Math.hypot(x2 - x1, y2 - y1), n = Math.max(1, Math.round(L / 3.3)), sz = m.sz;
+  for (let k = 0; k < n; k++) {
+    const t = (k + 0.5) / n; let x = x1 + (x2 - x1) * t, y = y1 + (y2 - y1) * t;
+    if (y < ya || y >= yb) continue;
+    if (m.q) { x = Math.round(x / m.q) * m.q; y = Math.round(y / m.q) * m.q; }
+    const q = h * 0.618 + k * 2.39;
+    g.fillRect(x + Math.sin(T * 1.3 + q) * m.wob - sz / 2, y + Math.cos(T * 1.05 + q * 1.7) * m.wob - sz / 2, sz, sz); dots++;
+  }
+}
+function contours(P, m, ya, yb) {
+  const NX = m.gx + 1, cw = m.w / m.gx, ch = m.h / m.gy;
+  for (let j = 0; j <= m.gy; j++) for (let i = 0; i <= m.gx; i++) F[j * NX + i] = field(P, i / m.gx, j / m.gy);
+  for (let l = 0; l < m.nl; l++) {
+    const v = m.lev[l]; g.fillStyle = m.col[l];
+    for (let j = 0; j < m.gy; j++) for (let i = 0; i < m.gx; i++) {
+      const o = j * NX + i, a = F[o], b = F[o + 1], cc = F[o + NX + 1], d = F[o + NX];
+      const code = (a > v ? 8 : 0) | (b > v ? 4 : 0) | (cc > v ? 2 : 0) | (d > v ? 1 : 0);
+      if (code === 0 || code === 15) continue;
+      const x = m.x + i * cw, y = m.y + j * ch;
+      ex[0] = x + cw * (v - a) / (b - a); ey[0] = y; ex[1] = x + cw; ey[1] = y + ch * (v - b) / (cc - b);
+      ex[2] = x + cw * (v - d) / (cc - d); ey[2] = y + ch; ex[3] = x; ey[3] = y + ch * (v - a) / (d - a);
+      let cs = CASES[code];
+      if ((code === 5 || code === 10) && (a + b + cc + d) * 0.25 < v) cs = CASES[15 - code];
+      for (let k = 0; cs[k] >= 0; k += 2) dotLine(ex[cs[k]], ey[cs[k]], ex[cs[k + 1]], ey[cs[k + 1]], m, l, o * 3 + l * 7 + k, ya, yb);
+    }
+  }
+}
+// hatching where the living map is densest: dot-dashes that only exist above iso, breathing, drifting
+function hatch(P, m, iso) {
+  const ux = Math.cos(0.663), uy = Math.sin(0.663), nx = -uy, ny = ux, cx = m.x + m.w / 2, cy = m.y + m.h / 2, R = Math.hypot(m.w, m.h) / 2;
+  g.strokeStyle = 'rgba(113,146,158,0.6)'; g.lineWidth = 1.5; g.lineCap = 'round'; g.setLineDash([0.1, 3.4]);
+  for (let s = -R, k = 0; s < R; s += 6.5, k++) {
+    const so = s + Math.sin(T * 0.5 + k * 0.7) * 0.6;
+    g.lineDashOffset = -(T * 2.2 + k * 1.37); g.beginPath();
+    let inside = false, px = 0, py = 0, pv = 0;
+    for (let t = -R; t <= R; t += 3) {
+      const x = cx + ux * t + nx * so, y = cy + uy * t + ny * so;
+      const on = x >= m.x && x < m.x + m.w && y >= m.y && y < m.y + m.h, v = on ? field(P, (x - m.x) / m.w, (y - m.y) / m.h) : 0;
+      const w = Math.sin(t * 0.05 + T * 0.7 + k) * 0.8;
+      if (v > iso !== inside) { const f = (iso - pv) / (v - pv), bx = px + (x - px) * f, by = py + (y - py) * f;
+        if (inside) { g.lineTo(bx + nx * w, by + ny * w); dots += 3; } else g.moveTo(bx + nx * w, by + ny * w); inside = !inside; }
+      else if (inside) { g.lineTo(x + nx * w, y + ny * w); dots++; }
+      px = x; py = y; pv = v;
+    }
+    g.stroke();
+  }
+  g.setLineDash([]);
+}
+
+// ---- the cycle: one gaussian moves; the living map migrates at once, the notes hop 1 -> 2 -> 3 -> 4 ----
+const CYC = 7.4, HOP = [1.2, 2.4, 3.6], FLY = 0.8, WIPE = 0.6;
+let cyStart = 1.4 - CYC, gi = 0;
+function startCycle() {
+  cyStart = T; wipe[0] = 0;
+  for (let k = 0; k < 4; k++) O[k].set(N[k]); for (let k = 1; k < 4; k++) wipe[k] = 0;
+  Rold.set(Rcur); Rnew.set(Rcur); gi = (gi + 1 + (rnd() * 2 | 0)) % 3;
+  let u, v; do { u = 0.27 + rnd() * 0.46; v = 0.3 + rnd() * 0.4; } while (Math.hypot(u - Rcur[gi * 4], v - Rcur[gi * 4 + 1]) < 0.2);
+  Rnew[gi * 4] = u; Rnew[gi * 4 + 1] = v;
+  N[0].set(Rnew); for (let k = 1; k < 4; k++) derive(N[k - 1], N[k]);
+}
+// each hop: a dotted trail grows between two copies, eight deep dots ride it, then the next copy is printed top-down
+const paths = [[140, 132, 160, 108, 180, 132], [180, 178, 152, 186, 140, 218], [140, 264, 160, 240, 180, 264]];
+function hops(cy) {
+  for (let i = 0; i < 3; i++) {
+    const p = (cy - HOP[i]) / FLY; if (p <= 0 || p > 1.7) continue;
+    const [ax, ay, bx, by, qx, qy] = paths[i], head = Math.min(1, p), fade = p < 1 ? 1 : 1 - (p - 1) / 0.7;
+    const n = Math.round(head * 11);
+    g.fillStyle = `rgba(155,173,176,${fade.toFixed(2)})`;
+    for (let k = 0; k <= n; k++) { const t = k / 11, s = 1 - t, x = s * s * ax + 2 * s * t * bx + t * t * qx, y = s * s * ay + 2 * s * t * by + t * t * qy;
+      g.fillRect(x + Math.sin(T * 1.2 + k) * 0.6 - 0.9, y + Math.cos(T + k * 1.7) * 0.6 - 0.9, 1.8, 1.8); dots++; }
+    if (p >= 1) continue;
+    g.fillStyle = 'rgb(31,79,143)';
+    for (let k = 0; k < 8; k++) { const t = Math.max(0, head - k * 0.045), s = 1 - t, x = s * s * ax + 2 * s * t * bx + t * t * qx, y = s * s * ay + 2 * s * t * by + t * t * qy;
+      g.fillRect(x + Math.sin(T * 2 + k) * 0.5 - 1.1, y + Math.cos(T * 1.6 + k * 1.3) * 0.5 - 1.1, 2.2, 2.2); dots++; }
+  }
+}
+function dottedV(x, y0, y1) {
+  g.fillStyle = 'rgb(182,194,210)';
+  for (let y = y0, k = 0; y < y1; y += 6, k++) g.fillRect(x + Math.sin(T * 0.8 + k * 0.9) * 0.7 - 0.7, y + Math.cos(T * 0.6 + k) * 0.5 - 0.7, 1.4, 1.4), dots++;
+}
+
+let last = 0;
+function frame(now) {
+  const dt = Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now; T += dt;
+  if (T - cyStart > CYC) startCycle();
+  const cy = T - cyStart;
+  g.clearRect(0, 0, W, H); dots = 0;
+  g.font = '9px Menlo, monospace'; g.letterSpacing = '2px'; g.fillStyle = 'rgb(182,194,210)';
+  g.fillText('PASSING NOTES', 22, 54); g.fillText('SPRINGS', 355, 54);
+  dottedV(320, 36, 364);
+  // living map: everything connected moves at once over 2 s and stays
+  const eR = ease(cy / 2);
+  for (let i = 0; i < NP; i++) Rcur[i] = Rold[i] + (Rnew[i] - Rold[i]) * eR;
+  hatch(Rcur, living, 1.02);
+  contours(Rcur, living, -1e9, 1e9);
+  // copy 1 moves with the discovery; copies 2..4 are reprinted from the note that reaches them, top to bottom
+  const e1 = ease(cy / 1.0);
+  for (let i = 0; i < NP; i++) P0[i] = O[0][i] + (N[0][i] - O[0][i]) * e1;
+  contours(P0, copies[0], -1e9, 1e9);
+  g.font = '9px Menlo, monospace'; g.letterSpacing = '0px'; g.fillStyle = 'rgb(182,194,210)';
+  for (let k = 0; k < 4; k++) g.fillText(String(k + 1), copies[k].x + copies[k].w - 6, copies[k].y - 5);
+  for (let k = 1; k < 4; k++) {
+    wipe[k] = Math.max(wipe[k], ease((cy - HOP[k - 1] - FLY) / WIPE));
+    const m = copies[k], yw = m.y - 2 + (m.h + 4) * wipe[k];
+    if (wipe[k] < 1) contours(O[k], m, yw, 1e9);
+    if (wipe[k] > 0) contours(N[k], m, -1e9, yw);
+  }
+  hops(cy);
+  window.__dots = dots; window.__T = T;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

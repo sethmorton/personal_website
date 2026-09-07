@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div>
+<canvas id="c" role="img" aria-label="A living granular manuscript. A vermilion sentence arrives, then keeps changing: paragraphs exchange places, sentences reshape, and emphasis travels through the whole essay without clearing the page."></canvas>
+<div class="cap">One sentence changes the weight of what came before, and what can come next.</div>
+</div>
+<script>
+const started = performance.now();
+const W = 640, H = 400, D = 2, FIRST = 1.8, REVISION = 3.8;
+const PAPER = '#f7f4ec', INK = '#28617a', DEEP = '#23485f', PALE = '#9badb0', RED = '#e23b2a';
+const c = document.getElementById('c'); c.width = W * D; c.height = H * D;
+const g = c.getContext('2d', { willReadFrequently: true }); g.scale(D, D);
+let seed = 731;
+const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+function spring(age) {
+  const a = Math.max(0, age);
+  const s = 1 - Math.exp(-2.8 * a) * (Math.cos(4.1 * a) + 2.8 / 4.1 * Math.sin(4.1 * a));
+  return mix(s, 1, ease((a - 2.5) / .8));
+}
+function layer(w = W, h = H) {
+  const canvas = document.createElement('canvas'); canvas.width = w * D; canvas.height = h * D;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true }); ctx.scale(D, D); return { canvas, ctx };
+}
+function grain(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+const paper = layer();
+paper.ctx.fillStyle = PAPER; paper.ctx.fillRect(0, 0, W, H);
+paper.ctx.globalCompositeOperation = 'multiply'; paper.ctx.fillStyle = INK;
+for (let j = 0; j < 14500; j++) {
+  paper.ctx.globalAlpha = (8 + rnd() * 4) / 255;
+  grain(paper.ctx, rnd() * W, rnd() * H, .12 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .55);
+}
+paper.ctx.strokeStyle = PALE; paper.ctx.lineWidth = .25; paper.ctx.globalAlpha = .12;
+for (let j = 0; j < 120; j++) {
+  const x = rnd() * W, y = rnd() * H;
+  paper.ctx.beginPath(); paper.ctx.moveTo(x, y); paper.ctx.lineTo(x + 2 + rnd() * 5, y + rnd() * 2 - 1); paper.ctx.stroke();
+}
+// Each row is a sentence, with paragraph leads carrying the structural springs.
+const rows = [
+  [138, 55, 262, 4.2, 0],
+  [150, 93, 331, 2.5, 1], [139, 106, 352, 2.2, 1], [139, 119, 319, 2.1, 1], [139, 132, 181, 2.3, 1],
+  [150, 163, 322, 2.7, 2], [139, 176, 351, 2.4, 2], [139, 189, 301, 2.3, 2], [139, 202, 227, 2.1, 2],
+  [150, 231, 325, 2.4, 3], [139, 244, 348, 2.2, 3], [139, 257, 232, 2.3, 3],
+  [151, 278, 244, 3.2, 4],
+  [153, 312, 307, 1.7, 5], [143, 325, 279, 1.6, 5], [143, 338, 196, 1.5, 5]
+].map(([x, y, length, width, group], i) => {
+  const begin = group === 4 ? 1.35 : group === 5 ? 2 + (i - 13) * .12 : .08 + i * .09;
+  const segments = [];
+  for (let x = 0; x < length;) {
+    const proposed = x + 12 + rnd() * 37;
+    const end = length - proposed < 9 ? length : proposed;
+    segments.push([x, end]); x = end + 2 + rnd() * 3;
+  }
+  const dots = [];
+  for (const [a, b] of segments) for (let j = 0; j < (b - a) * 23; j++) {
+    const u = a + rnd() * (b - a), v = rnd() + rnd() + rnd() - 1.5;
+    const edge = ease((u - a) / 2) * ease((b - u) / 2);
+    const hand = u / 3.4 + i * 1.2 + .82 * Math.sin(u / 8.1 + i) + .28 * Math.sin(u / 1.7);
+    const pressure = .34 + .66 * Math.sin(hand) ** 4;
+    const spine = Math.sin(u / 18 + i) * .7 - Math.sin(hand) * width * .19;
+    dots.push([u, 10 + spine + v * width * edge * pressure, .17 + rnd() * .48, .15 + rnd() * .42]);
+  }
+  const paints = [INK, DEEP, PALE, RED].map(color => {
+    const p = layer(length + 6, 22);
+    p.ctx.fillStyle = color;
+    for (const [u, v, r, alpha] of dots) { p.ctx.globalAlpha = color === RED ? Math.min(1, alpha * 2.7) : alpha; grain(p.ctx, u + 3, v, r); }
+    if (color !== RED) {
+      const wet = layer(length + 6, 22); wet.ctx.filter = 'blur(.75px)'; wet.ctx.drawImage(p.canvas, 0, 0, length + 6, 22);
+      p.ctx.globalAlpha = .38; p.ctx.drawImage(wet.canvas, 0, 0, length + 6, 22);
+      for (let j = 0; j < 8; j++) {
+        const xx = rnd() * length, yy = 10 + (rnd() - .5) * width, r = 1 + rnd() * 2.6;
+        const bloom = p.ctx.createRadialGradient(xx, yy, .2, xx, yy, r);
+        bloom.addColorStop(0, color + '36'); bloom.addColorStop(.6, color + '20'); bloom.addColorStop(1, color + '00');
+        p.ctx.globalAlpha = .45; p.ctx.fillStyle = bloom; grain(p.ctx, xx, yy, r);
+      }
+    }
+    return p.canvas;
+  });
+  return { x, y, length, width, group, begin, paints };
+});
+const initial = rows.map(row => ({ x: row.x, y: row.y, length: row.length, pale: row.group === 5 ? .6 : 0, weight: .88 }));
+let revision = -1, previous = initial, current = initial;
+function layout(n) {
+  let state = (731 + (n + 1) * 104729) % 2147483647;
+  const random = () => (state = state * 16807 % 2147483647) / 2147483647;
+  const order = [1, 2, 3, 5];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  const target = initial.map(row => ({ ...row }));
+  target[0] = { x: 135 + random() * 24, y: 52 + random() * 8, length: 240 + random() * 62, pale: 0, weight: 1 };
+  let top = 91;
+  for (const [rank, group] of order.entries()) {
+    const left = 128 + random() * 24, width = .82 + random() * .19;
+    let line = 0;
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (row.group !== group) continue;
+      target[i] = {
+        x: left + (line ? 0 : 10), y: top + line * 12,
+        length: row.length * width * (.94 + random() * .12),
+        pale: rank === 0 ? 0 : .2 + random() * .38,
+        weight: rank === 0 ? 1 : .7 + random() * .2
+      };
+      line++;
+    }
+    top += line * 12;
+    if (rank === n % 4) {
+      target[12] = { x: left + 5, y: top + 5, length: 225 + random() * 83, pale: 0, weight: 1 };
+      top += 23;
+    }
+    top += 17;
+  }
+  return target;
+}
+function advance(t) {
+  const next = Math.floor((t - FIRST) / REVISION);
+  if (next === revision) return;
+  previous = next > 0 ? layout(next - 1) : initial;
+  current = next >= 0 ? layout(next) : initial;
+  revision = next;
+}
+function position(i, t) {
+  const row = rows[i], a = previous[i], b = current[i];
+  const age = t - FIRST - revision * REVISION;
+  const s = revision < 0 ? 0 : spring(age - (row.group === 4 ? 0 : .2 + row.group * .065));
+  return {
+    x: mix(a.x, b.x, s), y: mix(a.y, b.y, s),
+    length: mix(a.length, b.length, s),
+    pale: mix(a.pale, b.pale, clamp(s)), weight: mix(a.weight, b.weight, clamp(s))
+  };
+}
+const links = [[12, 9, 510], [12, 0, 529], [0, 1, 110], [0, 5, 96], [0, 9, 82], [12, 13, 518]];
+for (const start of [1, 5, 9, 13]) {
+  const end = start === 9 ? 12 : start === 13 ? 16 : start + 4;
+  for (let j = start + 1; j < end; j++) links.push([start, j, 119]);
+}
+function tensions(ctx, t, alpha) {
+  ctx.fillStyle = PALE;
+  for (const [a, b, margin] of links) {
+    const ra = rows[a], rb = rows[b];
+    const visible = ease((t - Math.max(ra.begin, rb.begin) - .25) / .75);
+    if (!visible) continue;
+    const pa = position(a, t), pb = position(b, t);
+    const right = margin > 400;
+    const ax = pa.x + (right ? pa.length : 0), bx = pb.x + (right ? pb.length : 0);
+    const age = t - FIRST - revision * REVISION;
+    const pulse = clamp(age / 1.4), live = Math.sin(Math.PI * clamp(age / 2.4));
+    const length = Math.abs(pb.y - pa.y) + Math.abs(margin - ax) + Math.abs(margin - bx);
+    const count = Math.ceil(length / 1.45);
+    for (let j = 0; j < count; j++) {
+      const u = j / (count - 1), v = 1 - u;
+      const x = v * v * v * ax + 3 * v * v * u * margin + 3 * v * u * u * margin + u * u * u * bx;
+      const y = mix(pa.y, pb.y, ease(u));
+      const bump = Math.exp(-(((u - pulse) / .14) ** 2)) * live;
+      ctx.globalAlpha = alpha * visible * (.19 + bump * .5);
+      grain(ctx, x + Math.sin(u * 43) * Math.sin(Math.PI * u) * (.38 + bump * 2.3), y, .28 + bump * .12);
+    }
+  }
+}
+function manuscript(ctx, t, alpha) {
+  tensions(ctx, t, alpha);
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const reach = ease((t - row.begin) / (row.group === 4 ? .55 : .32));
+    if (!reach) continue;
+    const { x, y, length, pale, weight } = position(i, t);
+    const red = row.group === 4;
+    const age = t - FIRST - revision * REVISION;
+    const pressure = red ? 1 + .28 * Math.sin(Math.PI * clamp(age / .8)) : 1;
+    ctx.save(); ctx.beginPath(); ctx.rect(x - 3, y - 12, (length + 6) * reach, 26); ctx.clip();
+    const base = red ? 3 : 0;
+    ctx.globalAlpha = alpha * weight * (1 - pale); ctx.drawImage(row.paints[base], x - 3, y - 10 * pressure, length + 6, 22 * pressure);
+    ctx.globalAlpha = alpha * weight * pale; ctx.drawImage(row.paints[2], x - 3, y - 10, length + 6, 22);
+    if (!red) { ctx.globalAlpha = alpha * .45 * (1 - pale); ctx.drawImage(row.paints[1], x - 3, y - 10, length + 6, 22); }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+function draw(t) {
+  t = Math.max(0, t);
+  window.__t = t;
+  advance(t);
+  g.globalAlpha = 1; g.drawImage(paper.canvas, 0, 0, W, H);
+  manuscript(g, Math.max(0, t - .16), .08);
+  manuscript(g, t, 1);
+}
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) draw(Number(frozen) || 0);
+else if (matchMedia('(prefers-reduced-motion: reduce)').matches) draw(4.7);
+else {
+  // The figure is unmounted offscreen. Its clock belongs to the containing page.
+  const epoch = parent.__manuscriptEpoch ??= performance.timeOrigin + performance.now();
+  const tick = now => { draw((performance.timeOrigin + now - epoch) / 1000); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+window.__renderMs = performance.now() - started;
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Shape of Inference: one word rewrites the sentence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { width: 1080px; height: 1080px; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1080"></canvas>
+<script>
+// A sentence is written forward, one word at a time. One more word lands at the end and, instead of the sentence
+// continuing, every word already written changes weight and place: the line dissolves into a constellation.
+const W = 1080, BASE_Y = 552, DUR = 10;
+const PAPER = '#fafaf9', INK = [74, 106, 143], DEEP = [31, 79, 143], PALE = [182, 194, 210];
+const WORDS = 'The hiss must be noise from the pigeons in the horn'.split(' '), NEW = 'everywhere.';
+const T = { land: 2.6, release: 3.0, hold: 7.0, back: 9.0 };
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const easeOut = x => 1 - Math.pow(1 - clamp(x), 3);
+const quint = x => { x = clamp(x); return x < .5 ? 16 * x ** 5 : 1 - Math.pow(-2 * x + 2, 5) / 2; };
+const mix = (a, b, u) => a + (b - a) * u;
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+let seed = 1965; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+
+const c = document.getElementById('c'), g = c.getContext('2d');
+const layer = () => { const l = document.createElement('canvas'); l.width = l.height = W; return l.getContext('2d'); };
+
+// Paper: stipple grain multiplied over everything, drawn once.
+const grain = layer();
+grain.fillStyle = '#4a6a8f';
+for (let j = 0; j < W * W * .06; j++) {
+  grain.globalAlpha = (7 + rnd() * 5) / 255;
+  const r = .12 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .6;
+  grain.beginPath(); grain.arc(rnd() * W, rnd() * W, r, 0, Math.PI * 2); grain.fill();
+}
+for (let j = 0; j < 2600; j++) {
+  grain.globalAlpha = (18 + rnd() * 22) / 255;
+  grain.beginPath(); grain.arc(rnd() * W, rnd() * W, .5 + rnd() * .7, 0, Math.PI * 2); grain.fill();
+}
+
+// Roles: hot words gain weight and pull together, cold words lose weight, push words flee the pigeons.
+const ROLE = { hiss: 'hot', [NEW]: 'hot', pigeons: 'cold', noise: 'cold', must: 'push', be: 'push' };
+// Settled constellation, word centres on the 1080 square. "hiss" and "everywhere." become the new sentence.
+const TARGET = {
+  The: [300, 352], hiss: [410, 470], must: [690, 250], be: [800, 246], noise: [300, 770], from: [430, 800],
+  the: [560, 720], pigeons: [560, 905], in: [905, 620], the2: [760, 820], horn: [860, 715], [NEW]: [730, 470]
+};
+const STIFF = { hot: [8, .5], mid: [6, .45], push: [7, .42], cold: [3.5, .35] };
+
+window.ready = (async () => {
+  await Promise.all([document.fonts.ready, document.fonts.load('400 54px Literata'), document.fonts.load('700 54px Literata')]);
+  const font = (wght, size) => `${Math.round(wght)} ${size}px Literata`;
+  // Fit the whole line, new word included, inside 1030px with slightly tightened word spaces.
+  g.font = font(400, 54);
+  const measure = () => [...WORDS, NEW].reduce((s, t) => s + g.measureText(t).width, 0) + g.measureText(' ').width * .8 * WORDS.length;
+  const S = Math.min(54, Math.floor(54 * 1030 / measure()));
+  g.font = font(400, S);
+  const space = g.measureText(' ').width * .8;
+  let x = (W - measure()) / 2;
+  const words = [...WORDS, NEW].map((text, i) => {
+    const w = g.measureText(text).width, cx = x + w / 2; x += w + space;
+    const key = text === 'the' && i > 6 ? 'the2' : text;
+    return { text, i, w, bx: cx, by: BASE_Y, role: ROLE[text] ?? 'mid', target: TARGET[key], isNew: text === NEW,
+      // Release wave runs right to left from the new word: the last word written moves first.
+      release: T.release + (WORDS.length - Math.min(i, WORDS.length)) * .12,
+      x: cx, y: BASE_Y, vx: 0, vy: 0 };
+  });
+  const byText = t => words.find(w => w.text === t);
+  const hiss = byText('hiss'), ever = byText(NEW), horn = byText('horn'), pigeons = byText('pigeons'), noise = byText('noise');
+
+  // Presentation at time t: weight, scale, opacity per role; back-blend returns everything to the line.
+  const shape = (w, t) => {
+    const u = ease((t - w.release - .1) / 1.6), back = quint((t - T.back) / .72);
+    let wght = 400, sc = 1, al = 1;
+    if (w.role === 'hot') { wght = mix(400, 700, u); sc = mix(1, 1.7, u); }
+    else if (w.role === 'cold') { wght = mix(400, 300, u); sc = mix(1, .95, u); al = mix(1, .35, u); }
+    else if (w.role === 'push') { al = mix(1, .82, u); sc = mix(1, 1.22, u); }
+    else { al = mix(1, .72, u); sc = mix(1, 1.12, u); }
+    return { wght: mix(wght, 400, back), sc: mix(sc, 1, back), al: mix(al, 1, back) };
+  };
+
+  // Physics, precomputed: damped anchor springs with a hot pair spring, push repulsion, and box separation.
+  const DT = 1 / 120, T0 = T.release, STEPS = Math.ceil((T.back - T0) / DT) + 1;
+  const track = words.map(() => new Float32Array(STEPS * 2));
+  for (let s = 0; s < STEPS; s++) {
+    const t = T0 + s * DT;
+    for (const w of words) {
+      track[w.i][s * 2] = w.x; track[w.i][s * 2 + 1] = w.y;
+      if (t < w.release) continue;
+      if (t < w.release + DT) w.vy = w.target[1] > w.y ? 260 : -160; // falls off the line, or lifts, before the spring catches it
+      const [k, z] = STIFF[w.role], cdamp = 2 * z * Math.sqrt(k);
+      let fx = -k * (w.x - w.target[0]) - cdamp * w.vx, fy = -k * (w.y - w.target[1]) - cdamp * w.vy;
+      if (w.role === 'hot' && t > hiss.release) { // pull toward the other hot word, resting a word apart
+        const o = w === hiss ? ever : hiss, dx = o.x - w.x, dy = o.y - w.y, d = Math.hypot(dx, dy) || 1;
+        const rest = (hiss.w + ever.w) * .9 + 76, f = 7 * (d - rest) / d;
+        fx += f * dx; fy += f * dy;
+      }
+      if (w.role === 'push') { // flee the pigeons
+        const dx = w.x - pigeons.x, dy = w.y - pigeons.y, d2 = Math.max(dx * dx + dy * dy, 40000), f = 9e5 / d2 / Math.sqrt(d2);
+        fx += f * dx; fy += f * dy;
+      }
+      for (const o of words) { // soft box separation so nothing overlaps while settling
+        if (o === w || t < o.release) continue;
+        const hw = (w.w + o.w) * .68 + 30, hh = S * 1.5;
+        const dx = w.x - o.x, dy = w.y - o.y;
+        if (Math.abs(dx) < hw && Math.abs(dy) < hh) { fx += Math.sign(dx || 1) * 110; fy += Math.sign(dy || 1) * 220; }
+      }
+      w.vx += fx * DT; w.vy += fy * DT; w.x += w.vx * DT; w.y += w.vy * DT;
+    }
+  }
+  const at = (w, t) => {
+    if (t < T0) return [w.bx, w.by];
+    const s = Math.min(STEPS - 1, (t - T0) / DT), a = Math.floor(s), b = Math.min(STEPS - 1, a + 1), f = s - a;
+    const tr = track[w.i], x = mix(tr[a * 2], tr[b * 2], f), y = mix(tr[a * 2 + 1], tr[b * 2 + 1], f);
+    const back = quint((t - T.back) / .72);
+    return [mix(x, w.bx, back), mix(y, w.by, back)];
+  };
+
+  // Hairlines: a curve from word edge to word edge, bulging away from the segment.
+  const link = (a, b, pa, pb, alpha, sa, sb, bulge) => {
+    if (alpha <= 0) return;
+    const dx = pb[0] - pa[0], dy = pb[1] - pa[1], d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+    const ra = a.w * sa / 2 + 16, rb = b.w * sb / 2 + 16;
+    if (d < ra + rb + 10) return;
+    const x0 = pa[0] + ux * ra, y0 = pa[1] - S * .3 * sa + uy * ra, x1 = pb[0] - ux * rb, y1 = pb[1] - S * .3 * sb - uy * rb;
+    const mx = (x0 + x1) / 2 - uy * bulge, my = (y0 + y1) / 2 + ux * bulge;
+    g.strokeStyle = rgba(PALE, alpha); g.lineWidth = 1.6;
+    g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(mx, my, x1, y1); g.stroke();
+  };
+  const rule = (alpha, t) => { // baseline rule in 48 segments, dissolving right to left with the release wave
+    if (alpha <= 0) return;
+    const x0 = 56, x1 = W - 56, n = 48, y = BASE_Y + 12;
+    g.lineWidth = 1.4;
+    for (let i = 0; i < n; i++) {
+      const u = i / n, dissolve = t < T.back ? ease((t - (T.release - .1 + (1 - u) * 1.4)) / .5) : 0;
+      const a = alpha * (1 - dissolve);
+      if (a <= 0) continue;
+      g.strokeStyle = rgba(PALE, a);
+      g.beginPath(); g.moveTo(x0 + (x1 - x0) * u + 1, y); g.lineTo(x0 + (x1 - x0) * (u + 1 / n) - 1, y); g.stroke();
+    }
+  };
+  const drawWord = (w, x, y, wght, size, color, alpha) => {
+    if (alpha <= 0) return;
+    g.font = font(wght, size); g.fillStyle = rgba(color, alpha); g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillText(w.text, x, y);
+  };
+
+  window.render = t => {
+    t = ((t % DUR) + DUR) % DUR;
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+    g.fillStyle = PAPER; g.fillRect(0, 0, W, W);
+    const loopOut = quint((t - 9.62) / .38); // everything fades to paper for the seam
+    const ghost = ease((t - 6.7) / .6) * (1 - ease((t - 8.75) / .5));
+
+    // Baseline rule: present from the first frame, dissolves with the release wave, returns with the words.
+    rule((1 - loopOut) * (t < T.back ? 1 : quint((t - T.back) / .72)), t);
+    if (ghost > 0) { // the straight sentence as it was, under the constellation
+      rule(.08 * ghost, 0);
+      for (const w of words) if (!w.isNew) drawWord(w, w.bx, w.by, 400, S, DEEP, .08 * ghost);
+    }
+
+    // Word positions and shapes this frame.
+    const P = words.map(w => at(w, t)), SH = words.map(w => shape(w, t));
+    // Old hypothesis links: noise-pigeons, pigeons-horn; born as the line finishes, broken by the new word.
+    const oldA = ease((t - 2.15) / .4) * (1 - ease((t - T.release - .1) / .9));
+    link(noise, pigeons, P[noise.i], P[pigeons.i], oldA, SH[noise.i].sc, SH[pigeons.i].sc, 34);
+    link(pigeons, horn, P[pigeons.i], P[horn.i], oldA, SH[pigeons.i].sc, SH[horn.i].sc, 30);
+    // New links: hiss-everywhere, horn-hiss; grow as the field settles, let go before the loop seam.
+    const newA = ease((t - 3.4) / 1.4) * (1 - quint((t - T.back) / .6));
+    link(hiss, ever, P[hiss.i], P[ever.i], newA, SH[hiss.i].sc, SH[ever.i].sc, -26);
+    link(horn, hiss, P[horn.i], P[hiss.i], newA * .85, SH[horn.i].sc, SH[hiss.i].sc, 40);
+
+    for (const w of words) {
+      const [x, y] = P[w.i], sh = SH[w.i];
+      let alpha = sh.al * (1 - loopOut), dy = 0, sc = sh.sc, color = INK;
+      if (w.isNew) { // lands from slightly above, larger, and settles onto the baseline
+        const u = easeOut((t - T.land) / .38);
+        if (u <= 0) continue;
+        alpha *= u; dy = (1 - u) * -22; sc *= mix(1.18, 1, u); color = DEEP;
+        alpha *= 1 - quint((t - 9.1) / .5); // the accent leaves first so the loop reads as a fresh line
+      } else { // autoregressive entry: one word every 0.18s, rising a few pixels into place
+        const u = easeOut((t - w.i * .18) / .16);
+        if (u <= 0) continue;
+        alpha *= u; dy = (1 - u) * 7;
+      }
+      if (w.role === 'hot' && !w.isNew) color = [mix(INK[0], DEEP[0], (sh.wght - 400) / 300), mix(INK[1], DEEP[1], (sh.wght - 400) / 300), mix(INK[2], DEEP[2], (sh.wght - 400) / 300)];
+      drawWord(w, x, y + dy, sh.wght, S * sc, color, alpha);
+    }
+
+    g.globalCompositeOperation = 'multiply'; g.drawImage(grain.canvas, 0, 0); g.globalCompositeOperation = 'source-over';
+  };
+  window.render(0);
+  return { duration: DUR, size: S, steps: STEPS };
+})();
+</script>
+</body>
+</html>

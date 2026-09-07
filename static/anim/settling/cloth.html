@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #f7f4ec; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  canvas { width: 640px; height: 400px; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="cap">Pull one thread and the weave reorganizes around it. The fabric keeps the new shape.</div>
+<script>
+const W = 640, H = 400, DPR = 2;
+const c = document.getElementById('c'); c.width = W * DPR; c.height = H * DPR;
+const g = c.getContext('2d'); g.scale(DPR, DPR);
+
+const INK = '74,106,143', DEEP = 'rgb(31,79,143)', PALE = 'rgba(155,173,176,0.55)';
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+// mesh: NX x NY verlet points, rest grid with margins
+const NX = 30, NY = 19, N = NX * NY;
+const SX = (W - 80) / (NX - 1), SY = (H - 80) / (NY - 1);
+const x = new Float32Array(N), y = new Float32Array(N), ox = new Float32Array(N), oy = new Float32Array(N);
+const rx = new Float32Array(N), ry = new Float32Array(N);
+const pinOn = new Uint8Array(N), pinX = new Float32Array(N), pinY = new Float32Array(N);
+for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+  const k = j * NX + i;
+  x[k] = ox[k] = rx[k] = 40 + i * SX + (rnd() - 0.5) * 1.5;
+  y[k] = oy[k] = ry[k] = 40 + j * SY + (rnd() - 0.5) * 1.5;
+}
+const leash = new Float32Array(N).fill(90);   // hem is tacked loosely: border points may drift 30px, interior is free (walls bound it)
+for (let k = 0; k < N; k++) if (k < NX || k >= N - NX || k % NX === 0 || k % NX === NX - 1) leash[k] = 30;
+
+// structural constraints (drawn; each remembers the 1-2 cells it borders for wrinkle shading),
+// then softer shear diagonals and skip-one bending ties (solved only) so the sheet crumples instead of folding flat
+const M = (NX - 1) * NY + NX * (NY - 1), NC = (NX - 1) * (NY - 1), MT = M + 2 * NC + (NX - 2) * NY + NX * (NY - 2);
+const ca = new Int16Array(MT), cb = new Int16Array(MT), cL = new Float32Array(MT), cL0 = new Float32Array(MT), cS = new Float32Array(MT), c0 = new Int16Array(M), c1 = new Int16Array(M), ph = new Float32Array(M);
+let m = 0;
+const addC = (a, b, stiff, cellA, cellB) => { ca[m] = a; cb[m] = b; cS[m] = stiff; c0[m] = cellA; c1[m] = cellB; ph[m] = rnd(); cL[m] = cL0[m] = Math.hypot(x[a] - x[b], y[a] - y[b]); m++; };
+for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+  const k = j * NX + i, cell = j * (NX - 1) + i;
+  if (i < NX - 1) addC(k, k + 1, 1, j > 0 ? cell - (NX - 1) : -1, j < NY - 1 ? cell : -1);
+  if (j < NY - 1) addC(k, k + NX, 1, i > 0 ? cell - 1 : -1, i < NX - 1 ? cell : -1);
+}
+for (let j = 0; j < NY - 1; j++) for (let i = 0; i < NX - 1; i++) {
+  const k = j * NX + i; addC(k, k + NX + 1, 0.5, -1, -1); addC(k + 1, k + NX, 0.5, -1, -1);
+}
+for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+  const k = j * NX + i;
+  if (i < NX - 2) addC(k, k + 2, 0.8, -1, -1);
+  if (j < NY - 2) addC(k, k + 2 * NX, 0.8, -1, -1);
+}
+const cellC = new Float32Array(NC), restA = new Float32Array(NC), lv = new Uint8Array(M);   // compression per cell, alpha bucket per thread
+const cellArea = (i, j) => { const p = j * NX + i, q = p + 1, r = p + NX + 1, s = p + NX; return 0.5 * ((x[q] - x[s]) * (y[r] - y[p]) - (x[r] - x[p]) * (y[q] - y[s])); };
+for (let j = 0; j < NY - 1; j++) for (let i = 0; i < NX - 1; i++) restA[j * (NX - 1) + i] = cellArea(i, j);
+const dph = new Float32Array(NC); for (let i = 0; i < NC; i++) dph[i] = rnd();
+// physics: verlet, no gravity, strong damping, hem may drift 30px, canvas edges are walls.
+// Threads are plastic within bounds: rest lengths creep toward what they are (0.9x..1.12x original), so the sheet keeps the shape it is pulled into.
+// Cells squeezed below 60% of their area are inflated from their centre so the sheet crumples instead of folding over itself.
+// Pins are very stiff springs rather than hard fixes, so a pin the sheet cannot reach puckers instead of tearing.
+function step() {
+  for (let k = 0; k < N; k++) {
+    const vx = (x[k] - ox[k]) * 0.82, vy = (y[k] - oy[k]) * 0.82;
+    ox[k] = x[k]; oy[k] = y[k]; x[k] += vx; y[k] += vy;
+  }
+  for (let it = 0; it < 10; it++) {
+    for (let q = 0; q < MT; q++) {
+      const a = ca[q], b = cb[q], dx = x[b] - x[a], dy = y[b] - y[a], d = Math.hypot(dx, dy) || 1e-4;
+      const f = (d - cL[q]) / d * cS[q] * 0.5;
+      if (it === 0 && q < M) cL[q] += (Math.min(cL0[q] * 1.3, Math.max(cL0[q] * 0.78, d)) - cL[q]) * 0.012;
+      x[a] += dx * f; y[a] += dy * f; x[b] -= dx * f; y[b] -= dy * f;
+    }
+    for (let k = 0; k < N; k++) {
+      if (pinOn[k]) { x[k] += (pinX[k] - x[k]) * 0.4; y[k] += (pinY[k] - y[k]) * 0.4; continue; }
+      const dx = x[k] - rx[k], dy = y[k] - ry[k], d = Math.hypot(dx, dy), L = leash[k];   // leash: hem 30, interior 90; no spring back
+      if (d > L) { x[k] = rx[k] + dx * L / d; y[k] = ry[k] + dy * L / d; }
+    }
+    for (let j = 0; j < NY - 1; j++) for (let i = 0; i < NX - 1; i++) {
+      const cell = j * (NX - 1) + i, A = cellArea(i, j), minA = restA[cell] * 0.6;
+      if (A >= minA) continue;
+      const p = j * NX + i, q = p + 1, r = p + NX + 1, s = p + NX;
+      const cx = (x[p] + x[q] + x[r] + x[s]) * 0.25, cy = (y[p] + y[q] + y[r] + y[s]) * 0.25, f = A > 0 ? Math.min(0.2, Math.sqrt(minA / A) - 1) : 0.2;
+      x[p] += (x[p] - cx) * f; y[p] += (y[p] - cy) * f; x[q] += (x[q] - cx) * f; y[q] += (y[q] - cy) * f;
+      x[r] += (x[r] - cx) * f; y[r] += (y[r] - cy) * f; x[s] += (x[s] - cx) * f; y[s] += (y[s] - cy) * f;
+    }
+  }
+  for (let k = 0; k < N; k++) { x[k] = Math.min(W - 8, Math.max(8, x[k])); y[k] = Math.min(H - 8, Math.max(8, y[k])); }
+}
+
+// the disturbance: one point is eased to a new place (25-50px from where it was woven, at least 30px from where it is now)
+// and pinned there; at most 3 pins live, the oldest is released and stays where the sheet has settled it
+let T = 0, next = 1.6, pins = [], mover = null;
+function pull() {
+  let k, tx, ty, tries = 0;
+  do { k = (4 + (rnd() * (NY - 8)) | 0) * NX + 5 + ((rnd() * (NX - 10)) | 0); } while (pinOn[k]);
+  do { const ang = rnd() * 6.28, r = 55 + rnd() * 40; tx = rx[k] + Math.cos(ang) * r; ty = ry[k] + Math.sin(ang) * r; }
+  while (Math.hypot(tx - x[k], ty - y[k]) < 30 && ++tries < 20);
+  mover = { k, x0: x[k], y0: y[k], x1: tx, y1: ty, t0: T };
+  pinOn[k] = 1; pinX[k] = x[k]; pinY[k] = y[k]; pins.push(k);
+  if (pins.length > 5) pinOn[pins.shift()] = 0;
+}
+
+// stippled thread: dots walk slowly along the thread, each with its own sideways wobble
+function thread(a, b, sz, sp, p) {
+  const ax = x[a], ay = y[a], dx = x[b] - ax, dy = y[b] - ay, d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
+  const off = ((T * 0.25 + p) % 1) * sp, h = sz / 2;
+  for (let s = off, k = 0; s < d; s += sp, k++) {
+    const w = Math.sin(p * 40 + k * 1.9 + T * 1.7) * 0.6, u = Math.cos(p * 23 + k * 2.7 + T * 1.3) * 0.4;
+    g.rect(ax + ux * (s + u) - uy * w - h, ay + uy * (s + u) + ux * w - h, sz, sz);
+  }
+}
+const ALPHA = [0.12, 0.26, 0.46, 0.68, 0.88, 1.0];
+let last = performance.now(), dots = 0;
+function frame(now) {
+  const dt = Math.min(0.033, Math.max(0, (now - last) / 1000)); last = now; T += dt;
+  if (T > next) { pull(); next = T + 6.5 + rnd() * 1.5; }
+  if (mover) {
+    const u = Math.min(1, (T - mover.t0) / 1.5), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    pinX[mover.k] = mover.x0 + (mover.x1 - mover.x0) * e; pinY[mover.k] = mover.y0 + (mover.y1 - mover.y0) * e;
+    if (u >= 1) mover = null;
+  }
+  step();
+
+  // wrinkle field: signed cell area vs rest -> compression in [-1, 1]
+  for (let j = 0; j < NY - 1; j++) for (let i = 0; i < NX - 1; i++) {
+    const cell = j * (NX - 1) + i;
+    cellC[cell] = Math.max(-1, Math.min(1, 1 - cellArea(i, j) / restA[cell]));
+  }
+  for (let q = 0; q < M; q++) {
+    const A = c0[q], B = c1[q], cc = A < 0 ? cellC[B] : B < 0 ? cellC[A] : 0.5 * (cellC[A] + cellC[B]);
+    lv[q] = Math.max(0, Math.min(5, Math.round(2.4 + cc * 13)));
+  }
+
+  g.clearRect(0, 0, W, H); dots = 0;
+  // faint diagonals of every other cell, alternating direction, so it reads as a weave
+  g.fillStyle = PALE; g.beginPath();
+  for (let j = 0; j < NY - 1; j++) for (let i = (j & 1); i < NX - 1; i += 2) {
+    const p = j * NX + i, cell = j * (NX - 1) + i;
+    if (j & 1) thread(p + 1, p + NX, 1.2, 4.5, dph[cell]); else thread(p, p + NX + 1, 1.2, 4.5, dph[cell]);
+  }
+  g.fill();
+  // structural threads, batched by darkness: compressed = dark, thick, dense; stretched = light, thin, sparse
+  for (let L = 0; L < 6; L++) {
+    g.fillStyle = `rgba(${INK},${ALPHA[L]})`; g.beginPath();
+    const sz = 1.0 + L * 0.38, sp = 4.6 - L * 0.55;
+    for (let q = 0; q < M; q++) if (lv[q] === L) { thread(ca[q], cb[q], sz, sp, ph[q]); dots += (cL[q] / sp) | 0; }
+    g.fill();
+  }
+  // pins: a small dense cluster of deep dots
+  g.fillStyle = DEEP; g.beginPath();
+  for (const k of pins) for (let n = 0; n < 7; n++) {
+    const a = n * 0.9 + T * 0.5, r = 1.2 + (n % 3) * 1.1 + Math.sin(T * 1.9 + n) * 0.4;
+    g.rect(x[k] + Math.cos(a) * r - 1, y[k] + Math.sin(a) * r - 1, 2, 2);
+  }
+  g.fill();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

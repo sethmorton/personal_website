@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Shape of Inference: ink field</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { position: relative; width: 1080px; height: 1080px; overflow: hidden; }
+  canvas { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+// A field of ink points resting in four basins. One gold point lands and does not radiate: it rewrites the
+// potential. Near points move at once, far regions lag, one basin splits, two lock, one dissolves. The field
+// briefly resolves into the Holmdel horn, lets go, and settles back into the first landscape for the loop.
+const W = 1080, N = 1500, DT = 1 / 120, DUR = 8, STEPS = DUR / DT, PRE = 360;
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+let seed = 1965; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const gauss = () => rnd() + rnd() + rnd() + rnd() - 2;
+
+const PAPER = '#fafaf9';
+const INK = [74, 106, 143], DEEP = [31, 79, 143], GOLD = [230, 170, 50];
+const FLASH = [[226, 59, 42], [40, 91, 181], GOLD, [19, 155, 152]];
+const rgb = (a, b, u) => `rgb(${Math.round(mix(a[0], b[0], u))},${Math.round(mix(a[1], b[1], u))},${Math.round(mix(a[2], b[2], u))})`;
+
+// Timeline (seconds).
+const T = { land: 1.0, flash0: 1.2, flash1: 4.0, horn0: 4.3, horn1: 5.6, ret: 6.0, home: 6.8, end: DUR };
+const G = { x: 880, y: 640 };
+// Gaussian wells: force = k * exp(-r^2 / 2s^2) * (c - p). Landscape 0 is the resting field; landscape 1 is
+// after the gold point lands: A and B shift toward each other and lock, C weakens and spreads, G is new, D
+// is torn between itself and G and bifurcates.
+const W0 = [{ x: 290, y: 330, s: 95, k: 40 }, { x: 720, y: 290, s: 80, k: 40 }, { x: 330, y: 770, s: 110, k: 34 }, { x: 760, y: 740, s: 90, k: 40 }, { x: G.x, y: G.y, s: 105, k: 0 }];
+const W1 = [{ x: 440, y: 380, s: 95, k: 42 }, { x: 590, y: 350, s: 85, k: 42 }, { x: 330, y: 770, s: 260, k: 4 }, { x: 720, y: 760, s: 90, k: 40 }, { x: G.x, y: G.y, s: 105, k: 36 }];
+
+const c = document.getElementById('c'); c.width = c.height = W;
+const g = c.getContext('2d');
+const layer = () => { const l = document.createElement('canvas'); l.width = l.height = W; return l.getContext('2d'); };
+
+// Paper: multiply stipple over warm white, drawn once, used under and over the ink.
+const paper = layer();
+paper.fillStyle = PAPER; paper.fillRect(0, 0, W, W);
+paper.globalCompositeOperation = 'multiply'; paper.fillStyle = '#4a6a8f';
+for (let j = 0; j < W * W * .06; j++) {
+  paper.globalAlpha = (8 + rnd() * 5) / 255;
+  const r = .12 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .6;
+  paper.beginPath(); paper.arc(rnd() * W, rnd() * W, r, 0, Math.PI * 2); paper.fill();
+}
+// Per-point statics. Each point carries its own offset inside the basin, so a well holds a scatter, not a dot.
+const px = new Float32Array(N), py = new Float32Array(N), vx = new Float32Array(N), vy = new Float32Array(N);
+const hx = new Float32Array(N), hy = new Float32Array(N), tx = new Float32Array(N), ty = new Float32Array(N), ox = new Float32Array(N), oy = new Float32Array(N);
+const delay = new Float32Array(N), rad = new Float32Array(N), deep = new Uint8Array(N), flash = new Uint8Array(N), horn = new Uint8Array(N);
+for (let i = 0; i < N; i++) {
+  const w = W0[i % 4];
+  ox[i] = gauss() * w.s * .5; oy[i] = gauss() * w.s * .5;
+  px[i] = w.x + ox[i]; py[i] = w.y + oy[i];
+  rad[i] = 1.5 + 1.5 * rnd(); deep[i] = rnd() < .2; flash[i] = i % 4 === 0 ? 0 : (rnd() * 4) | 0; horn[i] = rnd() < .72;
+}
+
+// Curl noise from a sum of travelling sines, periodic over DUR so the jitter at t=8 equals t=0.
+const NK = [];
+for (let k = 0; k < 6; k++) {
+  const th = rnd() * Math.PI * 2, L = 170 + rnd() * 220, kk = Math.PI * 2 / L;
+  NK.push({ kx: Math.cos(th) * kk, ky: Math.sin(th) * kk, w: Math.PI * 2 / DUR * (1 + (rnd() * 3 | 0)) * (rnd() < .5 ? 1 : -1), ph: rnd() * Math.PI * 2, a: 9 / kk / Math.sqrt(6) });
+}
+function curl(x, y, t, out) {
+  let dx = 0, dy = 0;
+  for (const n of NK) { const cs = n.a * Math.cos(n.kx * x + n.ky * y + n.w * t + n.ph); dx += cs * n.kx; dy += cs * n.ky; }
+  out[0] = dy; out[1] = -dx;
+}
+
+// Delay field: how long the landscape change takes to reach a point, by distance from where the gold lands.
+const delayAt = d => d < 140 ? 0 : mix(.3, .8, ease((d - 140) / 560));
+
+const frames = new Float32Array((STEPS + 1) * N * 2);
+const cv = [0, 0];
+function step(t) {
+  const ret = ease((t - T.ret) / 1.0);
+  const hornW = ease((t - T.horn0) / .55) * (1 - ease((t - T.horn1) / .55));
+  const homeK = 46 * ease((t - T.home) / .8);
+  const landAmp = 1 - .92 * hornW;
+  const noiseAmp = 1 + 1.6 * ease((t - T.horn1) / .4) * (1 - ease((t - T.horn1 - .5) / .5));
+  const damp = Math.exp(-(10 + 6 * hornW + 8 * ease((t - T.home) / .6)) * DT);
+  for (let i = 0; i < N; i++) {
+    let x = px[i], y = py[i], fx = 0, fy = 0;
+    const s = ease((t - T.land - delay[i]) / .35) * (1 - ret);
+    for (let j = 0; j < 5; j++) {
+      const a = W0[j], b = W1[j], k = mix(a.k, b.k, s);
+      if (k === 0) continue;
+      const cx = mix(a.x, b.x, s), cy = mix(a.y, b.y, s), sg = mix(a.s, b.s, s);
+      const dx = cx + ox[i] - x, dy = cy + oy[i] - y, e = k * landAmp * Math.exp(-(dx * dx + dy * dy) / (2 * sg * sg));
+      fx += e * dx; fy += e * dy;
+    }
+    if (horn[i] && hornW > 0) { const kh = 34 * hornW; fx += kh * (tx[i] - x); fy += kh * (ty[i] - y); }
+    if (homeK > 0) { fx += homeK * (hx[i] - x); fy += homeK * (hy[i] - y); }
+    vx[i] = (vx[i] + fx * DT) * damp; vy[i] = (vy[i] + fy * DT) * damp;
+    curl(x, y, t, cv);
+    px[i] = x + (vx[i] + cv[0] * noiseAmp) * DT; py[i] = y + (vy[i] + cv[1] * noiseAmp) * DT;
+  }
+}
+
+// Horn targets: sample dark cells of the low-res plate inside the horn crop, then reduce crossings.
+function hornTargets(img) {
+  const R = 96, m = document.createElement('canvas'); m.width = m.height = R;
+  const mc = m.getContext('2d');
+  mc.drawImage(img, .18 * img.width, .12 * img.height, .82 * img.width, .62 * img.height, 0, 0, R, R);
+  const d = mc.getImageData(0, 0, R, R).data, cells = [];
+  let total = 0;
+  for (let i = 0; i < R * R; i++) {
+    const dark = 1 - (d[i * 4] * .3 + d[i * 4 + 1] * .59 + d[i * 4 + 2] * .11) / 255;
+    if (dark > .42) { total += dark * dark; cells.push({ x: i % R, y: (i / R) | 0, w: total }); }
+  }
+  const box = { x: 160, w: 760, y: 215, h: 760 * .62 / .82 };
+  const ids = []; for (let i = 0; i < N; i++) if (horn[i]) ids.push(i);
+  const tg = ids.map(() => {
+    const u = rnd() * total; let lo = 0, hi = cells.length - 1;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (cells[mid].w < u) lo = mid + 1; else hi = mid; }
+    const cl = cells[lo]; return [box.x + (cl.x + rnd()) / R * box.w, box.y + (cl.y + rnd()) / R * box.h];
+  });
+  ids.sort((a, b) => px[a] - px[b]); tg.sort((a, b) => a[0] - b[0]);
+  const d2 = (i, p) => (px[i] - p[0]) ** 2 + (py[i] - p[1]) ** 2;
+  for (let n = 0; n < 400000; n++) {
+    const a = (rnd() * ids.length) | 0, b = (rnd() * ids.length) | 0;
+    if (d2(ids[a], tg[b]) + d2(ids[b], tg[a]) < d2(ids[a], tg[a]) + d2(ids[b], tg[b])) { const q = tg[a]; tg[a] = tg[b]; tg[b] = q; }
+  }
+  ids.forEach((i, n) => { tx[i] = tg[n][0]; ty[i] = tg[n][1]; });
+}
+
+function simulate(img) {
+  for (let n = -PRE; n < 0; n++) step(n * DT);
+  hx.set(px); hy.set(py);
+  let hornSet = false;
+  for (let n = 0; n <= STEPS; n++) {
+    const t = n * DT;
+    frames.set(px, n * N * 2); frames.set(py, n * N * 2 + N);
+    if (Math.abs(t - T.land) < DT / 2) for (let i = 0; i < N; i++) delay[i] = delayAt(Math.hypot(px[i] - G.x, py[i] - G.y));
+    if (!hornSet && t >= T.horn0 - .1) { hornTargets(img); hornSet = true; }
+    step(t);
+  }
+}
+
+const dot = (ctx, x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
+const ink = layer();
+function drawField(t) {
+  const f = Math.min(STEPS - 1, t / DT), n = Math.floor(f), u = f - n;
+  const o0 = n * N * 2, o1 = (n + 1) * N * 2, op = Math.max(0, n - 3) * N * 2;
+  const fw = ease((t - T.flash0) / .3) * (1 - ease((t - T.flash1 + .5) / .5));
+  ink.clearRect(0, 0, W, W);
+  for (let pass = 0; pass < 2; pass++) {
+    ink.globalAlpha = pass ? 1 : .25;
+    let last = null;
+    for (let i = 0; i < N; i++) {
+      const x = mix(frames[o0 + i], frames[o1 + i], u), y = mix(frames[o0 + N + i], frames[o1 + N + i], u);
+      let base = deep[i] ? DEEP : INK, hot = 0;
+      if (fw > 0) {
+        const sp = Math.hypot(frames[o0 + i] - frames[op + i], frames[o0 + N + i] - frames[op + N + i]) / (3 * DT);
+        hot = clamp((sp - 190) / 160) * fw;
+      }
+      const style = hot > 0 ? rgb(base, FLASH[flash[i]], hot) : (deep[i] ? 'rgb(31,79,143)' : 'rgb(74,106,143)');
+      if (style !== last) ink.fillStyle = last = style;
+      dot(ink, x, y, pass ? rad[i] : rad[i] * 1.6);
+    }
+  }
+  // The gold point condenses out of the paper and lands at T.land; it sinks back before the loop closes.
+  const arrive = ease((t - T.land + .6) / .6), leave = ease((t - 7.0) / .6);
+  if (arrive > 0 && leave < 1) {
+    const r = mix(34, 5.5, arrive) * mix(1, .3, leave), a = mix(.1, 1, arrive) * (1 - leave);
+    ink.fillStyle = rgb(GOLD, GOLD, 0);
+    const gx = G.x + 90 * (1 - arrive), gy = G.y - 120 * (1 - arrive);
+    ink.globalAlpha = a * .3; dot(ink, gx, gy, r * 1.6);
+    ink.globalAlpha = a; dot(ink, gx, gy, r);
+  }
+  ink.globalAlpha = 1;
+}
+
+window.render = t => {
+  t = Math.max(0, Math.min(DUR - 1e-4, t));
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+  g.drawImage(paper.canvas, 0, 0);
+  drawField(t);
+  g.drawImage(ink.canvas, 0, 0);
+  g.globalCompositeOperation = 'multiply'; g.globalAlpha = .55; g.drawImage(paper.canvas, 0, 0);
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+};
+
+window.ready = (async () => {
+  const img = new Image(); img.src = '/teaser/plates/horn_ink.png';
+  await img.decode();
+  simulate(img);
+  const frozen = new URLSearchParams(location.search).get('t');
+  render(frozen === null ? 0 : Number(frozen) || 0);
+  return { duration: DUR, points: N };
+})();
+</script>
+</body>
+</html>

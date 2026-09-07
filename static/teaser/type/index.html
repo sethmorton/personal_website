@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Shape of Inference: type is a body</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { position: relative; width: 1080px; height: 1080px; overflow: hidden; }
+  canvas, .card, #fade { position: absolute; left: 0; top: 0; }
+  .card { inset: 0; display: grid; place-content: center; text-align: center; opacity: 0; }
+  h1 { margin: 0; font-family: 'Literata', Georgia, serif; font-weight: 400; font-optical-sizing: auto; font-size: 64px; line-height: 1.1; color: #1f4f8f; }
+  .card p { margin: 30px 0 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 18px; letter-spacing: 0.3em; text-indent: 0.3em; color: #1f4f8f; opacity: 0; }
+  #fade { inset: 0; background: #fafaf9; opacity: 0; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="card" id="title"><h1>The Shape of Inference</h1><p>sethmorton.com</p></div>
+<div id="fade"></div>
+<script>
+// Type is a body. Every glyph is a cloud of ink grains; words hang on springs. One red sentence lands and the
+// paragraph above it physically responds: a word collapses to dust, one is pulled to the red, one pales and sinks.
+const W = 1080, CX = W / 2;
+const $ = id => document.getElementById(id);
+const clamp = x => Math.max(0, Math.min(1, x));
+const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const mix = (a, b, u) => a + (b - a) * u;
+let seed = 1965; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const spring = age => { const a = Math.max(0, age); return mix(1 - Math.exp(-3.2 * a) * (Math.cos(4.6 * a) + 3.2 / 4.6 * Math.sin(4.6 * a)), 1, ease((a - 2) / .8)); };
+
+const T = { red: 3.5, land: 4.35, settle: 8.9, title: 9.4, url: 10.0, fade: 11.3, end: 12.0 };
+window.DURATION = T.end;
+const F = 54, LH = 68, MAXW = 980, PAPER = '#fafaf9';
+const INK = [31, 79, 143], COBALT = [40, 91, 181], RED = [226, 59, 42], GOLD = [230, 170, 50], PALE = [182, 194, 210], PARA_TXT = [110, 132, 168];
+const PARA = ['They taped over the riveted seams.', 'They checked all the cables.', 'They re-oriented the antenna. Nothing.', 'Then they noticed the pigeons.', 'The noise persisted.'];
+const REDS = 'The hiss turned out to be the cosmic microwave background.', CAP = 'Every failed entry became evidence.';
+
+const c = $('c'); c.width = c.height = W;
+const g = c.getContext('2d');
+const layer = () => { const l = document.createElement('canvas'); l.width = l.height = W; return l.getContext('2d', { willReadFrequently: true }); };
+
+const paper = layer();
+paper.fillStyle = PAPER; paper.fillRect(0, 0, W, W);
+paper.globalCompositeOperation = 'multiply'; paper.fillStyle = '#4a6a8f';
+for (let j = 0; j < W * W * .057; j++) {
+  paper.globalAlpha = (8 + rnd() * 4) / 255;
+  const r = .12 + Math.abs(rnd() + rnd() + rnd() - 1.5) * .55;
+  paper.beginPath(); paper.arc(rnd() * W, rnd() * W, r, 0, Math.PI * 2); paper.fill();
+}
+
+// Fonts first: the layout and glyph raster below measure real Literata.
+window.ready = (async () => {
+await Promise.all([document.fonts.ready, document.fonts.load('400 54px Literata'), document.fonts.load('400 40px Literata'), document.fonts.load('400 64px Literata'), document.fonts.load('18px "IBM Plex Mono"')]);
+// Layout: sentence per line, centred, wrapped only if a sentence overflows.
+const scratch = layer();
+const font = size => `400 ${size}px Literata`;
+function wrap(text, size) {
+  scratch.font = font(size);
+  const lines = [[]];
+  for (const word of text.split(' ')) {
+    const line = lines[lines.length - 1], trial = [...line, word].join(' ');
+    if (line.length && scratch.measureText(trial).width > MAXW) lines.push([word]); else line.push(word);
+  }
+  return lines.map(words => ({ words, width: scratch.measureText(words.join(' ')).width, space: scratch.measureText(' ').width, size }));
+}
+const words = [], lines = [];
+function place(text, size, y, role, lineHeight) {
+  for (const line of wrap(text, size)) {
+    let x = CX - line.width / 2;
+    const L = { y, words: [], size };
+    for (const w of line.words) {
+      const width = scratch.measureText(w).width;
+      words.push({ text: w, x, y, w: width, size, role: role === 'para' ? { 'Nothing.': 'dust', noise: 'noise', 'pigeons.': 'pigeons' }[w] ?? 'para' : role, line: L, dx: 0 });
+      L.words.push(words[words.length - 1]);
+      x += width + line.space;
+    }
+    lines.push(L); y += lineHeight;
+  }
+  return y;
+}
+let y0 = 270;
+for (const s of PARA) y0 = place(s, F, y0, 'para', LH);
+const redTop = y0 + 30;
+const yRed = place(REDS, F, redTop, 'red', LH);
+const yNoise = yRed - LH + 56, yCap = yNoise + 66;
+place(CAP, 40, yCap, 'cap', 56);
+const background = words.find(w => w.text === 'background.'), noise = words.find(w => w.role === 'noise');
+// The gold point: the full stop that ends the red sentence.
+scratch.font = font(F);
+const period = { x: background.x + scratch.measureText('background').width + 3, y: background.y - 4 };
+// After-layout: emptied lines re-centre, the paragraph drops to close the hole "Nothing." leaves and sags toward
+// the red weight, noise lands under "background". Vertical moves belong to lines, horizontal ones to words.
+const dustLine = lines.findIndex(L => L.words.every(w => w.role === 'dust'));
+lines.forEach((L, i) => {
+  L.dy = L.words[0].role === 'red' || L.words[0].role === 'cap' || i === dustLine ? 0 : i < dustLine ? LH / 2 : -LH / 2;
+  L.delay = Math.hypot(CX - period.x, L.y - period.y) / 2200 + .3;
+  const gone = L.words.filter(w => w.role === 'dust' || w.role === 'noise');
+  if (!gone.length || gone.length === L.words.length) return;
+  const removed = gone.reduce((s, w) => s + w.w + wrap(' ', F)[0].space, 0);
+  for (const w of L.words) w.dx = w === gone[0] ? 0 : (w.x < gone[0].x ? removed / 2 : -removed / 2);
+});
+noise.tx = background.x + background.w / 2 - noise.w * .82 / 2 - noise.x; noise.ty = yNoise - noise.y;
+
+// Grains, sampled from each word's rasterised glyphs.
+let ink = 0;
+const raster = words.map(w => {
+  scratch.clearRect(0, 0, W, W); scratch.font = font(w.size); scratch.fillStyle = '#000';
+  scratch.fillText(w.text, 20, 100);
+  const bw = Math.ceil(w.w) + 40, bh = Math.ceil(w.size * 1.4), px = scratch.getImageData(0, 100 - w.size, bw, bh).data, pts = [];
+  for (let i = 3; i < px.length; i += 4) if (px[i] > 90) pts.push(i >> 2);
+  ink += pts.length; return { pts, bw, top: 100 - w.size };
+});
+const P = Math.min(.55, 56000 / ink), N = raster.reduce((s, r) => s + Math.round(r.pts.length * P), 0);
+const ox = new Float32Array(N), oy = new Float32Array(N), rad = new Float32Array(N), alp = new Float32Array(N);
+const jf = new Float32Array(N), jp = new Float32Array(N), sx = new Float32Array(N), sy = new Float32Array(N);
+const vx = new Float32Array(N), vy = new Float32Array(N), jit = new Float32Array(N), gold = new Uint8Array(N);
+let n = 0;
+words.forEach((w, k) => {
+  const r = raster[k]; w.g0 = n;
+  for (let j = 0; j < r.pts.length; j++) {
+    if (rnd() > P) continue;
+    const p = r.pts[j];
+    ox[n] = (p % r.bw) - 20 + rnd() - .5; oy[n] = ((p / r.bw) | 0) + r.top - 100 + rnd() - .5;
+    rad[n] = .85 + rnd() * .55; alp[n] = .6 + rnd() * .4;
+    jf[n] = 4 + rnd() * 7; jp[n] = rnd() * Math.PI * 2; jit[n] = rnd();
+    const a = rnd() * Math.PI * 2, s = 30 + rnd() * 90;
+    vx[n] = Math.cos(a) * s; vy[n] = Math.sin(a) * s - 60;
+    if (w.role === 'cap') { sx[n] = 70 + rnd() * 940 - w.x; sy[n] = yCap + 70 + (rnd() + rnd() + rnd() - 1.5) * 110 - w.y; }
+    else { sx[n] = (rnd() - .5) * 90; sy[n] = (rnd() - .5) * 50 + 20; }
+    gold[n] = w === background && ox[n] + w.x > period.x - 2;
+    n++;
+  }
+  w.g1 = n;
+});
+// Red reveal order: distance along the written sentence.
+const redWords = words.filter(w => w.role === 'red');
+let cum = 0; for (const L of lines) if (L.words[0].role === 'red') { for (const w of L.words) { w.cum = cum + w.x - L.words[0].x; } cum += L.words[L.words.length - 1].x + L.words[L.words.length - 1].w - L.words[0].x; }
+const redSpeed = cum / (T.land - T.red - .05);
+const born = words.map((w, i) => w.role === 'para' || w.role === 'dust' || w.role === 'noise' || w.role === 'pigeons' ? .05 + i * .068 : 0);
+const capLeft = words.find(w => w.role === 'cap').x;
+
+// Colour table: channel x 9 steps. 0 ink→cobalt, 1 ink→pale, 2 red, 3 gold, 4 pale-ink caption.
+const STEPS = 9, rgb = (a, b, u) => `rgb(${mix(a[0], b[0], u) | 0},${mix(a[1], b[1], u) | 0},${mix(a[2], b[2], u) | 0})`;
+const styles = [[INK, COBALT], [INK, PALE], [RED, RED], [GOLD, GOLD], [PARA_TXT, PARA_TXT]].map(([a, b]) => Array.from({ length: STEPS }, (_, s) => rgb(a, b, s / (STEPS - 1))));
+
+const grains = layer();
+function dot(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+// Word state at t: position, alpha, collapse k, dust age, recolour u, edge positions for the springs.
+function state(w, i, t) {
+  const age = t - T.land - Math.hypot(w.x + w.w / 2 - period.x, w.y - period.y) / 2200;
+  const s = spring(age), sway = 1.6 * Math.sin(t * 2.2 + w.x * .004 + w.y * .01);
+  let x = w.x, y = w.y + sway, alpha = 1, k = 1, dust = -1, u = 0, pale = 0, scale = 1;
+  if (w.role === 'noise') { x += noise.tx * spring(age - .1); y += noise.ty * s; u = clamp(s); scale = mix(1, .82, clamp(s)); }
+  else if (w.role !== 'red' && w.role !== 'cap') {
+    const la = Math.max(0, t - T.land - w.line.delay) * 5.5;
+    x += w.dx * spring(age - .3); y += w.line.dy * (1 - Math.exp(-la) * (1 + la));
+    if (w.role === 'dust') { k = 1 - .6 * ease(age / .25); dust = age - .2; alpha = 1 - ease(age / .25) * .45; }
+    if (w.role === 'pigeons') { const e = ease(age / 1.1); y += 28 * e; x += 18 * e; pale = e * .75; alpha = 1 - e * .35; }
+  }
+  const b = ease((t - born[i]) / .3);
+  if (w.role !== 'red' && w.role !== 'cap') alpha *= b;
+  return { x, y, alpha, k, dust, u, pale, scale, age, b, left: x + (1 - k) * w.w / 2, right: x + w.w - (1 - k) * w.w / 2 };
+}
+function drawWords(t, ctx) {
+  ctx.clearRect(0, 0, W, W);
+  const states = words.map((w, i) => state(w, i, t));
+  // Springs between neighbours: faint at rest, bright as they stretch, gone once snapped.
+  ctx.fillStyle = rgb(PALE, INK, .25);
+  for (const L of lines) for (let j = 0; j + 1 < L.words.length && L.words[0].role !== 'red' && L.words[0].role !== 'cap'; j++) {
+    const a = L.words[j], b = L.words[j + 1], sa = states[words.indexOf(a)], sb = states[words.indexOf(b)];
+    const rest = b.x - (a.x + a.w), gap = Math.hypot(sb.left - sa.right, sb.y - sa.y), stretch = gap - rest;
+    const alpha = Math.min(sa.alpha, sb.alpha) * (stretch > 170 ? 0 : .22 + clamp(stretch / 60) * .6);
+    if (alpha <= 0.01 || sb.dust > .5) continue;
+    const ya = sa.y - a.size * .3, yb = sb.y - b.size * .3, cnt = Math.ceil(gap / 3.2);
+    ctx.globalAlpha = alpha;
+    for (let q = 0; q <= cnt; q++) { const v = q / cnt; dot(ctx, mix(sa.right + 2, sb.left - 2, v), mix(ya, yb, v) + Math.sin(v * 31 + t * 3) * .8, .9 + clamp(stretch / 60) * .5); }
+  }
+  let last = null;
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i], st = states[i];
+    if (st.alpha <= 0 && w.role !== 'red' && w.role !== 'cap') continue;
+    const ch = w.role === 'red' ? 2 : w.role === 'cap' ? 4 : w.role === 'noise' ? 0 : 1;
+    for (let q = w.g0; q < w.g1; q++) {
+      const jx = .45 * Math.sin(jf[q] * t + jp[q]), jy = .3 * Math.cos(jf[q] * .8 * t + jp[q]);
+      const k = w.role === 'dust' ? 1 - .65 * ease((st.age - jit[q] * .12) / .22) : st.k;
+      let x = st.x + ox[q] * k * st.scale + jx, y = st.y + oy[q] * k * st.scale + jy, a = alp[q] * st.alpha, r = rad[q], step = 0;
+      if (w.role === 'red') {
+        const reveal = gold[q] ? T.land : T.red + (w.cum + ox[q]) / redSpeed, e = ease((t - reveal) / .12);
+        if (e <= 0) continue;
+        a *= e; x += 3 * (1 - e); y += 9 * (1 - e); r *= mix(1.8, 1, e);
+      } else if (w.role === 'cap') {
+        // Loose grains shaken onto the paper by the landing, then gathered into the caption.
+        const fall = ease((t - T.land) / .6);
+        if (fall <= 0) continue;
+        const arrive = 5.05 + (w.x + ox[q] - capLeft) / 700 * .75 + jit[q] * .3, e = ease((t - arrive) / .55);
+        x = mix(w.x + sx[q], x, e) - (1 - e) * e * 40 * Math.sin(jit[q] * 6); y = mix(w.y + sy[q] - 40 * (1 - fall), y, e) + 6 * Math.sin(t * .7 + jit[q] * 9) * (1 - e);
+        a = mix(fall * (.13 + .07 * Math.sin(t * 1.3 + jit[q] * 20)), a, e); r = mix(rad[q] * 1.1, rad[q], e);
+      } else {
+        if (st.b < 1) { x = mix(x + sx[q], x, st.b); y = mix(y + sy[q], y, st.b); }
+        if (k < 1) y += 16 * (1 - k) * jit[q];
+        if (st.dust > 0) {
+          const p = st.dust;
+          x += vx[q] * p + 420 * p * p; y += vy[q] * p + 90 * p * p * Math.sin(jit[q] * 7);
+          a *= 1 - ease(p / .9); if (a <= 0.005) continue;
+        }
+        if (w.role === 'noise') step = Math.round(clamp(st.u * 1.4 - jit[q] * .4) * (STEPS - 1));
+        else if (w.role === 'pigeons') { step = Math.round(clamp(st.pale * 1.3 - jit[q] * .3) * (STEPS - 1)); y += st.pale * 14 * jit[q]; }
+      }
+      const style = styles[gold[q] ? 3 : ch][step];
+      if (style !== last) ctx.fillStyle = last = style;
+      ctx.globalAlpha = a;
+      dot(ctx, x, y, r);
+    }
+  }
+  // The gold full stop lands: the instant everything above responds to.
+  const land = ease((t - T.land + .25) / .35);
+  if (land > 0 && t < T.land + .5) {
+    ctx.fillStyle = rgb(GOLD, GOLD, 0); ctx.globalAlpha = land * (1 - ease((t - T.land) / .45));
+    dot(ctx, period.x + 6, period.y, mix(22, 5, land));
+  }
+  ctx.globalAlpha = 1;
+}
+window.render = t => {
+  t = Math.max(0, t);
+  g.globalAlpha = 1; g.drawImage(paper.canvas, 0, 0);
+  const page = 1 - ease((t - T.settle) / .8);
+  if (page > 0) {
+    drawWords(t, grains);
+    g.globalAlpha = page * .45; g.filter = 'blur(1.3px)'; g.drawImage(grains.canvas, 0, 0); g.filter = 'none';
+    g.globalAlpha = page; g.drawImage(grains.canvas, 0, 0);
+    g.globalAlpha = 1;
+  }
+  const title = $('title'), tIn = ease((t - T.title) / .7);
+  title.style.opacity = tIn.toFixed(3);
+  title.style.transform = `translateY(${(6 * (1 - tIn)).toFixed(2)}px)`;
+  title.lastElementChild.style.opacity = ease((t - T.url) / .5).toFixed(3);
+  $('fade').style.opacity = ease((t - T.fade) / (T.end - T.fade)).toFixed(3);
+};
+const frozen = new URLSearchParams(location.search).get('t');
+render(frozen === null ? 0 : Number(frozen) || 0);
+return { duration: T.end, grains: N, fonts: [document.fonts.check('400 54px Literata'), document.fonts.check('18px "IBM Plex Mono"')] };
+})();
+</script>
+</body>
+</html>

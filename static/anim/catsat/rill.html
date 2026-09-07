@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; background: #fafaf9; }
+  body { display: grid; place-items: center; width: 640px; height: 400px; overflow: hidden; }
+  .stage { position: relative; width: 640px; height: 400px; }
+  canvas { position: absolute; left: 0; top: 0; width: 640px; height: 400px; display: block; }
+  .cap { display: none; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+<canvas id="o"></canvas>
+<div class="cap">Earlier representations help build the current one.</div>
+</div>
+<script src="../lib/brush.js"></script>
+<script>
+// INK RILL ON WET PAPER. Two layers: the paper (p5.brush, WebGL, accumulating: every mark ever made stays) and the water
+// (canvas 2D, cleared every frame: hairline dashes riding the rill). The paper is a deterministic schedule of paint events
+// in cycle time; a frozen frame replays every event up to t. The water is a pure function of t.
+const W = 640, H = 400, DPR = 2, CYCLE = 12, FADE_AT = 10.8;
+const stage = document.getElementById('stage');
+const c = brush.createCanvas(W, H, { pixelDensity: DPR, parent: stage, id: 'c' }); stage.insertBefore(c, stage.firstChild);
+const o = document.getElementById('o'); o.width = W * DPR; o.height = H * DPR; const g = o.getContext('2d'); g.scale(DPR, DPR);
+let seed = 23; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v, smooth = u => u * u * (3 - 2 * u), lerp = (a, b, u) => a + (b - a) * u;
+const INK = '#4a6a8f', DEEP = '#1f4f8f', SKY = '#6e9ece', PALE = '#b6c2d2', WARM = '#c96c3e', PAPER = '#fafaf9';
+
+// ---- the bed: a loose calligraphic line across the page, resampled at equal arc length ----
+const CP = [[-40, 236], [-20, 232], [50, 214], [100, 198], [148, 202], [200, 218], [246, 238], [292, 224], [336, 196], [386, 172], [434, 176], [476, 198], [522, 210], [570, 232], [620, 214], [665, 190], [700, 176]];
+const NS = 480, px = new Float32Array(NS), py = new Float32Array(NS), nx = new Float32Array(NS), ny = new Float32Array(NS); let L = 0;
+{
+  const fx = [], fy = [], fs = [0];
+  for (let i = 1; i < CP.length - 2; i++) for (let k = 0; k < 24; k++) {           // Catmull-Rom
+    const u = k / 24, [p0, p1, p2, p3] = [CP[i - 1], CP[i], CP[i + 1], CP[i + 2]];
+    const cr = (a, b, cc, d) => 0.5 * ((2 * b) + (-a + cc) * u + (2 * a - 5 * b + 4 * cc - d) * u * u + (-a + 3 * b - 3 * cc + d) * u * u * u);
+    fx.push(cr(p0[0], p1[0], p2[0], p3[0])); fy.push(cr(p0[1], p1[1], p2[1], p3[1]));
+    if (fx.length > 1) fs.push(fs[fs.length - 1] + Math.hypot(fx[fx.length - 1] - fx[fx.length - 2], fy[fy.length - 1] - fy[fy.length - 2]));
+  }
+  L = fs[fs.length - 1];
+  for (let i = 0, j = 0; i < NS; i++) {
+    const s = i / (NS - 1) * L; while (j < fs.length - 2 && fs[j + 1] < s) j++;
+    const u = (s - fs[j]) / (fs[j + 1] - fs[j] || 1), j0 = Math.max(0, j - 2), j1 = Math.min(fx.length - 1, j + 3);
+    px[i] = fx[j] + (fx[j + 1] - fx[j]) * u; py[i] = fy[j] + (fy[j + 1] - fy[j]) * u;
+    const tx = fx[j1] - fx[j0], ty = fy[j1] - fy[j0], tl = Math.hypot(tx, ty) || 1; nx[i] = -ty / tl; ny[i] = tx / tl;
+  }
+}
+let AX = 0, AY = 0;
+function at(s, lat) {                                   // point at arc length s, offset lat along the normal
+  const f = clamp(s / L) * (NS - 1); let i = f | 0; if (i > NS - 2) i = NS - 2; const u = f - i;
+  AX = px[i] + (px[i + 1] - px[i]) * u + (nx[i] + (nx[i + 1] - nx[i]) * u) * lat;
+  AY = py[i] + (py[i + 1] - py[i]) * u + (ny[i] + (ny[i + 1] - ny[i]) * u) * lat;
+}
+const sOfX = x => { let lo = 0, hi = L; for (let k = 0; k < 30; k++) { const m = (lo + hi) / 2; at(m, 0); if (AX < x) lo = m; else hi = m; } return lo; };
+
+// ---- the pools: where the rill widens. Each is a bump in the bed's half width, a wash blob and a pen-lettered word ----
+const WORDS = ['THE', 'CAT', 'SAT'], FONT = '700 23px Georgia, serif';
+const pools = [[148, 50, 24], [336, 54, 26], [522, 58, 29]].map(([x, rx, ry], k) => ({ k, text: WORDS[k], s: sOfX(x), rx, ry }));
+const bump = u => u > -1 && u < 1 ? Math.cos(u * Math.PI / 2) ** 2 : 0;
+const bed = s => { let w = 1.3; for (const p of pools) w += (p.ry - 1.3) * bump((s - p.s) / (p.rx * 1.05)); return w; };
+const THE = pools[0], CAT = pools[1], SAT = pools[2];
+const S_END = L - 60, S_CATOUT = CAT.s + CAT.rx * 0.55, S_SATIN = SAT.s - SAT.rx * 0.95;
+
+// front: where the ink has reached, piecewise linear through the pools
+const KEY_T = [0, 0.9, 2.8, 4.9, 6.1], KEY_S = [0, THE.s, CAT.s, SAT.s, L];
+const front = t => { if (t >= KEY_T[4]) return L; let i = 0; while (t > KEY_T[i + 1]) i++; return lerp(KEY_S[i], KEY_S[i + 1], (t - KEY_T[i]) / (KEY_T[i + 1] - KEY_T[i])); };
+const T_POOL = pools.map(p => { for (let i = 0; i < 4; i++) if (p.s <= KEY_S[i + 1]) return lerp(KEY_T[i], KEY_T[i + 1], (p.s - KEY_S[i]) / (KEY_S[i + 1] - KEY_S[i])); });
+const T_WARM = T_POOL[1] + 1.0, T_SETTLE = 8.4;         // the warm thread leaves CAT once its lettering is down; by T_SETTLE it has settled into SAT
+
+// a hairline's lateral profile: fans across the bed in pools, parting around the lettering; hugs the centre between them
+function profile(k) { const a = 0.35 + rnd() * 0.55, b = (rnd() - 0.5) * 0.6, f1 = 0.005 + rnd() * 0.01, f2 = 0.02 + rnd() * 0.03, q1 = rnd() * 6.283, q2 = rnd() * 6.283, q3 = rnd() * 6.283, sg = rnd() < 0.5 ? -1 : 1;
+  return s => { const w = bed(s), u = Math.max(-1, Math.min(1, sg * a * Math.sin(s * f1 + q1) + b * Math.sin(s * f2 + q2))), open = clamp((w - 4) / 14);
+    return w * 0.88 * (open * 0.42 * u / (Math.abs(u) + 0.12) + (1 - open * 0.42) * u) + 0.55 * Math.sin(s * 0.17 + q3); }; }
+// the eddy in SAT's pool: the warm thread swirls once around the lettering, tightening, and settles right of centre
+const SWIRL_N = 64, swx = new Float32Array(SWIRL_N), swy = new Float32Array(SWIRL_N);
+for (let i = 0; i < SWIRL_N; i++) { const u = i / (SWIRL_N - 1), th = Math.PI + u * Math.PI * 2.3, ra = lerp(0.9, 0.3, u) * SAT.rx, rb = lerp(0.72, 0.26, u) * SAT.ry;
+  at(SAT.s + ra * Math.cos(th) + 4 * u, rb * Math.sin(th)); swx[i] = AX; swy[i] = AY; }
+const swirlAt = u => { const f = clamp(u) * (SWIRL_N - 1), i = Math.min(SWIRL_N - 2, f | 0), v = f - i; AX = lerp(swx[i], swx[i + 1], v); AY = lerp(swy[i], swy[i + 1], v); };
+let SWL = 0; for (let i = 1; i < SWIRL_N; i++) SWL += Math.hypot(swx[i] - swx[i - 1], swy[i] - swy[i - 1]);
+
+// ---- the pen lettering: glyph masks rasterised once, then read as short horizontal rotring strokes ----
+const off = document.createElement('canvas'), og = off.getContext('2d');
+for (const p of pools) {
+  at(p.s, 0); const cx = AX, cy = AY; og.font = FONT; const tw = og.measureText(p.text).width, PAD = 4, GW = Math.ceil(tw) + PAD * 2, GH = 26;
+  off.width = GW * 2; off.height = GH * 2; og.scale(2, 2); og.font = FONT; og.fillStyle = '#000'; og.fillText(p.text, PAD, 20); og.setTransform(1, 0, 0, 1, 0, 0);
+  const a = og.getImageData(0, 0, GW * 2, GH * 2).data, ox = cx - tw / 2 - PAD, oy = cy - 12.5, runs = [];
+  for (let j = 1; j < GH * 2; j += 2.6) {                                          // rows 1.3px apart, in raster cells
+    const row = j | 0; let x0 = -1;
+    for (let i = 0; i <= GW * 2; i++) { const on = i < GW * 2 && a[(row * GW * 2 + i) * 4 + 3] > 120;
+      if (on && x0 < 0) x0 = i; else if (!on && x0 >= 0) { if (i - x0 >= 2) runs.push([ox + x0 / 2, oy + j / 2, ox + i / 2]); x0 = -1; } }
+  }
+  runs.sort((u, v) => u[0] - v[0]); p.runs = runs; p.cx = cx; p.cy = cy;
+}
+
+// ---- the paint schedule: everything the paper ever receives, as (time, fn) events replayed in order ----
+const ev = [];
+const add = (t, fn) => ev.push({ t, fn });
+function hairline(s0, s1, lat, color, name, wt, press) {  // a bed-following stroke between two arc lengths
+  const n = Math.max(3, Math.round((s1 - s0) / 3.2)), pts = [];
+  for (let i = 0; i <= n; i++) { const s = lerp(s0, s1, i / n); at(s, lat(s)); pts.push([AX, AY, press ? press(s) : 1]); }
+  brush.set(name, color, wt); brush.spline(pts, 0.35);
+}
+const shade = (hex, u) => {                              // mix a palette colour toward paper by u
+  const r = parseInt(hex.slice(1, 3), 16), gg = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  return `rgb(${r + (250 - r) * u | 0},${gg + (250 - gg) * u | 0},${b + (249 - b) * u | 0})`;
+};
+// the fresh line behind the front, laid down a few hairlines at a time; then re-inked upstream so the older water darkens
+for (let t = 0.06; t < 10.6; t += 0.09) {
+  const s1 = front(t), s0 = front(t - 0.09), k = ev.length;
+  if (s1 > s0 + 1) { const lat = profile(k), q = rnd(); add(t, () => hairline(Math.max(0, s0 - 6), Math.min(s1 + 2, S_END + 40), lat, shade(SKY, 0.15), 'pen', 0.55, s => 0.6 + 0.5 * Math.sin(s * 0.03 + q))); }
+  for (let r = 0; r < 2; r++) {                                                    // two short re-inks somewhere upstream of the front
+    const len = 40 + rnd() * 90, a = rnd() * Math.max(1, Math.min(s1, S_END + 40) - len), lat = profile(k + r + 1), q = rnd() * 6.283, dark = rnd();
+    add(t + 0.03 * r, () => hairline(a, a + len, lat, shade(dark < 0.3 ? DEEP : INK, 0.2 + rnd() * 0.4), dark < 0.5 ? 'rotring' : 'pen', 0.36, s => 0.5 + 0.5 * Math.sin(s * 0.04 + q)));
+  }
+}
+// the pools bloom: three fills growing outward, wet edges bleeding into the paper; then the lettering, left to right
+function blob(p, scale, wob) { const pts = [], n = 28; for (let i = 0; i < n; i++) { const th = i / n * 6.283, w = 1 + wob * Math.sin(th * 3 + p.k) + wob * 0.6 * Math.sin(th * 5 + 2 * p.k);
+  at(p.s + p.rx * scale * Math.cos(th) * w, p.ry * scale * Math.sin(th) * w); pts.push([AX, AY]); } return pts; }
+for (const p of pools) {
+  const t0 = T_POOL[p.k], layers = [[0.05, 0.55, 95, 0.14], [0.25, 0.68, 95, 0.16], [0.5, 0.8, 90, 0.18], [0.8, 0.92, 85, 0.22], [1.15, 1.04, 75, 0.26], [1.6, 1.16, 65, 0.3]];
+  for (const [dt, sc, op, bl] of layers) { const pts = blob(p, sc, 0.09 + rnd() * 0.05);
+    add(t0 + dt, () => { brush.noStroke(); brush.fill(sc > 1.1 ? PALE : SKY, op); brush.fillBleed(bl, 'out'); brush.fillTexture(0.55, 0.35); brush.polygon(pts); brush.noFill(); }); }
+  for (let pass = 0; pass < 2; pass++) p.runs.forEach((r, i) => add(t0 + 0.45 + 0.5 * pass + 0.85 * i / p.runs.length, () => { brush.set('rotring', DEEP, 0.6); brush.line(r[0] + (rnd() - 0.5) * 0.4, r[1] + (rnd() - 0.5) * 0.4, r[2] + (rnd() - 0.5) * 0.4, r[1] + (rnd() - 0.5) * 0.4); }));
+}
+// the warm thread: leaves CAT's pool, wavers down the rill, spills into SAT, swirls once and settles into the wash
+for (let t = T_WARM, k = 0; t < 8.6; t += 0.16, k++) {
+  const lat = profile(400 + k), reach = t, q = rnd() * 6.283;
+  add(t, () => { const s1 = Math.min(front(reach) - 4, S_SATIN); if (s1 <= S_CATOUT + 8) return;
+    hairline(S_CATOUT, s1, s => lat(s) * 0.55 * clamp((S_SATIN - s) / 30), shade(WARM, 0.1 + 0.3 * rnd()), 'pen', 0.45, s => 0.55 + 0.45 * Math.sin(s * 0.05 + q)); });
+  if (t > T_WARM + 1.1 && k % 2 === 0) { const uEnd = clamp((t - T_WARM - 1.1) / 2.2), wob = rnd() * 6.283, sc = 0.84 + rnd() * 0.28, ox = (rnd() - 0.5) * 6, oy = (rnd() - 0.5) * 4;
+    add(t + 0.05, () => { const pts = []; for (let i = 0; i <= 40; i++) { const u = i / 40 * uEnd; swirlAt(u); pts.push([SAT.cx + (AX - SAT.cx) * sc + ox + 0.8 * Math.sin(u * 19 + wob), SAT.cy + (AY - SAT.cy) * sc + oy + 0.8 * Math.cos(u * 23 + wob), 0.5 + 0.5 * Math.sin(u * 9 + wob)]); }
+      if (pts.length > 2 && uEnd > 0.02) { brush.set('pen', shade(WARM, 0.1 + 0.3 * rnd()), 0.5); brush.spline(pts, 0.4); } }); }
+}
+for (const [dt, sc, op, cx] of [[6.6, 0.36, 105, -4], [7.0, 0.42, 105, -3], [7.5, 0.5, 100, -2], [8.0, 0.56, 95, 1], [8.5, 0.63, 90, 2], [9.1, 0.7, 80, 0]]) {
+  const p = { k: 3, s: SAT.s + cx, rx: SAT.rx, ry: SAT.ry }, pts = blob(p, sc, 0.14);
+  add(dt, () => { brush.noStroke(); brush.fill(WARM, op); brush.fillBleed(0.35, 'out'); brush.fillTexture(0.7, 0.4); brush.polygon(pts); brush.noFill(); });
+}
+add(8.6, () => { const pts = blob(SAT, 0.9, 0.12); brush.noStroke(); brush.fill(DEEP, 55); brush.fillBleed(0.3, 'out'); brush.fillTexture(0.5, 0.3); brush.polygon(pts); brush.noFill(); });
+ev.sort((a, b) => a.t - b.t);
+
+// ---- the water: hairline dashes riding the rill, a pure function of t. Blue and paper glints everywhere; warm only downstream of CAT ----
+const ND = 150, ds0 = new Float32Array(ND), dv = new Float32Array(ND), dlen = new Float32Array(ND), dprof = [], dkind = new Uint8Array(ND), dph = new Float32Array(ND);
+for (let i = 0; i < ND; i++) { ds0[i] = rnd() * L; dv[i] = 62 + rnd() * 50; dlen[i] = 10 + rnd() * 18; dprof.push(profile(1000 + i)); dkind[i] = i % 4 === 0 ? 1 : i % 4 === 1 ? 2 : 0; dph[i] = rnd() * 6.283; }
+const WARM_LOOP = S_SATIN - S_CATOUT + SWL + 40;
+function dash(i, t, fr) {
+  const lat = dprof[i], glint = dkind[i] === 2; let s, alpha, warm = false;
+  if (dkind[i] === 1 && t > T_WARM) {                                             // warm dashes live on the CAT -> SAT loop, then settle
+    s = S_CATOUT + ((ds0[i] + dv[i] * (t - T_WARM)) % WARM_LOOP); warm = true;
+    if (s > S_SATIN + SWL) return;                                               // settled: waits to be reborn at CAT's mouth
+    alpha = 0.55 * (1 - clamp((t - T_SETTLE) / 1.2)) * (1 - 0.8 * clamp((s - S_SATIN) / SWL) ** 2);
+  } else { s = (ds0[i] + dv[i] * t) % L; alpha = glint ? 0.75 : 0.45; }
+  if (s + dlen[i] > fr) return;
+  g.beginPath();
+  for (let k = 0; k <= 6; k++) { const ss = s + dlen[i] * k / 6;
+    if (warm && ss > S_SATIN) { const u = (ss - S_SATIN) / SWL; swirlAt(u); AX += 1.2 * Math.sin(u * 17 + dph[i]); AY += 1.2 * Math.cos(u * 13 + dph[i]); }
+    else at(ss, lat(ss) * (warm ? 0.55 * clamp((S_SATIN - ss) / 30) : glint ? 0.45 : 1) + 0.4 * Math.sin(t * 2.1 + dph[i] + k));
+    k ? g.lineTo(AX, AY) : g.moveTo(AX, AY); }
+  const fade = Math.min(1, (fr - s - dlen[i]) / 30, s / 30);
+  g.strokeStyle = warm ? `rgba(201,108,62,${(alpha * fade).toFixed(3)})` : glint ? `rgba(250,250,249,${(alpha * fade).toFixed(3)})` : `rgba(110,158,206,${(alpha * fade).toFixed(3)})`;
+  g.lineWidth = warm ? 0.7 : glint ? 0.8 : 0.6 + 0.3 * Math.sin(dph[i] + t); g.stroke();
+}
+function water(t) {
+  g.clearRect(0, 0, W, H); const fr = front(t);
+  for (let i = 0; i < ND; i++) dash(i, t, fr);
+  if (fr < L) {                                                                  // the arriving front: a wet bead with a few hairs
+    at(fr, 0); g.fillStyle = 'rgba(110,158,206,0.7)'; g.beginPath(); g.arc(AX, AY, 1.6, 0, 6.283); g.fill();
+    for (let k = 0; k < 4; k++) { at(fr - 14 - k * 6, (k - 1.5) * 1.2); g.strokeStyle = 'rgba(110,158,206,0.5)'; g.beginPath(); g.moveTo(AX, AY); at(fr - 2, (k - 1.5) * 0.4); g.lineTo(AX, AY); g.stroke(); }
+  }
+}
+
+// ---- paper: replay the schedule up to t ----
+let cursor = 0;
+function paperTo(t) {
+  brush.push(); brush.translate(-W / 2, -H / 2);
+  while (cursor < ev.length && ev[cursor].t <= t) ev[cursor++].fn();
+  brush.pop(); brush.render();
+}
+function paperReset() { cursor = 0; seed = 23; brush.seed(23); brush.noiseSeed(23); brush.clear(PAPER); brush.render(); }
+brush.scaleBrushes(1.15); brush.angleMode(brush.DEGREES);
+paperReset();
+function show(t) { const a = t > FADE_AT ? Math.max(0, 1 - (t - FADE_AT) / (CYCLE - FADE_AT)) : 1; c.style.opacity = o.style.opacity = a; window.__t = t; }
+
+const frozen = new URLSearchParams(location.search).get('t');
+if (frozen !== null) { const t = parseFloat(frozen) % CYCLE; paperTo(t); water(t); show(t); }
+else {
+  let T = 0, last = performance.now();
+  const frame = now => { T += Math.max(0, Math.min(0.033, (now - last) / 1000)); last = now;
+    if (T >= CYCLE) { T -= CYCLE; paperReset(); }
+    paperTo(T); water(T); show(T); requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

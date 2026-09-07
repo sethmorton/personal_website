@@ -1,6 +1,40 @@
 <script lang="ts">
-	import { Mail, ExternalLink } from 'lucide-svelte';
+	import ContentLink from '$lib/components/ContentLink.svelte';
+	import { ArrowUpRight } from 'lucide-svelte';
 	import SEO from '$lib/blog/components/SEO.svelte';
+
+	const writing = [
+		{
+			title: 'The Shape of Inference',
+			description:
+				'How new evidence changes what came before, and why reasoning needs a persistent, revisable state.',
+			href: '/blog/the_shape_of_inference'
+		},
+		{
+			title: 'The Geometry of Surprise',
+			description:
+				'Why curiosity methods collapse prediction error into one number, what that costs for continual learning, and how a settling substrate could preserve the shape of surprise.',
+			href: '/blog/the_geometry_of_surprise'
+		},
+		{
+			title: 'On Growth and the Low-Hanging Fruit of Immortality',
+			description:
+				"Achieving immortality is closer than you might think, and what does growth mean when it's no longer constrained by time?",
+			href: '/blog/on_growth_and_the_low_hanging_fruit_of_immortality'
+		},
+		{
+			title: 'What You Attend To Cannot Be Static',
+			description:
+				'Why fixed attention keeps models from learning continuously, and how thermodynamic computing could let them adapt in real time.',
+			href: '/blog/what_you_attend_to_cannot_be_static'
+		},
+		{
+			title: 'The Black Box of Biology',
+			description:
+				'The differences in building software for biology vs software for everything else.',
+			href: '/blog/the_black_box_of_biology'
+		}
+	];
 </script>
 
 <SEO
@@ -10,292 +44,330 @@
 	twitterCard="summary_large_image"
 />
 
-<div
-	class="home-shell flex min-h-screen items-center justify-center bg-stone-50 px-4 py-14 sm:px-6 sm:py-20"
->
-	<div class="w-full max-w-4xl">
-		<!-- Header -->
-		<div
-			class="home-block animate-fade-in-up mb-8 flex flex-col items-center gap-4 text-center sm:mb-12 sm:flex-row sm:gap-6 sm:text-left"
-		>
-			<div class="flex-shrink-0 overflow-hidden rounded-full">
+<main class="home-shell">
+	<div class="home-content">
+		<section class="introduction" aria-labelledby="name">
+			<div class="intro-copy">
+				<header>
+					<img class="portrait" src="/seth_image.jpg" alt="Seth Morton" width="56" height="56" />
+					<h1 id="name">Seth Morton</h1>
+				</header>
+				<div class="bio">
+					<p>
+						I love learning and systems thinking, especially when it comes to problems in AI and
+						biology. I started my first company at 12, finished CS at Northeastern in my first year,
+						left to study philosophy at Tufts, then dropped out to <a href="/built">build</a>
+						in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some
+						of life’s biggest questions.
+					</p>
+					<p>
+						I’m currently working on the next era of AI with
+						<a href="https://extropic.ai" target="_blank" rel="noopener noreferrer"
+							>thermodynamic chips</a
+						>.
+					</p>
+					<p>
+						I write about my experiences and thoughts on my <a href="/blog">blog</a>.
+					</p>
+				</div>
+			</div>
+			<div class="illustration" aria-hidden="true">
 				<img
-					src="/seth_image.jpg"
-					alt="Seth Morton"
-					class="h-16 w-16 object-cover sm:h-20 sm:w-20"
+					src="/illustrations/branching-prussian.webp"
+					alt=""
+					width="1086"
+					height="1448"
+					fetchpriority="high"
 				/>
 			</div>
-			<div>
-				<h1
-					class="font-display text-3xl font-semibold tracking-[-0.005em] text-gray-900 sm:text-5xl"
-				>
-					Seth Morton
-				</h1>
+		</section>
+
+		<section class="writing" aria-labelledby="writing-heading">
+			<div class="section-heading">
+				<h2 id="writing-heading">Selected writing</h2>
+				<a href="/blog">All writing <ArrowUpRight size={14} strokeWidth={1.5} /></a>
 			</div>
-		</div>
+			<ul>
+				{#each writing as article}
+					<li>
+						<ContentLink
+							href={article.href}
+							title={article.title}
+							description={article.description}
+							external
+						/>
+					</li>
+				{/each}
+			</ul>
+		</section>
 
-		<!-- Main content -->
-		<div
-			class="home-block animate-fade-in-up animation-delay-200 mb-8 space-y-6 sm:mb-12 sm:space-y-6"
-		>
-			<p class="text-base leading-relaxed text-gray-700 sm:text-lg">
-				I love learning and systems thinking, especially when it comes to problems in AI and
-				biology. I started my first company at 12, finished CS at Northeastern in my first year,
-				left to study philosophy at Tufts, then dropped out to
-				<a
-					href="/built"
-					class="font-medium text-blue-600 underline decoration-1 underline-offset-2 transition-colors duration-150 hover:text-blue-800"
-				>
-					build
-				</a>
-				in SF’s biotech scene. My dream is to experience exoplanets and to be part of answering some
-				of life’s biggest questions.
-				<br /><br />
-				I’m currently working on the next era of AI with
-				<a
-					href="https://extropic.ai"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="font-medium text-blue-600 underline decoration-1 underline-offset-2 transition-colors duration-150 hover:text-blue-800"
-				>
-					thermodynamic chips
-				</a>.
-			</p>
-
-			<p class="text-base leading-relaxed text-gray-700 sm:text-lg">
-				I write about my experiences and thoughts on my
-				<a
-					href="/blog"
-					class="font-medium text-blue-600 underline decoration-1 underline-offset-2 transition-colors duration-150 hover:text-blue-800"
-				>
-					blog
-				</a>.
-			</p>
-		</div>
-
-		<!-- Selected writing -->
-		<div class="home-block animate-fade-in-up animation-delay-400 mb-8 sm:mb-12">
-			<h3 class="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-stone-500 sm:mb-6">
-				Selected writing
-			</h3>
-			<div class="space-y-4 text-gray-700">
-				<div
-					class="animate-fade-in-up animation-delay-500 group flex items-start justify-between gap-4"
-				>
-					<div class="min-w-0 flex-1">
-						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
-							The Geometry of Surprise
-						</div>
-						<div class="text-sm text-gray-600">
-							Why curiosity methods collapse prediction error into one number, what that costs for
-							continual learning, and how a settling substrate could preserve the shape of surprise.
-						</div>
-					</div>
-					<a
-						href="/blog/the_geometry_of_surprise"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-						aria-label="Read The Geometry of Surprise"
-					>
-						<ExternalLink size={16} />
-					</a>
-				</div>
-				<div
-					class="animate-fade-in-up animation-delay-600 group flex items-start justify-between gap-4"
-				>
-					<div class="min-w-0 flex-1">
-						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
-							On Growth and the Low-Hanging Fruit of Immortality
-						</div>
-						<div class="text-sm text-gray-600">
-							Achieving immortality is closer than you might think, and what does growth mean when
-							it's no longer constrained by time?
-						</div>
-					</div>
-					<a
-						href="/blog/on_growth_and_the_low_hanging_fruit_of_immortality"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-						aria-label="Read On Growth and the Low-Hanging Fruit of Immortality"
-					>
-						<ExternalLink size={16} />
-					</a>
-				</div>
-				<div
-					class="animate-fade-in-up animation-delay-700 group flex items-start justify-between gap-4"
-				>
-					<div class="min-w-0 flex-1">
-						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
-							What You Attend To Cannot Be Static
-						</div>
-						<div class="text-sm text-gray-600">
-							Why fixed attention keeps models from learning continuously, and how thermodynamic
-							computing could let them adapt in real time.
-						</div>
-					</div>
-					<a
-						href="/blog/what_you_attend_to_cannot_be_static"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-						aria-label="Read What You Attend To Cannot Be Static"
-					>
-						<ExternalLink size={16} />
-					</a>
-				</div>
-				<div
-					class="animate-fade-in-up animation-delay-800 group flex items-start justify-between gap-4"
-				>
-					<div class="min-w-0 flex-1">
-						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
-							The Black Box of Biology
-						</div>
-						<div class="text-sm text-gray-600">
-							The differences in building software for biology vs software for everything else.
-						</div>
-					</div>
-					<a
-						href="/blog/the_black_box_of_biology"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-						aria-label="Read The Black Box of Biology"
-					>
-						<ExternalLink size={16} />
-					</a>
-				</div>
-				<div
-					class="animate-fade-in-up animation-delay-900 group flex items-start justify-between gap-4"
-				>
-					<div class="min-w-0 flex-1">
-						<div class="font-medium transition-colors duration-150 group-hover:text-blue-700">
-							Balance
-						</div>
-						<div class="text-sm text-gray-600">
-							Why balance is a fallacy and why you should embrace the yin and yang of life.
-						</div>
-					</div>
-					<a
-						href="/blog/balance"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex-shrink-0 text-blue-600 transition duration-150 hover:text-blue-800 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-						aria-label="Read Balance"
-					>
-						<ExternalLink size={16} />
-					</a>
-				</div>
-			</div>
-		</div>
-
-		<!-- Contact -->
-		<div
-			class="animate-fade-in-up animation-delay-1000 flex flex-col items-center gap-4 sm:flex-row sm:gap-8"
-		>
-			<a
-				href="https://x.com/_sethmorton"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="text-sm text-gray-900 transition-colors duration-150 hover:text-blue-600 sm:text-base"
-			>
-				Twitter
-			</a>
+		<footer>
+			<a href="https://x.com/_sethmorton" target="_blank" rel="noopener noreferrer">Twitter</a>
 			<a
 				href="https://www.linkedin.com/in/seth-morton-118574242"
 				target="_blank"
-				rel="noopener noreferrer"
-				class="text-sm text-gray-900 transition-colors duration-150 hover:text-blue-600 sm:text-base"
+				rel="noopener noreferrer">LinkedIn</a
 			>
-				LinkedIn
-			</a>
 			<a
 				href="https://mail.google.com/mail/?view=cm&fs=1&to=sethmorton05@gmail.com"
 				target="_blank"
-				rel="noopener noreferrer"
-				class="text-sm text-gray-900 transition-colors duration-150 hover:text-blue-600 sm:text-base"
+				rel="noopener noreferrer">Email</a
 			>
-				Email
-			</a>
-		</div>
+		</footer>
 	</div>
-</div>
+</main>
 
 <style>
-	@keyframes fadeInUp {
-		from {
-			opacity: 0;
-			transform: translateY(12px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+	.home-shell {
+		min-height: 100svh;
+		padding: 52px 40px 36px;
+		background: var(--paper);
+		color: var(--ink);
 	}
 
-	.animate-fade-in-up {
-		animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-		opacity: 0;
+	.home-content {
+		max-width: var(--page-width);
+		width: 100%;
+		margin: 0 auto;
 	}
 
-	.animation-delay-200 {
-		animation-delay: 0.2s;
+	.introduction {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 170px;
+		align-items: center;
+		gap: 32px;
+		margin-bottom: 44px;
 	}
 
-	.animation-delay-400 {
-		animation-delay: 0.4s;
+	header {
+		display: flex;
+		align-items: center;
+		gap: 20px;
+		margin-bottom: 32px;
 	}
 
-	.animation-delay-500 {
-		animation-delay: 0.5s;
+	.portrait {
+		width: 56px;
+		height: 56px;
+		border-radius: 50%;
+		object-fit: cover;
 	}
 
-	.animation-delay-600 {
-		animation-delay: 0.6s;
+	h1 {
+		font-family: var(--font-display);
+		font-size: var(--text-home-title);
+		font-weight: 400;
+		line-height: 1.08;
+		letter-spacing: -0.055em;
 	}
 
-	.animation-delay-700 {
-		animation-delay: 0.7s;
+	.bio {
+		font-size: var(--text-home-body);
+		line-height: 1.8;
 	}
 
-	.animation-delay-800 {
-		animation-delay: 0.8s;
+	.bio p + p {
+		margin-top: 20px;
 	}
 
-	.animation-delay-900 {
-		animation-delay: 0.9s;
+	.bio a {
+		color: var(--blue);
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 4px;
 	}
 
-	.animation-delay-1000 {
-		animation-delay: 1s;
+	.illustration {
+		max-width: 170px;
+		justify-self: end;
+		mix-blend-mode: multiply;
 	}
 
-	/* Ensure animations work on mobile */
-	@media (prefers-reduced-motion: reduce) {
-		.animate-fade-in-up {
-			animation: none;
-			opacity: 1;
-		}
+	.illustration img {
+		display: block;
+		width: 100%;
+		height: auto;
 	}
 
-	/* Lock page scroll on large screens only. Scoped to this page's root element:
-	   a :global(body) rule here leaks to every route after client-side navigation
-	   (SvelteKit keeps route CSS loaded), which froze scrolling on blog pages.
-	   The lock guarantees the page is exactly one viewport tall, so the vertical
-	   rhythm goes fluid here: padding and section gaps compress on short windows
-	   and open up on tall ones. Below ~790px of real window height the content
-	   cannot fit, so the page falls back to normal flow instead of clipping. */
-	@media (min-width: 1024px) and (min-height: 790px) {
+	.section-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		padding-bottom: 14px;
+		border-bottom: 1px solid var(--rule);
+		font-family: var(--font-ui);
+		font-size: var(--text-ui);
+	}
+
+	h2 {
+		font-size: inherit;
+		font-weight: 500;
+		color: var(--muted);
+	}
+
+	.section-heading a {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		color: var(--blue);
+	}
+
+	ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	footer a:hover,
+	.bio a:hover {
+		color: var(--blue);
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+
+	footer {
+		display: flex;
+		gap: 28px;
+		padding-top: 26px;
+		font-family: var(--font-ui);
+		font-size: var(--text-ui);
+	}
+
+	@media (max-width: 800px) {
 		.home-shell {
-			height: 100vh;
-			overflow: hidden;
-			padding-top: clamp(1.25rem, 6vh, 5rem);
-			padding-bottom: clamp(1.25rem, 6vh, 5rem);
+			padding: 48px 28px 32px;
 		}
+		.introduction {
+			gap: 24px;
+			grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+		}
+		header {
+			gap: 14px;
+		}
+		.portrait {
+			width: 44px;
+			height: 44px;
+		}
+		h1 {
+			font-size: var(--text-home-title);
+		}
+		.bio {
+			font-size: var(--text-home-body);
+		}
+	}
 
-		.home-shell .home-block {
-			margin-bottom: clamp(1.25rem, 4vh, 3rem);
+	@media (max-width: 600px) {
+		.home-shell {
+			padding: 36px 24px 28px;
+		}
+		.introduction {
+			grid-template-columns: 1fr;
+			gap: 26px;
+			margin-bottom: 32px;
+		}
+		header {
+			margin-bottom: 28px;
+		}
+		h1 {
+			font-size: var(--text-home-title);
+		}
+		.illustration {
+			width: 190px;
+			justify-self: center;
+		}
+		.bio {
+			font-size: var(--text-home-body);
+			line-height: 1.8;
+		}
+	}
+
+	.intro-copy {
+		animation: site-enter var(--motion-enter) var(--ease-out) both;
+	}
+	.illustration {
+		animation: site-enter var(--motion-enter) 80ms var(--ease-out) both;
+	}
+	.writing {
+		animation: site-enter var(--motion-enter) 140ms var(--ease-out) both;
+	}
+	footer {
+		animation: site-enter var(--motion-enter) 200ms var(--ease-out) both;
+	}
+	footer a,
+	.bio a,
+	.section-heading a {
+		transition:
+			color var(--motion-fast),
+			text-decoration-color var(--motion-fast);
+	}
+	footer a {
+		text-decoration: underline;
+		text-decoration-color: transparent;
+		text-underline-offset: 4px;
+	}
+	footer a:hover {
+		text-decoration-color: var(--blue);
+	}
+
+	/* Fit desktop windows through spacing, while retaining natural scrolling on
+	   phones, short windows, and zoomed layouts. Never clip content or lock body. */
+	@media (min-width: 1024px) and (min-height: 700px) {
+		.home-shell {
+			display: grid;
+			align-items: center;
+			height: 100vh;
+			padding: clamp(20px, 3vh, 44px) 40px;
+		}
+		.home-content {
+			--entry-space: clamp(6px, 0.9vh, 12px);
+			--entry-title-size: clamp(18px, 2.15vh, var(--text-entry));
+			--entry-description-size: clamp(13px, 1.55vh, var(--text-ui));
+			display: grid;
+			grid-template-rows: auto auto auto;
+			gap: clamp(16px, 2.5vh, 28px);
+		}
+		.introduction {
+			margin-bottom: 0;
+			grid-template-columns: minmax(0, 1fr) 170px;
+			gap: 32px;
+		}
+		header {
+			margin-bottom: clamp(14px, 2vh, 26px);
+		}
+		h1 {
+			font-size: var(--text-home-title);
+		}
+		.bio {
+			font-size: var(--text-home-body);
+			line-height: 1.65;
+		}
+		.bio p + p {
+			margin-top: clamp(12px, 1.8vh, 20px);
+		}
+		.illustration {
+			width: min(100%, 23vh);
+		}
+		.section-heading {
+			padding-bottom: clamp(10px, 1.2vh, 14px);
+		}
+		footer {
+			padding-top: 0;
+			align-self: end;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.intro-copy,
+		.illustration,
+		.writing,
+		footer {
+			animation: none;
+		}
+		footer a,
+		.bio a,
+		.section-heading a {
+			transition: none;
 		}
 	}
 </style>
