@@ -34,3 +34,6 @@
 - Use the original stacked-surface Three.js helpers scene for the HAWF clip and preserve the author’s chosen stream variant for causal generation.
 
 - Preserve the approved granular triangular mesh and three-agent composition for passing notes; avoid replacing it with generic clustered node diagrams. Use Extropic references for simplicity and causal motion, not their palette or visual styling.
+
+- Show only one selected animation per passage in both development and production, with short captions and no semicolons or simulation disclaimers. Keep Stream selected for causal generation.
+- In passing notes, recipients must visibly rebuild different structures from the note within their own contexts, rather than reproduce the sender’s unchanged mesh.

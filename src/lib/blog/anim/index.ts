@@ -1,5 +1,5 @@
 // Live figures for blog posts. `[[anim: <group>]]` in a post body mounts a
-// VariantFigure showing the group's first variant; development also shows alternatives.
+// VariantFigure showing one selected variant. Alternatives remain in the source archive.
 // Each variant is a standalone canvas page in static/anim/<group>/<name>.html,
 // 640x400, granular ink on paper, no surrounding chrome of its own.
 
@@ -10,8 +10,7 @@ export const ANIMS: Record<string, Variant[]> = {
 		{
 			name: 'essay_tree',
 			label: 'Mobile',
-			caption:
-				'A sentence changes importance. Connections across paragraphs pull earlier ideas into a different arrangement.'
+			caption: 'One sentence changes the shape of the essay.'
 		},
 		{
 			name: 'manuscript',
@@ -46,7 +45,7 @@ export const ANIMS: Record<string, Variant[]> = {
 		{
 			name: 'sheet',
 			label: 'Sheet',
-			caption: 'Every new observation ripples throughout the sheet.'
+			caption: 'New evidence ripples through an existing structure.'
 		},
 		{
 			name: 'logbook',
@@ -85,8 +84,7 @@ export const ANIMS: Record<string, Variant[]> = {
 		{
 			name: 'confluence',
 			label: 'Stream',
-			caption:
-				'A flow metaphor: earlier tokens contribute information to the current token’s representation.'
+			caption: 'Each token draws on what came before. Earlier representations stay fixed.'
 		},
 		{
 			name: 'river',
@@ -114,14 +112,12 @@ export const ANIMS: Record<string, Variant[]> = {
 		{
 			name: 'springs',
 			label: 'Coupled blocks',
-			caption:
-				'Six blocks share 15 springs; eight share 28. Each new block adds connections across the whole structure. A dense update revisits the old relationships as well as the new ones.'
+			caption: 'More blocks mean more connections to revisit.'
 		},
 		{
 			name: 'ledger',
 			label: 'Ledger',
-			caption:
-				'One dense all-pairs sweep after every new token gives cubic total work. Sparse updates need not.'
+			caption: 'Rechecking every pair after every new token adds up.'
 		},
 		{
 			name: 'loom',
@@ -145,8 +141,7 @@ export const ANIMS: Record<string, Variant[]> = {
 		{
 			name: 'triangles',
 			label: 'Contexts',
-			caption:
-				'A note prompts a new interpretation in another context; it does not revise the earlier cached states. Persistent state carries a change through existing connections, including associations between distant regions.'
+			caption: 'Each agent rebuilds from the note. The shared structure changes in place.'
 		},
 		{
 			name: 'telegraph',
@@ -177,16 +172,14 @@ export const ANIMS: Record<string, Variant[]> = {
 		{
 			name: 'field',
 			label: 'Wave field',
-			caption:
-				'New evidence sends waves through layered fields; the balls move as those fields change. An illustration of settling, not a literal simulation of HAWF.'
+			caption: 'New evidence reshapes the field. The state moves in response.'
 		}
 	],
 	harness: [
 		{
 			name: 'workspace',
 			label: 'Workspace',
-			caption:
-				'Separate contexts work on a saved draft. Their outputs return to the shared artifacts for the next attempt.'
+			caption: 'Separate attempts return to a shared draft.'
 		}
 	]
 };

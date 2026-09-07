@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { dev } from '$app/environment';
 	import { ANIMS } from './index';
 	import { figureVideos, figurePosters } from './media';
 	let { group }: { group: string } = $props();
 	const [category, preferred] = $derived(group.split('/'));
 	const variants = $derived(ANIMS[category]);
-	let active = $state<string>();
-	const current = $derived(variants.find((v) => v.name === (active ?? preferred)) ?? variants[0]);
+	const current = $derived(variants.find((v) => v.name === preferred) ?? variants[0]);
 	let video = $state<HTMLVideoElement>();
 	let visible = $state(false);
 	let loaded = $state(false);
@@ -63,19 +61,6 @@
 	<button class="motion-control" onclick={() => (paused = !paused)}>
 		{paused ? 'Play animation' : 'Pause animation'}
 	</button>
-	{#if dev && variants.length > 1}
-		<div class="chips" role="group" aria-label="Figure variants">
-			{#each variants as v}
-				<button
-					aria-pressed={v.name === current.name}
-					class:on={v.name === current.name}
-					onclick={() => (active = v.name)}
-				>
-					{v.label}
-				</button>
-			{/each}
-		</div>
-	{/if}
 	<figcaption>{current.caption}</figcaption>
 </figure>
 
@@ -107,33 +92,5 @@
 		font-size: 0.92rem;
 		line-height: 1.45;
 		color: var(--muted);
-	}
-	.chips {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 0.4rem;
-		margin-top: 0.7rem;
-	}
-	.chips button {
-		font-family: var(--font-ui);
-		font-size: var(--text-meta);
-		color: var(--muted);
-		background: transparent;
-		border: 1px solid var(--rule);
-		border-radius: 999px;
-		padding: 0.45rem 0.8rem;
-		min-height: 44px;
-		cursor: pointer;
-		transition:
-			color var(--motion-fast) ease,
-			border-color var(--motion-fast) ease;
-	}
-	.chips button:hover {
-		color: var(--ink);
-	}
-	.chips button.on {
-		color: var(--blue);
-		border-color: var(--blue);
 	}
 </style>

@@ -40,23 +40,31 @@ try {
 		console.log(`PASS: pages fit ${width}px`);
 	}
 	assert.equal(await page.$$eval('figure.anim', (figures) => figures.length), 8);
+	assert.equal(await page.$('.chips'), null, 'Only one selected visual should be shown');
+	assert(
+		await page.$$eval('figure.anim figcaption', (nodes) =>
+			nodes.every((n) => !n.textContent.includes(';') && n.textContent.split(/\s+/).length < 23)
+		),
+		'Captions should be short and contain no semicolons'
+	);
 	assert.equal(
 		await page.$$eval(
 			'figure.anim figcaption',
-			(nodes) => nodes.filter((n) => n.textContent.includes('Six blocks share 15 springs')).length
+			(nodes) =>
+				nodes.filter((n) => n.textContent.includes('More blocks mean more connections')).length
 		),
 		1
 	);
 	assert.equal(
 		await page.$$eval(
 			'figure.anim figcaption',
-			(nodes) => nodes.filter((n) => n.textContent.includes('One dense all-pairs sweep')).length
+			(nodes) => nodes.filter((n) => n.textContent.includes('Rechecking every pair')).length
 		),
 		1
 	);
 	assert(
 		await page.$$eval('figure.anim figcaption', (nodes) =>
-			nodes.some((n) => n.textContent.includes('A flow metaphor'))
+			nodes.some((n) => n.textContent.includes('Each token draws on what came before'))
 		),
 		'Original stream not selected'
 	);
@@ -66,7 +74,7 @@ try {
 				p.textContent.startsWith('This is the broad intuition')
 			);
 			const springs = [...document.querySelectorAll('figure.anim')].find((f) =>
-				f.textContent.includes('Six blocks share 15 springs')
+				f.textContent.includes('More blocks mean more connections')
 			);
 			return (
 				!!paragraph &&
@@ -104,12 +112,6 @@ try {
 		await f.evaluate((node) => node.scrollIntoView({ block: 'center' }));
 		await page.waitForFunction((node) => node.querySelector('video').readyState >= 2, {}, f);
 		assert(await f.$eval('video', (video) => !video.error && video.videoWidth >= 720));
-		const variants = await f.$$('.chips button');
-		for (const button of variants) {
-			await button.click();
-			await page.waitForFunction((node) => node.querySelector('video').readyState >= 2, {}, f);
-			assert(await f.$eval('video', (video) => !video.error && video.videoWidth === 1280));
-		}
 	}
 	await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
 	await page.reload({ waitUntil: 'networkidle0' });
@@ -121,7 +123,7 @@ try {
 	);
 	assert.deepEqual(errors, []);
 	console.log(
-		'PASS: publication, redirect, SSR, film, all figure variants, pause/resume and reduced motion'
+		'PASS: publication, redirect, SSR, film, selected figures, pause/resume and reduced motion'
 	);
 } finally {
 	await page.close();
