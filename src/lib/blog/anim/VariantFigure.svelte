@@ -4,9 +4,10 @@
 	import { ANIMS } from './index';
 	import { figureVideos, figurePosters } from './media';
 	let { group }: { group: string } = $props();
-	const variants = $derived(ANIMS[group]);
-	let active = $state(0);
-	const current = $derived(variants[active]);
+	const [category, preferred] = $derived(group.split('/'));
+	const variants = $derived(ANIMS[category]);
+	let active = $state<string>();
+	const current = $derived(variants.find((v) => v.name === (active ?? preferred)) ?? variants[0]);
 	let video = $state<HTMLVideoElement>();
 	let visible = $state(false);
 	let loaded = $state(false);
@@ -47,8 +48,8 @@
 		{#key current.name}
 			<video
 				bind:this={video}
-				src={loaded ? figureVideos[`./media/${group}/${current.name}.mp4`] : undefined}
-				poster={loaded ? figurePosters[`./media/${group}/${current.name}.png`] : undefined}
+				src={loaded ? figureVideos[`./media/${category}/${current.name}.mp4`] : undefined}
+				poster={loaded ? figurePosters[`./media/${category}/${current.name}.png`] : undefined}
 				aria-label={current.caption}
 				width="640"
 				height="400"
@@ -64,8 +65,12 @@
 	</button>
 	{#if dev && variants.length > 1}
 		<div class="chips" role="group" aria-label="Figure variants">
-			{#each variants as v, i}
-				<button aria-pressed={i === active} class:on={i === active} onclick={() => (active = i)}>
+			{#each variants as v}
+				<button
+					aria-pressed={v.name === current.name}
+					class:on={v.name === current.name}
+					onclick={() => (active = v.name)}
+				>
 					{v.label}
 				</button>
 			{/each}

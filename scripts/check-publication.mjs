@@ -8,6 +8,9 @@ const html = await (await fetch(base + article)).text();
 assert(html.includes('In 1964, two radio astronomers'), 'Article body must be server rendered');
 assert(html.includes('September 7, 2026'), 'Publication date missing');
 assert(!html.includes('(Draft)'), 'Published article still marked draft');
+assert(html.includes('critical computational advantage'), 'Revised caching explanation missing');
+assert(html.includes('Co-construction.'), 'Revised section heading missing');
+assert(html.includes('The models of tomorrow'), 'Revised conclusion missing');
 assert(
 	(await (await fetch(base + '/sitemap.xml')).text()).includes(article),
 	'Missing sitemap entry'
@@ -36,7 +39,43 @@ try {
 		}
 		console.log(`PASS: pages fit ${width}px`);
 	}
-	assert.equal(await page.$$eval('figure.anim', (figures) => figures.length), 7);
+	assert.equal(await page.$$eval('figure.anim', (figures) => figures.length), 8);
+	assert.equal(
+		await page.$$eval(
+			'figure.anim figcaption',
+			(nodes) => nodes.filter((n) => n.textContent.includes('Six blocks share 15 springs')).length
+		),
+		1
+	);
+	assert.equal(
+		await page.$$eval(
+			'figure.anim figcaption',
+			(nodes) => nodes.filter((n) => n.textContent.includes('One dense all-pairs sweep')).length
+		),
+		1
+	);
+	assert(
+		await page.$$eval('figure.anim figcaption', (nodes) =>
+			nodes.some((n) => n.textContent.includes('A flow metaphor'))
+		),
+		'Original stream not selected'
+	);
+	assert(
+		await page.evaluate(() => {
+			const paragraph = [...document.querySelectorAll('p')].find((p) =>
+				p.textContent.startsWith('This is the broad intuition')
+			);
+			const springs = [...document.querySelectorAll('figure.anim')].find((f) =>
+				f.textContent.includes('Six blocks share 15 springs')
+			);
+			return (
+				!!paragraph &&
+				!!springs &&
+				!!(paragraph.compareDocumentPosition(springs) & Node.DOCUMENT_POSITION_FOLLOWING)
+			);
+		}),
+		'Dense-spring figure must follow the broad-intuition paragraph'
+	);
 	assert.equal(await page.$('.film video'), null, 'Film should not load until opened');
 	await page.click('.film summary');
 	await page.waitForSelector('.film video');

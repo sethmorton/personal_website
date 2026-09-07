@@ -29,3 +29,8 @@
 - Review eyepiece transitions for silhouette continuity, not just continuous pixels: retain the photographed horn’s large flare and support wheel through the handoff; composite an opaque instrument over a separate fading background to avoid a translucent cutout stage.
 
 - In associative-state figures, include sparse long-range connections across branches or regions; their forces must participate in the dynamics, not merely decorate a nearest-neighbor web.
+
+- Keep the essay hierarchy about co-construction and the dense springs about growing computation; distinguish them through motion and simple counts, not an unexplained cell grid.
+- Use the original stacked-surface Three.js helpers scene for the HAWF clip and preserve the author’s chosen stream variant for causal generation.
+
+- Preserve the approved granular triangular mesh and three-agent composition for passing notes; avoid replacing it with generic clustered node diagrams. Use Extropic references for simplicity and causal motion, not their palette or visual styling.

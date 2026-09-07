@@ -86,7 +86,8 @@ let T = 0, moved = -1, moveT = -10, nextMove = 1.6, mx = 0, my = 0, msx = 0, msy
 // hops from the moved node, for what each agent can reconstruct
 const hop = new Int8Array(N), q = new Int8Array(N);
 function move() {
-  let m; do m = rnd() * N | 0; while (m === moved); moved = m; moveT = T;
+  const cross = E.filter(e => e.cross);
+  const m = cross[Math.floor(T / 7) % cross.length].a; moved = m; moveT = T;
   // right: the node moves 50 px and stays; the mesh will follow
   msx = rx[m]; msy = ry[m];
   for (let k = 0; k < 80; k++) {
@@ -97,8 +98,7 @@ function move() {
   }
   hop.fill(-1); hop[m] = 0; let h = 0, tl = 0; q[tl++] = m;
   while (h < tl) { const v = q[h++]; for (let w = 0; w < N; w++) if (adj[v * N + w] && hop[w] < 0) { hop[w] = hop[v] + 1; q[tl++] = w; } }
-  // left: agent 1 moves the node in its own context. Agents 2 and 3 start over from nothing.
-  const A1 = AG[0]; A1.msx = A1.x[m]; A1.msy = A1.y[m]; A1.mx = mx - rx[m] + A1.x[m]; A1.my = my - ry[m] + A1.y[m];
+  // A note starts a fresh reconstruction; it does not move the cached state.
   for (const ag of AG.slice(1)) { ag.has.fill(0); ag.born.fill(-1); ag.jit = rnd() * 1000; }
 }
 
@@ -124,14 +124,14 @@ function settle(dt) {
 // ---- left panel: three agents, each with its own context. Agent 1 has the whole structure. The others rebuild
 // it from the note at the same positions, with the same information arriving later. ----
 const SC = 0.36;
-const mkAgent = (y0, keep, err, drop) => ({ y0, keep, err, drop, x: Float32Array.from(ox), y: Float32Array.from(oy), has: new Uint8Array(N), born: new Float32Array(N).fill(-1), jit: 0, msx: 0, msy: 0, mx: 0, my: 0 });
+const mkAgent = (y0, keep, err, drop) => ({ y0, keep, err, drop, x: Float32Array.from(ox), y: Float32Array.from(oy), has: new Uint8Array(N), born: new Float32Array(N).fill(-1), jit: 0 });
 const AG = [mkAgent(52, 1, 0, 0), mkAgent(166, 1, 0, 0), mkAgent(280, 1, 0, 0)];
 AG[0].has.fill(1); AG[0].born.fill(0);
 // notes in flight: from agent i to agent i+1, leaving at t0, carrying `size` dots
 const NOTES = [{ t0: 1.3, size: 7 }, { t0: 3.9, size: 7 }];
 function agents(dt) {
-  const age = T - moveT, A1 = AG[0], u = ease(age / 1.1);
-  A1.x[moved] = A1.msx + (A1.mx - A1.msx) * u; A1.y[moved] = A1.msy + (A1.my - A1.msy) * u;   // agent 1 moves it; nothing else in its context moves
+  const age = T - moveT;
+  // Cached representations remain fixed; a message is interpreted in the next context.
   for (let k = 1; k < AG.length; k++) {
     const ag = AG[k], arrive = NOTES[k - 1].t0 + 1.1;
     if (age < arrive) continue;
@@ -140,7 +140,7 @@ function agents(dt) {
       if (i !== moved && Math.sin(ag.jit + i * 12.9) * 0.5 + 0.5 > ag.keep) { ag.has[i] = 2; continue; }   // lost in the retelling
       ag.has[i] = 1; ag.born[i] = T;
       const s1 = Math.sin(ag.jit + i * 7.1), s2 = Math.cos(ag.jit * 1.3 + i * 3.7);
-      ag.x[i] = (i === moved ? A1.mx : ox[i]) + s1 * ag.err; ag.y[i] = (i === moved ? A1.my : oy[i]) + s2 * ag.err;
+      ag.x[i] = ox[i] + s1 * ag.err; ag.y[i] = oy[i] + s2 * ag.err;
     }
   }
 }
@@ -237,15 +237,15 @@ function panel(X0, X, Y) {
   }
   for (const e of E) {
     const h = Math.min(1, Math.abs(e.strain) * 7);
-    g.fillStyle = e.cross ? rgba(GOLD, .8) : mix(DEEP, e.strain < 0 ? VIOLET : TEAL, h * 0.8);
-    inkEdge(X0 + X[e.a], Y[e.a], X0 + X[e.b], Y[e.b], (e.cross ? 1.7 : 1.25) + h * 1.1, key(e.a, e.b));
+    g.fillStyle = e.cross ? rgba(DEEP, .92) : mix(DEEP, e.strain < 0 ? VIOLET : TEAL, h * 0.8);
+    inkEdge(X0 + X[e.a], Y[e.a], X0 + X[e.b], Y[e.b], (e.cross ? 2.1 : 1.25) + h * 1.1, key(e.a, e.b));
   }
   const age = T - moveT;
   for (const e of E.filter(e => e.cross)) {
     const from = hop[e.a] <= hop[e.b] ? e.a : e.b, to = from === e.a ? e.b : e.a;
     const u = (age - Math.min(hop[e.a], hop[e.b]) * .2) / 1.1;
     if (u > 0 && u < 1) {
-      g.fillStyle = rgba(GOLD, 1);
+      g.fillStyle = rgba(DEEP, 1);
       grain(X0 + X[from] + (X[to] - X[from]) * u, Y[from] + (Y[to] - Y[from]) * u, 2.4);
     }
   }
@@ -274,7 +274,7 @@ function advance(dt) {
 function draw() {
   g.clearRect(0, 0, W, H);
   chrome(); AG.forEach(agentPanel); notes(); panel(320, rx, ry);
-  window.__notes = { T, moved, crossLinks: E.filter(e => e.cross).length, positions: [...rx, ...ry], copies: AG.map(ag => ({ nodes: [...ag.has].filter(h => h === 1).length, edges: E.filter(e => ag.has[e.a] === 1 && ag.has[e.b] === 1 && !(ag.drop && Math.sin(ag.jit * 0.7 + key(e.a, e.b) * 5.3) * 0.5 + 0.5 < ag.drop)).length })) };
+  window.__notes = { T, moved, crossLinks: E.filter(e => e.cross).length, positions: [...rx, ...ry], original: [...ox, ...oy], cached: AG.map(ag => [...ag.x, ...ag.y]), copies: AG.map(ag => ({ nodes: [...ag.has].filter(h => h === 1).length, edges: E.filter(e => ag.has[e.a] === 1 && ag.has[e.b] === 1 && !(ag.drop && Math.sin(ag.jit * 0.7 + key(e.a, e.b) * 5.3) * 0.5 + 0.5 < ag.drop)).length })) };
 }
 const frozen = new URLSearchParams(location.search).get('t');
 if (frozen !== null) {

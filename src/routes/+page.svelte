@@ -39,7 +39,7 @@
 
 <SEO
 	title="Seth Morton"
-	description="Infovore, pursuing exoplanets and eudamonia."
+	description="Seth Morton — founder and engineer exploring AI, biology, continual learning, and thermodynamic computation. Essays, projects, and research."
 	type="website"
 	twitterCard="summary_large_image"
 />

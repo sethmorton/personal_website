@@ -133,8 +133,13 @@
 		// Anim pass: [[anim: name]] becomes a block-level placeholder markdown-it
 		// passes through verbatim (html: true); split on it after rendering.
 		processedContent = processedContent.replace(
-			/\[\[anim:\s*([a-z]+)\s*\]\]/g,
-			(_m: string, name: string) => (name in ANIMS ? `\n\n<div data-anim="${name}"></div>\n\n` : '')
+			/\[\[anim:\s*([a-z]+(?:\/[a-z_]+)?)\s*\]\]/g,
+			(_m: string, name: string) => {
+				const [group, variant] = name.split('/');
+				return ANIMS[group] && (!variant || ANIMS[group].some((v) => v.name === variant))
+					? `\n\n<div data-anim="${name}"></div>\n\n`
+					: '';
+			}
 		);
 
 		// Second pass: Render markdown
@@ -147,7 +152,7 @@
 		});
 
 		return html
-			.split(/<div data-anim="([a-z]+)"><\/div>/)
+			.split(/<div data-anim="([a-z]+(?:\/[a-z_]+)?)"><\/div>/)
 			.map((part, i) => (i % 2 ? { anim: part } : { html: part }));
 	});
 </script>
@@ -174,7 +179,11 @@
 			{/if}
 			<span class="hero-rule" aria-hidden="true"></span>
 			<h1 class="hero-title">{heroTitle}</h1>
-			<p class="hero-meta"><time>{formattedDate}</time></p>
+			<p class="hero-meta">
+				<time datetime={/^\d{4}-\d{2}-\d{2}$/.test(publishDate ?? '') ? publishDate : undefined}
+					>{formattedDate}</time
+				>
+			</p>
 			<span class="hero-rule" aria-hidden="true"></span>
 			{#if teaser}
 				<details class="film" bind:open={filmOpen}>

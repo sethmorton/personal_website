@@ -115,7 +115,7 @@ export const ANIMS: Record<string, Variant[]> = {
 			name: 'springs',
 			label: 'Coupled blocks',
 			caption:
-				'Each new block pulls on earlier blocks, which pull on others. Six blocks share 15 springs; eight share 28. In this dense example, all those relationships can need revisiting.'
+				'Six blocks share 15 springs; eight share 28. Each new block adds connections across the whole structure. A dense update revisits the old relationships as well as the new ones.'
 		},
 		{
 			name: 'ledger',
@@ -144,9 +144,9 @@ export const ANIMS: Record<string, Variant[]> = {
 	notes: [
 		{
 			name: 'triangles',
-			label: 'Triangles',
+			label: 'Contexts',
 			caption:
-				'Messages must be interpreted in separate contexts. Shared state carries changes through existing relationships, including long-range associations.'
+				'A note prompts a new interpretation in another context; it does not revise the earlier cached states. Persistent state carries a change through existing connections, including associations between distant regions.'
 		},
 		{
 			name: 'telegraph',
@@ -178,7 +178,7 @@ export const ANIMS: Record<string, Variant[]> = {
 			name: 'field',
 			label: 'Wave field',
 			caption:
-				'New evidence changes the landscape; the state moves in response. A visual analogy for HAWF’s settling dynamics.'
+				'New evidence sends waves through layered fields; the balls move as those fields change. An illustration of settling, not a literal simulation of HAWF.'
 		}
 	],
 	harness: [

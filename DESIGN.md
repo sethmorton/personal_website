@@ -23,3 +23,5 @@ Blog figures use MP4 videos with static posters, pause outside the viewport, and
 Run `npm run check`, `npm run build`, and `CDP_URL=<Chromium debugging URL> BASE_URL=<local site URL> node scripts/check-publication.mjs` before publication. The browser check covers mobile overflow, publication redirects, server-rendered text, figure playback, and reduced motion. Keep scratch frames in `.render-cache/`, outside `static/`.
 
 `.vercelignore` excludes `static/anim/` and `static/teaser/` from deployment uploads: these are local render sources, originals, and studies. The imported delivery files under `src/lib/blog/` remain in production. Keep originals in Git; do not make the public article depend on the excluded paths.
+
+Article markers can select a particular existing variant, for example `[[anim: cubic/springs]]` for the intuitive demonstration and `[[anim: cubic/ledger]]` for its cost comparison. A plain `[[anim: cubic]]` uses the group’s first variant.

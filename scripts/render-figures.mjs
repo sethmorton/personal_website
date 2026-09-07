@@ -15,7 +15,8 @@ const figures = [];
 for (const [, group, body] of registry.matchAll(/^\t(\w+): \[([\s\S]*?)^\t\]/gm))
 	for (const [, name] of body.matchAll(/name: '(\w+)'/g)) figures.push({ group, name });
 const cycles = {
-	'hawf/field': 10,
+	'hawf/field': 12,
+	'notes/triangles': 8.5,
 	'cubic/springs': 12,
 	'settling/essay_tree': 18 / 1.7,
 	'settling/essay_page': 21,
@@ -62,7 +63,7 @@ try {
 			};
 		});
 		await page.goto(
-			`${site}${group === 'hawf' ? '/teaser/terrain/index.html?figure&capture' : `/anim/${key}.html`}`,
+			`${site}${group === 'hawf' ? '/anim/inference/helpers.html?capture' : `/anim/${key}.html`}`,
 			{ waitUntil: 'networkidle0' }
 		);
 		await page.evaluate(() => document.fonts.ready);
@@ -86,11 +87,11 @@ try {
 			'-i',
 			'-',
 			'-an',
-			...(group === 'hawf' ? ['-vf', 'scale=720:450:flags=lanczos'] : []),
+			...(group === 'hawf' ? ['-vf', 'scale=960:600:flags=lanczos'] : []),
 			'-c:v',
 			'libx264',
 			'-crf',
-			group === 'hawf' ? '28' : '20',
+			group === 'hawf' ? '24' : '20',
 			'-preset',
 			group === 'hawf' ? 'slow' : 'fast',
 			'-pix_fmt',
@@ -123,10 +124,16 @@ try {
 					}
 					return filmCanvas.toDataURL('image/png').split(',')[1];
 				},
-				{ t: (i + 1) / 24, duration, reset: !cycles[key], direct: group === 'hawf' }
+				{
+					t: (i + 1) / 24,
+					duration,
+					reset: !cycles[key] || group === 'hawf' || key === 'notes/triangles',
+					direct: group === 'hawf'
+				}
 			);
 			const buffer = Buffer.from(data, 'base64');
-			if (i === Math.round(frames * 0.6)) writeFileSync(path.join(dir, `${name}.png`), buffer);
+			if (i === Math.round(key === 'notes/triangles' ? 8 * 24 : frames * 0.6))
+				writeFileSync(path.join(dir, `${name}.png`), buffer);
 			if (!encoder.stdin.write(buffer)) await once(encoder.stdin, 'drain');
 		}
 		encoder.stdin.end();
@@ -138,8 +145,8 @@ try {
 			key,
 			frames,
 			duration: frames / 24,
-			width: group === 'hawf' ? 720 : 1280,
-			height: group === 'hawf' ? 450 : 800,
+			width: group === 'hawf' ? 960 : 1280,
+			height: group === 'hawf' ? 600 : 800,
 			errors
 		});
 		console.log(`Rendered ${key}: ${frames} frames`);

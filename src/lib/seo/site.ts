@@ -1,5 +1,5 @@
 export const SITE_NAME = 'Seth Morton';
-export const SITE_URL = 'https://sethmorton.xyz';
+export const SITE_URL = 'https://www.sethmorton.com';
 export const SITE_DESCRIPTION =
 	'Founder and engineer building at the intersection of AI, biology, and thermodynamic computation.';
 export const SITE_IMAGE = '/seth_image.jpg';

@@ -1,10 +1,10 @@
 # The Shape of Inference
 
-In 1964, two radio astronomers in Holmdel, New Jersey were losing a war with pigeons.
+In 1964, two radio astronomers in Holmdel, New Jersey, were losing a war with pigeons.
 
 Arno Penzias and Robert Wilson had inherited a giant [horn antenna](https://www.aps.org/funding-recognition/historic-sites/holmdel-horn-antenna) - basically a fifty-foot ear - and everywhere they pointed it, the ear picked up a loud hiss. So they did what any good experimentalists would do: they started debugging.
 
-They taped over the riveted seams. They checked all the cables (again). They re-oriented the antenna. Nothing.
+They taped over the riveted seams. They checked all the cables (again). They reoriented the antenna. Nothing.
 
 Then they noticed the pigeons.
 
@@ -28,9 +28,9 @@ Today's AI can remember more evidence, search through more possibilities, reflec
 
 What happens when something you learn now should ripple backward, change what the past means, and open entirely new paths forward?
 
-Or more precisely, how do machines achieve the *omnidirectional* style of reasoning humans do?
+Or more precisely, how do machines achieve the *omnidirectional* style of thinking humans do?
 
-**Ideas rewrite their past.**
+**Co-construction.**
 
 I think the clearest way to motivate this problem is by illustrating the process of writing an essay.
 
@@ -38,7 +38,7 @@ You start an essay with some vague idea of what you want to say. You write an in
 
 Halfway through, you write a sentence and take a step back.
 
-You think: perhaps this sentence is more accurate to what I'm trying to say in this essay.
+You think: perhaps this sentence more accurately captures what I'm trying to say in this essay.
 
 Suddenly, the introduction you wrote ten minutes ago is wrong.
 
@@ -54,7 +54,7 @@ This process is the shape of most interesting research and creation. You begin w
 
 [[anim: relight]]
 
-> Sidenote: this is by no means meant to underrate research with a fixed target. Problems with reliable verifiers, like many areas of math and coding, are an incredibly strong use case for today's models. Left-to-right inference is the wrong shape for problems where the target itself moves.
+> Sidenote: this is by no means meant to underrate research with a fixed target. Problems with reliable verifiers, like many areas of math and coding, are an incredibly strong use case for today's models.
 
 In other words, the answer and the problem are co-constructed.
 
@@ -88,15 +88,15 @@ The cat sat on the __
 
 it can use everything before it to predict that *mat* is a plausible next word.
 
-The important part is the direction of this [inference](https://cloud.google.com/discover/what-is-ai-inference) [[sn: When we run a trained model to solve a task.]]: the past helps construct the present. However, the present can't rewrite past representations. This method of inference is called autoregression (generating each next token based on the tokens that came before it).
+The important part is the direction of this [inference](https://cloud.google.com/discover/what-is-ai-inference) [[sn: The process a trained model goes through to produce an answer.]]: the past helps construct the present. This method of inference is called autoregression (generating each next token based on the tokens that came before it).
 
-[[anim: catsat]]
+[[anim: catsat/confluence]]
 
-Now, let's imagine every token is a block connected to every other block by a spring (like the blocks in the essay above). If one block moves, we need to check how that changes the force on the other blocks.
+This gives autoregression a critical computational advantage: past representations freeze once computed. We can cache them, focus computation on the current token, and fetch exactly what we need in parallel because we know how we'll be using those past representations. In other words, the blocks of the essay stay fixed.
+
+Now, let's imagine a scenario more akin to how we write an essay: instead of fixing the blocks, we treat every token as a block connected to every other block by a spring. If one block moves, that changes the force exerted on the other blocks, and this force ripples.
 
 With $n$ blocks, there are roughly $n^2$ relationships to check.
-
-[[anim: cubic]]
 
 Now let's say we add a token. It may pull on an older block, which in turn changes other blocks, and so on.
 
@@ -110,6 +110,8 @@ work.
 
 This is the broad intuition behind why *omnidirectional* (in all directions) inference is so computationally expensive. [[sn: I first heard this concept on [a podcast with Adam Marblestone](https://www.dwarkesh.com/p/adam-marblestone). It was a fantastic podcast and really pivotal to me in my journey - highly recommend listening!]]
 
+[[anim: cubic/springs]]
+
 Autoregression only has to build the next representation from the past. Our proposed spring system has to reopen old representations, update them, and then propagate those changes through everything connected to them. This ability matters a lot! Think back to our writing example: a new realization changes what earlier thoughts mean, which changes what becomes important, which opens up new paths forward.
 
 $n^3$ is computationally infeasible. For example, if a session uses [100,000 tokens](https://arxiv.org/abs/2605.13301), our naive dense spring system would require roughly
@@ -118,6 +120,7 @@ $$333{,}338{,}333{,}350{,}000$$
 
 pairwise relationship updates.
 
+[[anim: cubic/ledger]]
 
 > Of course, $n^3$ is a maximal upper bound. Omnidirectional doesn't mean everything has to update at all times, only that past representations *can* update, and that those updates can in turn create new future paths. Most new observations disturb very little -- an observation you made about cereal doesn't need to change all of your representations of the past.
 
@@ -145,7 +148,7 @@ Remember the *cat* and *sat* tokens from the explanation of transformers. The re
 
 Essentially, CoT gives an autoregressive model a scratchpad: you compute something, write it down, then let the next representation build on what was written.
 
-Note, the direction of inference is still forward and this still doesn't fully solve our spring problem. Think back to writing the essay: with CoT, if you realize halfway through that you've misunderstood the idea you started with, you can write a correction into that residual stream and continue from there. However, the earlier interpretation itself stays fixed.
+Note: the direction of inference is still forward, and this still doesn't fully solve our spring problem. Think back to writing the essay: with CoT, if you realize halfway through that you've misunderstood the idea you started with, you can write a correction into that residual stream and continue from there. However, the earlier interpretation itself stays fixed.
 
 With the advent and success of CoT, a natural follow-up surfaced: as the model works through its scratchpad, could we give it more opportunities to refine the representations in its residual stream before producing each next token?
 
@@ -191,17 +194,17 @@ So why isn't it?
 
 **Passing notes.**
 
-Observationally, even maximal self-improving harnesses like SIA or Prime-Agent [fail to produce genuinely novel results autonomously](https://www.primeintellect.ai/blog/measuring-autonomous-research). [[sn: From [Prime Intellect's post on measuring autonomous research](https://www.primeintellect.ai/blog/measuring-autonomous-research): "We were again surprised by the lack of novelty. The models clearly understand the objects they manipulate at a deep level, and yet very few genuinely new ideas emerge."]] In the search process, even while learning, the harnesses tend to remain parochial - [concentrating in local neighborhoods of idea space](https://arxiv.org/abs/2605.27905) rather than expanding outward. This I think is really key - if the harness were the missing piece, you would think that novelty should scale with harness advancement: more memory, more branching and sophisticated searching, more self-modification should open new regions of idea space.
+Observationally, even maximal self-improving harnesses like SIA or Prime-Agent [fail to produce genuinely novel results autonomously](https://www.primeintellect.ai/blog/measuring-autonomous-research). [[sn: From [Prime Intellect's post on measuring autonomous research](https://www.primeintellect.ai/blog/measuring-autonomous-research): "We were again surprised by the lack of novelty. The models clearly understand the objects they manipulate at a deep level, and yet very few genuinely new ideas emerge."]] In the search process, even while learning, the harnesses tend to remain parochial - [concentrating in local neighborhoods of idea space](https://arxiv.org/abs/2605.27905) rather than expanding outward. This, I think, is really key - if the harness were the missing piece, you would think that novelty should scale with harness advancement: more memory, more branching and sophisticated searching, more self-modification should open new regions of idea space.
 
 There are two reasons why this approach isn't generating the results we might expect:
 
-**1\. Continually learning what to "attend" to.** I've argued this at length in [my last essay](https://www.sethmorton.com/blog/what_you_attend_to_cannot_be_static): a model's understanding of relevance is largely fixed at training time - while approaches like test-time training can update small parts of the system during inference, we still don't have a good way of accessing and updating different regions of the neural network as new evidence arrives in a cost- and time-efficient manner.
+**1\. Continually learning what to "attend" to.** I've argued this at length in [my last essay](https://www.sethmorton.com/blog/what_you_attend_to_cannot_be_static): a model's understanding of relevance is largely fixed at training time due to its fixed weights. While approaches like test-time training can update small parts of the model during inference, we still don't have a good way of accessing and updating different regions of the model as new evidence arrives in a cost- and time-efficient manner.
 
 **2\. The problem of passing notes.**
 
 Imagine you have a collection of agents writing an essay. One agent gets to paragraph three and realizes that what it's just written changes what the essay's intro should say, and more generally the structure of the essay.
 
-It can send that insight to another agent through a message. However, it can't send the entire dependency structure that made the insight important: the tone, hidden assumptions, how every paragraph should now feel. The next agent has to reconstitute why the change matters, and more importantly, every little relationship that change now modifies.
+It can send that insight to another agent through a message. However, it can't send the entire dependency structure that made the insight important: the tone, hidden assumptions, and how every paragraph should now feel. The next agent has to reconstitute why the change matters and, more importantly, every little relationship that change now modifies.
 
 This is usually fine when the correction is simple (e.g., change the spelling of a word or something). That said, novel reasoning often involves a cascade of small dependencies changing at once. A sentence becoming less important might change the framing of a paragraph, which changes what evidence matters, which changes how an earlier claim should be interpreted.
 
@@ -210,6 +213,8 @@ This is the constitutive limitation of autoregressive systems: these consequence
 [[anim: notes]]
 
 With springs, you change something in a system and those changes propagate until the whole thing settles into a new configuration. This is much closer to how our brain works and how we do omnidirectional inference.
+
+> Sidenote: there are also other problems with systems powered by autoregressive inference, such as [hallucination snowballing](https://arxiv.org/abs/2305.13534): an early mistake can lead a model to generate further false claims to justify it, even when it can recognize those claims as wrong in isolation.
 
 **Settling.**
 
@@ -223,9 +228,7 @@ This brings me to my HAWF (Hierarchical Associative Wave Field) architecture. I 
 
 There are two key research problems here:
 
-First, what forces should act on the springs? More precisely, what [loss functions](https://developers.google.com/machine-learning/crash-course/linear-regression/loss) should we use?
-
-If concepts are blocks connected via springs, how do we decide which forces determine the relationships the system tries to preserve, and how much a change in one block ripples through the rest of the system?
+First, what forces should act on the springs? More precisely, what [loss functions](https://developers.google.com/machine-learning/crash-course/linear-regression/loss) should we use? If concepts are blocks connected via springs, how do we decide which forces determine the relationships the system tries to preserve, and how much a change in one block ripples through the rest of the system?
 
 Second, how easily should the structure move? More precisely, how far from equilibrium should the system remain? If every spring is too loose, one new observation can drag the entire system into a new shape. If they are too stiff, nothing important can move. We want a stable structure, but with enough leeway to let strong or surprising evidence modify parts of it.
 
@@ -233,9 +236,9 @@ Second, how easily should the structure move? More precisely, how far from equil
 
 **Hardware.**
 
-This also leads to my thesis around alternative compute.
+This also leads to my thesis around alternative hardware.
 
-Settling is sparse and irregular, meaning: a new observation might stretch a few springs and leave everything else where it was - and then the next observation ramifies across the entire field. There's no fixed pattern to which parts of the state move, and no way to know in advance which ones will.
+Settling is sparse and irregular: a new observation might stretch a few springs and leave everything else where it was - and then the next observation ramifies across the entire field. There's no fixed pattern to which parts of the state move, and no way to know in advance which ones will.
 
 This is close to the worst case for a matrix multiplication accelerator. Most modern AI chips are built for doing the same mathematical operation on many numbers in parallel. Critically, we can predict which numbers they will need and when, so they can carefully schedule their movement through the chip to keep as much computation running in parallel as possible.
 
@@ -245,6 +248,8 @@ I believe the future of hardware will be built around more sparse, irregular, se
 
 **Conclusion.**
 
-To reach the next era of intelligence, systems will need to be capable of doing open-ended research. The era of tomorrow will involve an architectural shift toward persistent state and settling-based dynamics, and we need to start thinking about the compute and architectures that will get us there.
+Open-ended research isn't merely a longer chain of thought. On the day Penzias and Wilson received that phone call, one new piece of information stretched one spring, and the entire investigation settled into a different shape.
 
-I would love to chat more about this - if you want to, [my DMs](https://x.com/_sethmorton) are open.
+To reach the next era of intelligence, systems will need to be capable of doing open-ended research. The models of tomorrow will involve an architectural shift toward persistent state and settling-based dynamics, and we need to start thinking about the compute and architectures that will get us there.
+
+I would love to chat more about this - please feel free to [DM](https://x.com/_sethmorton) me or [email me](mailto:sethmorton05@gmail.com).

@@ -2,6 +2,9 @@ export type BlogMeta = {
 	title: string;
 	description: string;
 	image?: string;
+	imageAlt?: string;
+	imageWidth?: number;
+	imageHeight?: number;
 	type?: 'article' | 'profile' | 'website';
 };
 
@@ -31,6 +34,18 @@ export const BLOG_META: Record<string, BlogMeta> = {
 		description: 'Bridging silicon and carbon; why longevity is a design problem.',
 		type: 'article'
 	},
+	the_black_box_of_biology: {
+		title: 'The Black Box of Biology',
+		description:
+			'Why building for biology differs from software: uncertain experiments, tacit knowledge, and the trust that makes collaboration possible.',
+		type: 'article'
+	},
+	when_forgetting_is_no_longer_the_default: {
+		title: 'When Forgetting Is No Longer the Default',
+		description:
+			'DNA data storage could change what we choose to remember. The technical bottlenecks and human questions behind durable biological archives.',
+		type: 'article'
+	},
 	biotech_has_a_distribution_problem: {
 		title: 'Biotech Has a Distribution Problem',
 		description:
@@ -56,10 +71,14 @@ export const BLOG_META: Record<string, BlogMeta> = {
 		type: 'article'
 	},
 	the_shape_of_inference: {
-		image: '/blog/the_shape_of_inference.webp',
+		image: '/social/the-shape-of-inference-blue-horn.png',
+		imageAlt:
+			'The Shape of Inference — a blue illustration of the Holmdel horn antenna, by Seth Morton',
+		imageWidth: 1200,
+		imageHeight: 630,
 		title: 'The Shape of Inference',
 		description:
-			'Penzias and Wilson made a discovery without a single new measurement. Why autoregression, chain of thought, and agent harnesses cannot do that, and why the next architectures will settle over a persistent state instead of only moving forward.',
+			'How new evidence reshapes earlier ideas, and why future AI architectures may need persistent, revisable state. An essay on co-construction and inference.',
 		type: 'article'
 	},
 	what_you_attend_to_cannot_be_static: {

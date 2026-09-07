@@ -20,6 +20,9 @@
 		url?: string;
 		image?: string;
 		imageAlt?: string;
+		imageWidth?: number;
+		imageHeight?: number;
+		publishedTime?: string;
 		robots?: string;
 		twitterCard?: TwitterCard;
 	};
@@ -32,7 +35,10 @@
 		url = undefined as string | undefined,
 		image = SITE_IMAGE,
 		imageAlt = SITE_IMAGE_ALT,
-		robots = 'index, follow',
+		imageWidth = image === SITE_IMAGE ? 471 : undefined,
+		imageHeight = image === SITE_IMAGE ? 510 : undefined,
+		publishedTime,
+		robots = 'index, follow, max-image-preview:large',
 		twitterCard = 'summary_large_image' as TwitterCard
 	}: Props = $props();
 
@@ -43,6 +49,27 @@
 
 	const canonicalUrl = () => toAbsoluteUrl(url ?? $page.url.pathname);
 	const imageUrl = () => (image ? toAbsoluteUrl(image) : undefined);
+	const articleSchema = () =>
+		JSON.stringify({
+			'@context': 'https://schema.org',
+			'@type': 'BlogPosting',
+			'@id': `${canonicalUrl()}#article`,
+			headline: title,
+			description,
+			url: canonicalUrl(),
+			mainEntityOfPage: canonicalUrl(),
+			image: imageUrl(),
+			datePublished: publishedTime,
+			inLanguage: 'en',
+			author: {
+				'@type': 'Person',
+				'@id': `${SITE_URL}/#person`,
+				name: SITE_NAME,
+				url: `${SITE_URL}/about`
+			},
+			publisher: { '@id': `${SITE_URL}/#person` },
+			isPartOf: { '@id': `${SITE_URL}/#website` }
+		}).replace(/</g, '\\u003c');
 </script>
 
 <svelte:head>
@@ -66,6 +93,16 @@
 	{#if imageUrl()}
 		<meta property="og:image" content={imageUrl()} />
 		<meta property="og:image:alt" content={imageAlt} />
+		{#if imageWidth && imageHeight}
+			<meta property="og:image:width" content={String(imageWidth)} />
+			<meta property="og:image:height" content={String(imageHeight)} />
+		{/if}
+	{/if}
+
+	{#if type === 'article' && publishedTime}
+		<meta property="article:published_time" content={publishedTime} />
+		<meta property="article:author" content={`${SITE_URL}/about`} />
+		{@html `<script type="application/ld+json">${articleSchema()}</script>`}
 	{/if}
 
 	<!-- Twitter -->

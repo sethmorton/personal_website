@@ -14,18 +14,17 @@
 	<p>Not found</p>
 {:else}
 	<div class="min-h-screen">
-		{#if BLOG_META[slug]}
-			<SEO
-				title={BLOG_META[slug].title}
-				description={BLOG_META[slug].description}
-				type={BLOG_META[slug].type ?? 'article'}
-				image={BLOG_META[slug].image}
-				imageAlt={BLOG_META[slug].image ? selectedBlogPost.title : undefined}
-				twitterCard="summary_large_image"
-			/>
-		{:else}
-			<SEO title={selectedBlogPost.title} type="article" />
-		{/if}
+		<SEO
+			title={BLOG_META[slug]?.title ?? selectedBlogPost.title}
+			description={BLOG_META[slug]?.description}
+			type="article"
+			image={BLOG_META[slug]?.image ?? selectedBlogPost.image ?? `/blog/${slug}.webp`}
+			imageAlt={BLOG_META[slug]?.imageAlt ?? `Illustration for ${selectedBlogPost.title}`}
+			imageWidth={BLOG_META[slug]?.imageWidth}
+			imageHeight={BLOG_META[slug]?.imageHeight}
+			publishedTime={selectedBlogPost.date}
+			twitterCard="summary_large_image"
+		/>
 		<BlogPost
 			content={selectedBlogPost.content}
 			teaser={selectedBlogPost.teaser}

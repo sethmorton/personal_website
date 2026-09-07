@@ -10,7 +10,7 @@
 
 <SEO
 	title="Blog – Seth Morton"
-	description="Essays on engineering, systems, and building tools that scale."
+	description="Essays by Seth Morton on AI architectures, continual learning, biology, thermodynamic computation, and how we build and discover."
 	type="website"
 	twitterCard="summary_large_image"
 />

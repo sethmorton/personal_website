@@ -107,7 +107,7 @@ function draw(t) {
   homes.forEach((_, i) => block(i, opacity));
   const count = births.filter(b => time >= b).length;
   g.globalAlpha = opacity; g.fillStyle = SLATE; g.font = '18px Georgia, serif'; g.textAlign = 'center';
-  g.fillText('New evidence revisits old relationships', 320, 37);
+  g.fillText('Every new block adds more relationships', 320, 37);
   g.fillText(count + ' blocks · ' + active.length + ' springs', 320, 375);
   g.globalAlpha = 1;
   window.__coupling = { time: t, nodeCount: count, edgeCount: active.length,
