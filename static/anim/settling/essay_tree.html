@@ -28,13 +28,14 @@ const mkAnts = (n, v0) => Array.from({ length: n }, () => ({ t: rnd(), v: v0 * (
 // [id, parent, x, y, half-width, half-height, weight, when written]
 const DEF = [
   ['T', null, 320, 68, 50, 12, 1.6, 0.3],
-  ['A', 'T', 160, 168, 30, 9, 1, 1.3], ['B', 'T', 320, 168, 30, 9, 1, 2.1], ['C', 'T', 480, 168, 30, 9, 1, 2.9],
+  ['A', 'T', 160, 168, 30, 9, 1, 1.3], ['B', 'T', 320, 168, 40, 12, 1, 2.1], ['C', 'T', 480, 168, 30, 9, 1, 2.9],
   ['a1', 'A', 122, 263, 17, 6, 0.8, 3.6], ['a2', 'A', 198, 263, 17, 6, 0.8, 3.9],
   ['b1', 'B', 282, 263, 17, 6, 0.8, 4.2], ['b2', 'B', 358, 263, 17, 6, 0.8, 4.5],
-  ['c1', 'C', 442, 263, 17, 6, 0.8, 4.8], ['c2', 'C', 518, 263, 17, 6, 0.8, 5.1],
+  ['c1', 'C', 442, 263, 17, 6, 0.8, 4.8], ['c2', 'C', 518, 263, 28, 9, 0.8, 5.1],
   ['c3', 'C', 578, 270, 17, 6, 1.0, 11.0],       // the new path, condensing out of scattered dots
   ['D', 'T', 590, 168, 30, 9, 0.15, 11.6],       // a fourth paragraph, a ghost until it firms
 ];
+const LABELS = { T: 'Thesis', B: 'Paragraph', c2: 'Sentence' };
 const SIBS = [['A', 'B'], ['B', 'C']];
 const CROSS = [['c2', 'A'], ['a2', 'C']];
 const K = 2, G = 16, ANCH = 8, HOMEX = 2.5, XF = 0.25, LEAN = 40, ACCEPT = 0.05;
@@ -150,7 +151,12 @@ function frame(now) {
       const sc = b.cond * b.cond * 45, sz = an.r * (0.85 + b.sc * 0.25);
       g.fillRect(P[0] + Math.cos(an.j + T * 2.4) * jit + Math.cos(an.j * 7) * sc - sz / 2, P[1] + Math.sin(an.j * 1.3 + T * 2.1) * jit + Math.sin(an.j * 11) * sc - sz / 2, sz, sz); dots++;
     }
-    if (!b.ghost && b.cond < 0.5) {                     // the writing inside: a faint dot-dash row that slowly re-spaces
+    if (LABELS[b.id] && b.cond < .5) {
+      g.fillStyle = mix(INK, DEEP, 0.5, b.alive * out);
+      g.font = (b.id === 'T' ? '14px' : '12px') + ' Georgia, serif';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(LABELS[b.id], 0, 0);
+    } else if (!b.ghost && b.cond < 0.5) {                     // the writing inside: a faint dot-dash row that slowly re-spaces
       g.fillStyle = mix(INK, INK, 0, (0.42 + b.hot * 0.3) * b.alive * out);
       const rows = h > 11 ? 2 : 1;
       for (let q = 0; q < rows; q++) { const y = rows === 1 ? 0 : (q - 0.5) * 7;

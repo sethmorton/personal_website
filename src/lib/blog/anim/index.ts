@@ -112,7 +112,7 @@ export const ANIMS: Record<string, Variant[]> = {
 		{
 			name: 'springs',
 			label: 'Coupled blocks',
-			caption: 'More blocks mean more connections to revisit.'
+			caption: 'Each new block adds another round of work.'
 		},
 		{
 			name: 'ledger',

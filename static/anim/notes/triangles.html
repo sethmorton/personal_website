@@ -81,17 +81,17 @@ for (const e of distant.sort((a, b) => b.L0 - a.L0)) {
 const adj = new Uint8Array(N * N); for (const e of E) adj[e.a * N + e.b] = adj[e.b * N + e.a] = 1;
 for (const face of faces) face.edges = face.nodes.map((a, k) => E.find(e => key(e.a, e.b) === key(a, face.nodes[(k + 1) % 3])));
 
-// ---- the discovery, every 7 s: one node learns something ----
+// ---- the discovery, every 9 s: one node learns something ----
 let T = 0, moved = -1, moveT = -10, nextMove = 1.6, mx = 0, my = 0, msx = 0, msy = 0;
 // hops from the moved node, for what each agent can reconstruct
 const hop = new Int8Array(N), q = new Int8Array(N);
 function move() {
   const cross = E.filter(e => e.cross);
-  const m = cross[Math.floor(T / 7) % cross.length].a; moved = m; moveT = T;
-  // right: the node moves 50 px and stays; the mesh will follow
-  msx = rx[m]; msy = ry[m];
+  const m = cross[Math.floor(T / 9) % cross.length].a; moved = m; moveT = T;
+  // right: the node moves 88 px and stays; the mesh will follow
+  msx = rx[m]; msy = ry[m]; mx = msx; my = msy;
   for (let k = 0; k < 80; k++) {
-    const a = rnd() * 6.283, x = rx[m] + Math.cos(a) * 50, y = ry[m] + Math.sin(a) * 50;
+    const a = rnd() * 6.283, x = rx[m] + Math.cos(a) * 88, y = ry[m] + Math.sin(a) * 88;
     if (x < 34 || x > 286 || y < 54 || y > 346) continue;
     let ok = true; for (let j = 0; j < N; j++) if (j !== m && Math.hypot(x - rx[j], y - ry[j]) < 34) ok = false;
     if (ok) { mx = x; my = y; break; }
@@ -103,7 +103,7 @@ function move() {
 }
 
 // ---- right panel physics: overdamped springs along the mesh, rest lengths that remember ----
-const K = 3.2, MOB = 1, ACCEPT = 0.25;
+const K = 1.8, MOB = 1, ACCEPT = 0.08;
 const fx = new Float32Array(N), fy = new Float32Array(N);
 function settle(dt) {
   fx.fill(0); fy.fill(0);
@@ -113,7 +113,7 @@ function settle(dt) {
     e.strain = (L - e.L0) / e.L0;
     e.L0 += (L - e.L0) * ACCEPT * dt;                              // the mesh accepts the shape it is pulled into
   }
-  const u = ease((T - moveT) / 1.1);
+  const u = ease((T - moveT) / 3.6);
   for (let i = 0; i < N; i++) {
     if (i === moved) { rx[i] = msx + (mx - msx) * u; ry[i] = msy + (my - msy) * u; continue; }
     rx[i] += fx[i] * MOB * dt; ry[i] += fy[i] * MOB * dt;
@@ -287,7 +287,7 @@ function chrome() {
 
 function advance(dt) {
   T += dt;
-  if (T > nextMove) { move(); nextMove = T + 7; }
+  if (T > nextMove) { move(); nextMove = T + 9; }
   if (moved >= 0) { settle(dt); agents(dt); }
 }
 function draw() {

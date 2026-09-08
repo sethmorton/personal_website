@@ -10,16 +10,16 @@
 </style>
 </head>
 <body>
-<canvas id="c" role="img" aria-label="A schematic of dense coupled state. Six blocks share fifteen springs, including connections across the whole field. A seventh and eighth block each tug an earlier block; the existing relationships transmit the change. Eight blocks share twenty-eight springs."></canvas>
+<canvas id="c" role="img" aria-label="Blocks arrive one at a time. Every arrival triggers a new pass over all existing springs. The cumulative counter reaches eighty-four relationship checks across eight rounds."></canvas>
 <script>
-const W = 640, H = 400, D = 2, CYCLE = 12;
+const W = 640, H = 400, D = 2, CYCLE = 14;
 const PAPER = '#f7f4ec', BLUE = '#28617a', SLATE = '#23485f', GOLD = '#ac8b50';
 const c = document.getElementById('c'); c.width = W * D; c.height = H * D;
 const g = c.getContext('2d'); g.scale(D, D);
 const clamp = x => Math.max(0, Math.min(1, x));
 const ease = x => { x = clamp(x); return x * x * (3 - 2 * x); };
 const homes = [[145, 120], [310, 96], [495, 135], [530, 255], [335, 293], [160, 257], [77, 195], [456, 321]];
-const births = [0, 0, 0, 0, 0, 0, 2.4, 6.2];
+const births = [0, .65, 1.4, 2.3, 3.4, 4.7, 7.1, 10.1];
 const edges = [];
 for (let b = 1; b < homes.length; b++) for (let a = 0; a < b; a++) {
   edges.push({ a, b, rest: Math.hypot(homes[b][0] - homes[a][0], homes[b][1] - homes[a][1]), strain: 0 });
@@ -92,10 +92,30 @@ function draw(t) {
   t = ((t % CYCLE) + CYCLE) % CYCLE;
   if (t < time) reset();
   while (time < t - .000001) step(Math.min(1 / 120, t - time));
-  const opacity = ease(t / .5) * (1 - ease((t - 11.3) / .7));
+  const opacity = ease(t / .5) * (1 - ease((t - 13.3) / .7));
   g.globalAlpha = 1; g.drawImage(paper, 0, 0, W, H);
   const active = edges.filter(e => time >= births[e.b]);
   active.forEach(e => spring(e, opacity));
+  const count = births.filter(b => time >= b).length;
+  const roundStart = births[count - 1];
+  const roundEnd = (births[count] ?? 13.1) - .15;
+  const progress = clamp((time - roundStart - .3) / (roundEnd - roundStart - .3));
+  const checked = Math.min(active.length, Math.floor(progress * active.length));
+  // Each undirected spring is checked once per round, including existing springs.
+  const previousChecks = count * (count - 1) * (count - 2) / 6;
+  const totalChecks = previousChecks + checked;
+  if (checked < active.length && time > roundStart + .3) {
+    const e = active[checked], u = progress * active.length - checked;
+    g.strokeStyle = GOLD; g.lineWidth = 1.8; g.globalAlpha = opacity;
+    g.beginPath();
+    for (let k = 0; k <= 80; k++) {
+      const p = edgePoint(e, k / 80);
+      if (k) g.lineTo(...p); else g.moveTo(...p);
+    }
+    g.stroke();
+    const p = edgePoint(e, u);
+    g.fillStyle = SLATE; g.beginPath(); g.arc(...p, 2.5, 0, Math.PI * 2); g.fill();
+  }
   // Only stressed connections carry marks: the motion depicts the response, not decoration.
   const stressed = active.filter(e => Math.abs(e.strain) > .025).sort((a, b) => Math.abs(b.strain) - Math.abs(a.strain)).slice(0, 4);
   g.fillStyle = GOLD;
@@ -105,12 +125,11 @@ function draw(t) {
     g.beginPath(); g.arc(p[0], p[1], 1.35, 0, Math.PI * 2); g.fill();
   }
   homes.forEach((_, i) => block(i, opacity));
-  const count = births.filter(b => time >= b).length;
   g.globalAlpha = opacity; g.fillStyle = SLATE; g.font = '18px Georgia, serif'; g.textAlign = 'center';
-  g.fillText('Every new block adds more relationships', 320, 37);
-  g.fillText(count + ' blocks · ' + active.length + ' springs', 320, 375);
+  g.fillText('New blocks make us revisit earlier relationships', 320, 37);
+  g.fillText(totalChecks + ' relationship checks so far', 320, 375);
   g.globalAlpha = 1;
-  window.__coupling = { time: t, nodeCount: count, edgeCount: active.length,
+  window.__coupling = { time: t, nodeCount: count, edgeCount: active.length, totalChecks, checked,
     positions: positions.slice(0, count).map(p => [...p]),
     edges: active.map(e => [e.a, e.b]) };
 }

@@ -161,7 +161,7 @@
 	<body>
 		<header><span class="title">Persistent state</span><span id="status">Settled</span></header>
 		<canvas
-			aria-label="Three connected wireframe layers with rolling balls. New evidence sends broad waves across the field. Drag horizontally or use arrow keys to rotate."
+			aria-label="Three connected wireframe layers with one rolling ball. New evidence sends broad waves across the field. Drag horizontally or use arrow keys to rotate."
 			tabindex="0"
 		></canvas>
 		<p id="fallback" hidden>
@@ -207,7 +207,18 @@
 				const palette = getComputedStyle(document.documentElement);
 				const color = (name) => palette.getPropertyValue(`--${name}`).trim();
 				const scene = new THREE.Scene();
-				scene.background = new THREE.Color(color('paper'));
+				const backdrop = document.createElement('canvas');
+				backdrop.width = 512;
+				backdrop.height = 320;
+				const bg = backdrop.getContext('2d');
+				const wash = bg.createRadialGradient(256, 160, 35, 256, 160, 275);
+				wash.addColorStop(0, '#e6eeeb');
+				wash.addColorStop(1, color('paper'));
+				bg.fillStyle = wash;
+				bg.fillRect(0, 0, 512, 320);
+				const background = new THREE.CanvasTexture(backdrop);
+				background.colorSpace = THREE.SRGBColorSpace;
+				scene.background = background;
 				scene.fog = new THREE.Fog(color('paper'), 16, 30);
 				const camera = new THREE.PerspectiveCamera(39, 1, 0.1, 100);
 				const field = new THREE.Group();
@@ -279,25 +290,13 @@
 				const displacementVectors = lines(samples.length, color('gold'), 0.95);
 				const tangentVectors = lines(samples.length, color('slate'), 0.65);
 				const ties = lines(24, color('slate'), 0.16);
-				const bounds = new THREE.Box3Helper(
-					new THREE.Box3(new THREE.Vector3(-4.3, -3, -2.8), new THREE.Vector3(4.3, 3.2, 2.8)),
-					color('gold')
-				);
-				bounds.material.transparent = true;
-				bounds.material.opacity = 0.32;
-				field.add(bounds);
-				const grid = new THREE.GridHelper(13, 26, color('gold'), color('slate'));
-				grid.position.y = -3.15;
-				grid.material.transparent = true;
-				grid.material.opacity = 0.13;
-				scene.add(grid);
 				scene.add(new THREE.HemisphereLight('#ffffff', color('slate'), 2));
 				const light = new THREE.DirectionalLight('#ffffff', 3);
 				light.position.set(-4, 8, 5);
 				scene.add(light);
 				const ballGeometry = new THREE.SphereGeometry(0.23, 24, 16);
-				const balls = Array.from({ length: 9 }, (_, i) => {
-					const tint = color(i % 3 === 0 ? 'gold' : i % 3 === 1 ? 'indigo' : 'slate');
+				const balls = Array.from({ length: 1 }, () => {
+					const tint = color('gold');
 					const mesh = new THREE.Mesh(
 						ballGeometry,
 						new THREE.MeshStandardMaterial({
@@ -323,11 +322,11 @@
 					return {
 						mesh,
 						trail,
-						layer: Math.floor(i / 3),
-						x: Math.sin(i * 2.4) * 3,
-						z: Math.cos(i * 1.7) * 1.8,
-						vx: Math.cos(i * 1.9) * 1.4,
-						vz: Math.sin(i * 1.9) * 1.4,
+						layer: 2,
+						x: -1.2,
+						z: 0.6,
+						vx: 1.4,
+						vz: 0.6,
 						fresh: true
 					};
 				});
@@ -605,6 +604,7 @@
 							object.geometry?.dispose();
 							object.material?.dispose();
 						});
+						background.dispose();
 						renderer.dispose();
 					},
 					{ once: true }

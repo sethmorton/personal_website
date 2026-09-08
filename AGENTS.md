@@ -37,3 +37,7 @@
 
 - Show only one selected animation per passage in both development and production, with short captions and no semicolons or simulation disclaimers. Keep Stream selected for causal generation.
 - In passing notes, recipients must visibly rebuild different structures from the note within their own contexts, rather than reproduce the sender’s unchanged mesh.
+
+- Count cumulative relationship checks across repeated rounds in the dense-springs figure, not just connections at the current size.
+- Keep the HAWF clip to one ball on the stacked fields, with a subtle paper-toned background and no bounding box or floor grid.
+- Label only a few essay blocks, and give passing-notes reconstructions time to complete while the shared mesh visibly deforms.

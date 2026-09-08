@@ -51,7 +51,7 @@ try {
 		await page.$$eval(
 			'figure.anim figcaption',
 			(nodes) =>
-				nodes.filter((n) => n.textContent.includes('More blocks mean more connections')).length
+				nodes.filter((n) => n.textContent.includes('Each new block adds another round')).length
 		),
 		1
 	);
@@ -74,7 +74,7 @@ try {
 				p.textContent.startsWith('This is the broad intuition')
 			);
 			const springs = [...document.querySelectorAll('figure.anim')].find((f) =>
-				f.textContent.includes('More blocks mean more connections')
+				f.textContent.includes('Each new block adds another round')
 			);
 			return (
 				!!paragraph &&

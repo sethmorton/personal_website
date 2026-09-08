@@ -16,8 +16,8 @@ for (const [, group, body] of registry.matchAll(/^\t(\w+): \[([\s\S]*?)^\t\]/gm)
 	for (const [, name] of body.matchAll(/name: '(\w+)'/g)) figures.push({ group, name });
 const cycles = {
 	'hawf/field': 12,
-	'notes/triangles': 8.5,
-	'cubic/springs': 12,
+	'notes/triangles': 20,
+	'cubic/springs': 14,
 	'settling/essay_tree': 18 / 1.7,
 	'settling/essay_page': 21,
 	'relight/sheet': 10.8,
