@@ -14,9 +14,9 @@ The noise persisted. And [the pigeons came back](https://www.lindau-nobel.org/pi
 
 What eventually resolved the problem was a phone call: a colleague mentioned offhandedly that [a group at Princeton](https://adsabs.harvard.edu/full/1965ApJ...142..414D) had been building a detector for a faint microwave glow predicted to be left over from the early universe.
 
-The hiss turned out to be the [cosmic microwave background](https://ui.adsabs.harvard.edu/abs/1965ApJ...142..419P/abstract) - the first direct evidence of the Big Bang.
-
 Fourteen years later, Penzias and Wilson were in Stockholm [accepting the Nobel Prize](https://www.nobelprize.org/prizes/physics/1978/speedread/).
+
+The hiss turned out to be the [cosmic microwave background](https://ui.adsabs.harvard.edu/abs/1965ApJ...142..419P/abstract) - the first direct evidence of the Big Bang.
 
 I think a lot about this story. On the day of that phone call, Penzias and Wilson collected zero new measurements.
 
