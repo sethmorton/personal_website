@@ -24,13 +24,13 @@ And yet, the investigation had undergone a metamorphosis. Their goal had inverte
 
 How can a machine do that?
 
-Today's AI can remember more evidence, search through more possibilities, reflect for longer, and modify parts of itself while it works. But it runs into the same core problem:
+Today's AI can remember more evidence, search through more possibilities, reflect longer, and modify parts of itself while it works. But it runs into the same core problem:
 
 What happens when something you learn now should ripple backward, change what the past means, and open entirely new paths forward?
 
 Or more precisely, how do machines achieve the *omnidirectional* style of thinking humans do?
 
-**Co-construction.**
+## Co-construction.
 
 I think the clearest way to motivate this problem is by illustrating the process of writing an essay.
 
@@ -58,7 +58,7 @@ This process is the shape of most interesting research and creation. You begin w
 
 In other words, the answer and the problem are co-constructed.
 
-**Omnidirectional inference.**
+## Omnidirectional inference.
 
 This is exactly where today's models run into an architectural problem.
 
@@ -128,7 +128,7 @@ So machine learning took a different route.
 
 How much more capable can we make a model while keeping inference mostly forward-moving?
 
-**More room to think.**
+## More room to think.
 
 I think there are three approaches that have historically built on each other to improve capability while moving solely forward: giving the model a scratchpad, letting it refine its internal representations, and organizing its work across multiple attempts.
 
@@ -192,7 +192,7 @@ So why isn't it?
 
 > Sidenote: There is another kind of model architecture, called [diffusion](https://arxiv.org/abs/2502.09992), which offers a different approach. Instead of generating tokens from left to right, diffusion models start with an incomplete sentence and gradually refine it over steps. So for example, it might start with something like "She [MASK] the [MASK] because she [MASK]," then fill in "She missed the train because she was late," and then keep refining that. New approaches like [latent diffusion](https://arxiv.org/abs/2212.09462) also do this for the representations of those tokens. However, the refinement works solely on the latest representations and tokens. When we refine, the old interpretation is always replaced by a new one. Furthermore, the rule used to make those refinements is learned during model training and is largely fixed at inference time.
 
-**Passing notes.**
+## Passing notes.
 
 Observationally, even maximal self-improving harnesses like SIA or Prime-Agent [fail to produce genuinely novel results autonomously](https://www.primeintellect.ai/blog/measuring-autonomous-research). [[sn: From [Prime Intellect's post on measuring autonomous research](https://www.primeintellect.ai/blog/measuring-autonomous-research): "We were again surprised by the lack of novelty. The models clearly understand the objects they manipulate at a deep level, and yet very few genuinely new ideas emerge."]] In the search process, even while learning, the harnesses tend to remain parochial - [concentrating in local neighborhoods of idea space](https://arxiv.org/abs/2605.27905) rather than expanding outward. This, I think, is really key - if the harness were the missing piece, you would think that novelty should scale with harness advancement: more memory, more branching and sophisticated searching, more self-modification should open new regions of idea space.
 
@@ -216,7 +216,7 @@ With springs, you change something in a system and those changes propagate until
 
 > Sidenote: there are also other problems with systems powered by autoregressive inference, such as [hallucination snowballing](https://arxiv.org/abs/2305.13534): an early mistake can lead a model to generate further false claims to justify it, even when it can recognize those claims as wrong in isolation.
 
-**Settling.**
+## Settling.
 
 Imagine these springs pushing and pulling until they reach a stable configuration. We can call this process **settling**.
 
@@ -234,7 +234,7 @@ Second, how easily should the structure move? More precisely, how far from equil
 
 > Sidenote: I talk about this much more in depth in my blog on [the Geometry of Surprise](https://www.sethmorton.com/blog/the_geometry_of_surprise).
 
-**Hardware.**
+## Hardware.
 
 This also leads to my thesis around alternative hardware.
 
@@ -246,7 +246,7 @@ This is very much contrary to what settling-based systems need: what gets update
 
 I believe the future of hardware will be built around more sparse, irregular, settling-based computation.
 
-**Conclusion.**
+## Conclusion.
 
 Open-ended research isn't merely a longer chain of thought. On the day Penzias and Wilson received that phone call, one new piece of information stretched one spring, and the entire investigation settled into a different shape.
 

@@ -43,3 +43,5 @@
 - Label only a few essay blocks, and give passing-notes reconstructions time to complete while the shared mesh visibly deforms.
 
 - Exclude .svelte-kit and other local build caches explicitly in .vercelignore before CLI deployments, and check upload size against the production source bundle.
+
+- Use real section headings in essay Markdown so subtitles inherit the blog’s heading size rather than body-sized bold paragraph text.
