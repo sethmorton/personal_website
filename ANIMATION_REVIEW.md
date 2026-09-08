@@ -25,7 +25,7 @@ The author rejected the clustered-node redesign and the separate relationship-ce
 
 - Most videos: 1280×800, 24fps, H.264. The original Three.js field: 960×600, 24fps, about 4 MB. Render canvases directly, without a GIF palette conversion.
 - Physics advances at 60Hz between captured frames. Three.js has a deterministic capture mode that also works when its browser tab is backgrounded.
-- Vite imports produce hashed immutable media URLs. The Vercel adapter configures CDN caching; deployment and actual cache hits have not been tested.
+- Vite imports produce hashed immutable media URLs. Production delivery on www.sethmorton.com is verified: all eight selected MP4s return CDN HIT, video/mp4, year-long immutable caching and 206 byte-range responses.
 - Lazy-load on entering view, pause offscreen without resetting time, and show posters under reduced motion. The optional 18-second teaser loads only when opened.
 - Original experimental variants remain in the source archive. Both development and production show only one selected animation per passage, without variant controls. Captions are short, with no semicolons or simulation disclaimers.
 
@@ -37,7 +37,10 @@ The existing “maximal upper bound” language is stronger than the dense-updat
 
 ## Verification
 
-- Production layout checked at 320, 390, 768 and 1440 pixels, including publication, redirects, eight figures, pause/resume, offscreen continuity and reduced motion.
+- Live production layout checked at 320, 390, 768 and 1440 pixels, including publication, redirects, eight figures, pause/resume, offscreen continuity and reduced motion. WebKit 26.5, Chromium 151 and Firefox 153 also passed mobile and desktop playback checks without uncaught errors or horizontal overflow.
 - Explicit figure variants and placement after the broad-intuition paragraph have browser assertions.
 - Revised MP4s fully decoded with ffmpeg; dimensions, frame counts, codec and pixel format checked. Sampled contact sheets and mobile screenshots reviewed.
 - Isolated production build excluding archival sources passed. Static output is approximately 153 MB. Typecheck and application formatting checks passed. Whole-repository formatting still reports pre-existing unformatted animation studies and vendored scripts.
+
+- Live SEO checks passed for all 16 public pages. All 16 referenced image URLs returned 200. Twitterbot receives the blue-horn 1200×630 card in server-rendered metadata.
+- The dense-springs counter was verified at each completed round: 0, 1, 4, 10, 20, 35, 56, 84. Notes reconstruct all 14 nodes in each receiving context before the next discovery.
