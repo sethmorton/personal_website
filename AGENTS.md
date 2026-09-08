@@ -41,3 +41,5 @@
 - Count cumulative relationship checks across repeated rounds in the dense-springs figure, not just connections at the current size.
 - Keep the HAWF clip to one ball on the stacked fields, with a subtle paper-toned background and no bounding box or floor grid.
 - Label only a few essay blocks, and give passing-notes reconstructions time to complete while the shared mesh visibly deforms.
+
+- Exclude .svelte-kit and other local build caches explicitly in .vercelignore before CLI deployments, and check upload size against the production source bundle.

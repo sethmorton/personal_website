@@ -3,3 +3,10 @@
 static/teaser/
 static/anim/
 .render-cache/
+
+# Local build caches are regenerated in Vercel.
+.svelte-kit/
+.output/
+build/
+.env
+.env.*
