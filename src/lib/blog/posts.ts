@@ -12,6 +12,7 @@ import theGeometryOfSurpriseContent from '$lib/blog/content/the_geometry_of_surp
 import pathsNotPointsContent from '$lib/blog/content/paths_not_points.txt?raw';
 import inferenceFilm from '$lib/blog/media/the-shape-of-inference.mp4?url';
 import theShapeOfInferenceContent from '$lib/blog/content/the_shape_of_inference.txt?raw';
+import alignedAccelerationContent from '$lib/blog/content/aligned_acceleration.txt?raw';
 
 export type BlogPostEntry = {
 	title: string;
@@ -101,6 +102,12 @@ export const publishedBlogPosts: BlogPostEntry[] = [
 ];
 
 export const draftBlogPosts: BlogPostEntry[] = [
+	{
+		title: 'Aligned Acceleration',
+		slug: 'aligned-acceleration',
+		date: '2026-09-14',
+		content: alignedAccelerationContent
+	},
 	{
 		title: 'Paths, Not Points',
 		slug: 'paths_not_points',
