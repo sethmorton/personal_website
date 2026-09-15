@@ -10,7 +10,7 @@
 	let current = $state('introduction');
 	let expanded = $state(true);
 	const editUrl =
-		'https://github.com/sethmorton/personal_website/edit/draft/aligned-acceleration/src/lib/blog/content/aligned_acceleration.txt';
+		'https://github.com/sethmorton/personal_website/edit/main/src/lib/blog/content/aligned_acceleration.txt';
 
 	onMount(() => {
 		expanded = window.matchMedia('(min-width: 1000px)').matches;

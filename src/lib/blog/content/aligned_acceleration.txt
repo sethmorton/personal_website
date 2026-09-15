@@ -1,44 +1,60 @@
 # Aligned Acceleration
 
-> "Jacob is correct here. We really do earnestly believe AI could kill all humans! I personally think it is >10% within the next decade."
+> "...We really do earnestly believe AI could kill all humans! I personally think it is >10% within the next decade."
 >
 > Evan Hubinger, Alignment Lead at Anthropic, September 9, 2026
 
-That warning comes at a tumultuous moment in our history. The very people building the most powerful technology of our time are telling us, in their own words, that they do not trust what they are building. And they are saying it to a public that is already weary. Weary of the promises. Weary of a decade in which the technology that shapes how we work, what we read, who we hear from, and what we are paid was built to take from us, our attention and our data and our time, and to give back as little as it could. Weary of watching the rules for the tools we live by get written far away, by a handful of people we did not choose, and cannot reach, and cannot replace.
+> "Show me the incentive and I'll show you the outcome."
+>
+> Charlie Munger
 
-But it also comes at a moment of enormous unfinished work. More of our parents and grandparents are living with Alzheimer's than at any time in human history. Oil still powers the world. Somewhere tonight a family is sitting in a hospital waiting room, praying for a cure that science has not yet delivered, because prayer is the only thing left in their hands.
+We are living through a strange and consequential moment.
 
-So this is the strangeness of the moment. We have never been more capable. And we have never felt further from the controls. For all the real progress we have made, the machines grew stronger while our say over them grew weaker. That is the feeling underneath all of this. Not fear of the machine. The sense that it was never ours.
+A moment where the people building the most powerful technology of our time are warning us, in their own words, that they do not trust what they are building.
 
-I came to AI from biology. I was in my early twenties, trying to make peace with how hopeless that field could feel. Biology is a black box. I watched people I loved get sick with things we cannot yet treat, and I watched the smartest people I knew reach into a system so complex that our best tools came back with almost nothing. It was there that I learned something that has stayed with me. Real change in biology comes when more people can simulate, and test, and try, and fail, and try again. Every bit of intelligence we could add to our models meant one more experiment we could run, one more question we could ask. It meant better lives for the people I loved.
+A moment when those warnings are falling on weary ears. Weary from a decade in which our relationship to technology has been redefined. We can summon nearly any song, film, product, or person in seconds -- but the systems through which we work, speak, shop, and learn are governed by institutions most people cannot influence and cannot meaningfully leave. Technology that was once meant to aid us is now built to extract from us.
 
-I still believe that. And it is a belief that reaches well past biology. At its best, technology widens what a person can do. It has let us live longer and travel farther and speak across oceans and hold nearly all of human knowledge in one hand. But its worth was never in the machine. Its worth was in what it handed back to the person holding it: a greater say over the conditions of their own life. That is what technology is for.
+And yet this is also a moment of enormous unfinished work. More of our parents and grandparents are living with Alzheimer's than at any time in human history. More oil than ever powers the world. Somewhere tonight a family is sitting in a hospital waiting room, praying for a cure that science has not yet delivered, because prayer is the only thing left in their hands.
 
-But right now, we are walking through a fog. We are told this machine will lift the drudgery from our days and hand us back our hours. We are told, in the same breath, that the compute and the power it burns are enormous, and that the thing itself might be deadly. And so the argument about what to do has hardened into two camps.
+We have more power at our fingertips than any generation before us. Yet we are moving into the future as if through a thick fog: the technology advances, the headlines multiply, and people struggle to see where they fit in the world taking shape.
 
-One says: slow down. If we can build faster than we can understand, then every step at the frontier is a gamble with stakes we cannot take back. Buy time. Build the institutions and the tools to know what we are making before we make something we cannot undo.
+I am an AI researcher. I, like many of my peers, did not enter this field to kill all humans. Instead, my time in AI is predicated on my work in biology. There, I discovered the sheer complexity of living systems. Inside a single cell, thousands of processes unfold at once, each interacting with the others, each changing the meaning of what comes next. To fully understand disease, we have to understand build system robust enough to model it.
 
-The other says: you cannot freeze a technology the whole world is racing to build. If we stop, others will not, and we hand the future to people who do not share our values. So keep the frontier ours. Keep it open. Back new labs, trust competition, and let many hands make it both stronger and safer.
+That is why I came to believe that one of the greatest tools we could give biology is more intelligence and computation. More intelligence meant more of life we could model. More experiments we could run. More questions we could ask. And, for the people I loved, more hope that those questions might finally find answers.
 
-Both are partly right. But both are answering a question neither has said out loud. It is not how fast. It is not how slow. It is this:
+I still believe that. And this belief is one that reaches well past biology. At its best, technology widens what a person can do. It has let us live longer and travel farther and speak across oceans and hold nearly all of human knowledge in one hand. But its worth was never in the machine, but in what it gave the person holding it: a greater command over the conditions of their own life.
 
-**How do we keep progress moving, and keep our hands on the wheel?**
+That is what technology is for.
 
-I call the answer Aligned Acceleration. But to explain it, I have to start with how we let go of the wheel in the first place.
+Artificial intelligence gives us a chance to carry that purpose further. It can lift the drudgery from our days, return hours to our lives, and help us understand diseases that have resisted generations of scientists. But a technology powerful enough to widen human agency is also powerful enough to narrow it. It could reorder entire professions, concentrate extraordinary power, and create dangers its own builders admit they do not yet understand.
 
-## The Loss of Ownership
+That tension has given rise to two instincts.
 
-For most of the last century, technology was progress you could see, touch, and own. In the decades after World War II, the television gained color. The personal computer came into the home. The iPhone put a computer in your pocket, and the internet opened a door to people and knowledge across the world.
+One says: slow down. If we can build faster than we can understand, then every step at the frontier is a gamble with consequences we may not be able to reverse. Buy time. Build the institutions and tools needed to understand what we are making before we create something we cannot undo.
 
-Through all of it, people felt like participants in progress. You bought the machine. You learned to use it. It became yours. Technology was something that entered your life and gave you more power over it.
+The other says: move forward. The world will not stop building this technology because we choose to. If we fall behind, we may hand the future to people who do not share our values. So keep the frontier open. Back new laboratories. Lower the cost of building. Place this power in more hands.
 
-But by the late 2010s, that began to change. Technology shifted from things we owned to places we accessed. Products became subscriptions. Information moved onto platforms. Algorithms, the rules a company writes to decide what you see, decided more and more of what we saw, and the systems we depended on became harder and harder to leave.
+There is wisdom in both instincts. But the choice before us is larger than whether to press forward or pull back.
 
-We gained a great deal in that trade. Two-day shipping. Nearly any song, any video, any fact in seconds. These companies grew to a scale no company had reached before, and our reach grew with them.
+At stake is not simply how quickly technology advances. It is whether, as technology becomes more powerful, people become more powerful with it.
 
-But our say did not. Technology became infrastructure, governed by a few institutions that ordinary people could neither influence nor easily leave. And that changed how people felt about technology itself. Cambridge Analytica [cite]. A decade of privacy scandals [cite]. _The Social Dilemma_ [cite], in which the people who built social media explained how they built it to keep us hooked. Each one taught the same lesson. Big Tech was no longer simply working for people. People were the product.
+I call the answer Aligned Acceleration.
 
-So when AI arrived in late 2022, it arrived into a crisis of trust. And this is what people were told.
+## Our Collective Loss of Ownership
+
+For most of the last century, technological progress arrived as something you could see, touch, and bring home. The television gained color. The personal computer found its way onto the family desk. The smartphone placed a library in your pocket and opened a door to people across the world.
+
+You bought the machine. You learned to use it. It became yours. And because it was yours, it gave you greater command over your own life.
+
+By the late 2010s, that relationship began to change. Technology shifted from objects we owned to services we entered. Products became subscriptions. Information gathered on platforms. Invisible systems decided more of what we saw, whom we heard from, and what held our attention. The more of our lives that moved inside these systems, the harder they became to leave.
+
+We gained a great deal in that trade. Packages arrived in two days. A small business could reach customers around the world. These companies grew to a scale no company had reached before, and our reach grew with them.
+
+But our say did not. Our movements were tracked. Our personal information was gathered and sold. Cambridge Analytica showed how that information could be used to influence us [cite]. In _The Social Dilemma_ showed us how social media was designed to keep us hooked [cite].
+
+So when generative AI entered public life in late 2022, it met a public that had already learned to distrust the institutions building its technology.
+
+And this is what people were told:
 
 This is the most powerful technology ever created.
 
@@ -56,9 +72,9 @@ And the people building it believe it could kill you.
 
 Is it any wonder, then, that most Americans are more concerned than excited about AI, and want more control over how it is used in their lives? [cite: Pew]
 
-That concern is reasonable. A technology of extraordinary power is arriving fast, and the people it will touch most feel they have the least say in where it goes. The machines got stronger. Our grip got weaker. And so we face a choice: how do we keep our power over the future without giving up the progress that can make that future better?
+That concern is reasonable. But it has narrowed the debate to a single question: Should we slow the frontier until our ability to govern it catches up? Or accelerate, so that we do not surrender the future to those who will?
 
-## Pace
+## The False Choice
 
 One answer is to slow down. To "pace the frontier." [cite: Dario Amodei]
 
