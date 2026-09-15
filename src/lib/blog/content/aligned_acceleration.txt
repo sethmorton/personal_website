@@ -1,0 +1,153 @@
+# Aligned Acceleration
+
+> "Jacob is correct here. We really do earnestly believe AI could kill all humans! I personally think it is >10% within the next decade."
+>
+> Evan Hubinger, Alignment Lead at Anthropic, September 9, 2026
+
+That warning comes at a tumultuous moment in our history. The very people building the most powerful technology of our time are telling us, in their own words, that they do not trust what they are building. And they are saying it to a public that is already weary. Weary of the promises. Weary of a decade in which the technology that shapes how we work, what we read, who we hear from, and what we are paid was built to take from us, our attention and our data and our time, and to give back as little as it could. Weary of watching the rules for the tools we live by get written far away, by a handful of people we did not choose, and cannot reach, and cannot replace.
+
+But it also comes at a moment of enormous unfinished work. More of our parents and grandparents are living with Alzheimer's than at any time in human history. Oil still powers the world. Somewhere tonight a family is sitting in a hospital waiting room, praying for a cure that science has not yet delivered, because prayer is the only thing left in their hands.
+
+So this is the strangeness of the moment. We have never been more capable. And we have never felt further from the controls. For all the real progress we have made, the machines grew stronger while our say over them grew weaker. That is the feeling underneath all of this. Not fear of the machine. The sense that it was never ours.
+
+I came to AI from biology. I was in my early twenties, trying to make peace with how hopeless that field could feel. Biology is a black box. I watched people I loved get sick with things we cannot yet treat, and I watched the smartest people I knew reach into a system so complex that our best tools came back with almost nothing. It was there that I learned something that has stayed with me. Real change in biology comes when more people can simulate, and test, and try, and fail, and try again. Every bit of intelligence we could add to our models meant one more experiment we could run, one more question we could ask. It meant better lives for the people I loved.
+
+I still believe that. And it is a belief that reaches well past biology. At its best, technology widens what a person can do. It has let us live longer and travel farther and speak across oceans and hold nearly all of human knowledge in one hand. But its worth was never in the machine. Its worth was in what it handed back to the person holding it: a greater say over the conditions of their own life. That is what technology is for.
+
+But right now, we are walking through a fog. We are told this machine will lift the drudgery from our days and hand us back our hours. We are told, in the same breath, that the compute and the power it burns are enormous, and that the thing itself might be deadly. And so the argument about what to do has hardened into two camps.
+
+One says: slow down. If we can build faster than we can understand, then every step at the frontier is a gamble with stakes we cannot take back. Buy time. Build the institutions and the tools to know what we are making before we make something we cannot undo.
+
+The other says: you cannot freeze a technology the whole world is racing to build. If we stop, others will not, and we hand the future to people who do not share our values. So keep the frontier ours. Keep it open. Back new labs, trust competition, and let many hands make it both stronger and safer.
+
+Both are partly right. But both are answering a question neither has said out loud. It is not how fast. It is not how slow. It is this:
+
+**How do we keep progress moving, and keep our hands on the wheel?**
+
+I call the answer Aligned Acceleration. But to explain it, I have to start with how we let go of the wheel in the first place.
+
+## The Loss of Ownership
+
+For most of the last century, technology was progress you could see, touch, and own. In the decades after World War II, the television gained color. The personal computer came into the home. The iPhone put a computer in your pocket, and the internet opened a door to people and knowledge across the world.
+
+Through all of it, people felt like participants in progress. You bought the machine. You learned to use it. It became yours. Technology was something that entered your life and gave you more power over it.
+
+But by the late 2010s, that began to change. Technology shifted from things we owned to places we accessed. Products became subscriptions. Information moved onto platforms. Algorithms, the rules a company writes to decide what you see, decided more and more of what we saw, and the systems we depended on became harder and harder to leave.
+
+We gained a great deal in that trade. Two-day shipping. Nearly any song, any video, any fact in seconds. These companies grew to a scale no company had reached before, and our reach grew with them.
+
+But our say did not. Technology became infrastructure, governed by a few institutions that ordinary people could neither influence nor easily leave. And that changed how people felt about technology itself. Cambridge Analytica [cite]. A decade of privacy scandals [cite]. _The Social Dilemma_ [cite], in which the people who built social media explained how they built it to keep us hooked. Each one taught the same lesson. Big Tech was no longer simply working for people. People were the product.
+
+So when AI arrived in late 2022, it arrived into a crisis of trust. And this is what people were told.
+
+This is the most powerful technology ever created.
+
+> "This is the most powerful technology humanity has ever invented." Sam Altman, CEO of OpenAI [verify]
+
+A handful of organizations control it.
+
+It will replace your livelihood.
+
+> "AI could wipe out half of all entry-level white-collar jobs and push unemployment to 10 to 20 percent within one to five years." Dario Amodei, CEO of Anthropic [cite: Axios, May 2025]
+
+And the people building it believe it could kill you.
+
+> "we really do earnestly believe AI could kill all humans! I personally think it is >10% within the next decade." Evan Hubinger, Alignment Lead, Anthropic, September 9, 2026 [cite: Axios]
+
+Is it any wonder, then, that most Americans are more concerned than excited about AI, and want more control over how it is used in their lives? [cite: Pew]
+
+That concern is reasonable. A technology of extraordinary power is arriving fast, and the people it will touch most feel they have the least say in where it goes. The machines got stronger. Our grip got weaker. And so we face a choice: how do we keep our power over the future without giving up the progress that can make that future better?
+
+## Pace
+
+One answer is to slow down. To "pace the frontier." [cite: Dario Amodei]
+
+The argument is simple and compelling. Our power to build these systems must not outrun our power to understand and govern them. So we need institutions that can test the most powerful models, measure what they can do, and draw a line when their power moves beyond our ability to control the consequences.
+
+There is wisdom in that restraint. If a system can cause catastrophic harm, we cannot afford to discover the danger only after it is out in the world.
+
+But there is a difference between regulating a dangerous technology and regulating progress itself. And trying to control progress by slowing the frontier creates three problems.
+
+First, we cannot assume the rest of the world will slow down with us. The frontier will keep moving. If we step away from it, we give up some of our say over what one of the most consequential technologies of our time becomes.
+
+Second, we cannot assume the frontier will always be something we can pace. Today the most powerful models are expensive to build and concentrated in a few labs. That may not last. As powerful AI becomes cheaper to train, easier to copy, and able to keep learning after release, progress will happen in more places and on more machines. There may no longer be a single frontier anyone can freeze, inspect, and restart.
+
+Third, slowing down has a cost. Disease does not pause. Poverty does not pause. Scarcity does not pause. The family in the waiting room is not waiting on a committee. There are discoveries waiting to be made and problems within our power to solve, and progress delayed means cures delayed, knowledge delayed, and better lives delayed.
+
+So for those reasons, others begin from the opposite instinct.
+
+## Accelerate
+
+Progress is good.
+
+The accelerationist begins from a conviction I share: technology is how we overcome the limits of the world we inherit. It is how we cure disease, overcome scarcity, expand what we know, and widen what human beings can do.
+
+So let more companies compete to make intelligence, energy, and computation cheaper. Let new companies challenge old ones. And if powerful intelligence is coming, better that many people can build with it than a few institutions alone.
+
+But competition is not a permanent condition.
+
+Companies have every reason to escape it. They accumulate capital, control the infrastructure, lock in their customers, and build advantages that make them harder to challenge. Successful competition can produce firms powerful enough to weaken the competition that made them successful. And once a company no longer has to fight to be replaced, it no longer has to keep earning our choice.
+
+Scale makes this worse. If you can run an intelligent system on your laptop, imagine what a datacenter full of machines can run. So intelligence may become cheap enough for anyone to use while the most powerful systems still require infrastructure that only a handful of institutions can afford.
+
+An open frontier does not guarantee an open future. Follow this path alone and I see a world consolidated even further in the hands of a few organizations that ordinary people cannot influence, cannot challenge, and cannot leave. We would have built the most powerful technology in history and ended up exactly where the last decade left us. Stronger machines. Weaker grip.
+
+So neither slowing progress nor simply unleashing it answers what technology is for. The purpose of progress is not to win a race. It is not to make intelligence more powerful for its own sake. It is to give more people greater command over the conditions of their own lives.
+
+And that means the durable challenge is not how fast we go. It is this: how do we write the rules of the game so that progress keeps serving people, even as the technology itself keeps changing?
+
+## Aligned Acceleration
+
+That question is where Aligned Acceleration begins, and it begins with a simple premise. Becoming more capable and becoming better aligned are not opposing goals.
+
+By aligned, I mean something plain. Powerful technology should keep serving human purposes, and the institutions that control it should stay answerable to human beings.
+
+So Aligned Acceleration has four objectives. Increase the rate at which humanity solves problems. Increase the rate at which we discover when our systems are failing. Increase the rate at which those failures can be corrected, replaced, or redirected. And preserve people's ability to shape what progress is for.
+
+Regulation, then, should focus less on slowing progress and more on the rules under which progress happens. Solving real problems should become easier and more rewarding. Harming people should become harder and more expensive to ignore.
+
+### Shaping the game
+
+That may sound like theory. But we have done it before. The best rules we have ever written did three things at once: they kept the field open, they made harm costly, and they made important problems worth solving.
+
+The Acid Rain Program capped sulfur dioxide pollution but let each company decide how to cut it. Emissions fell by more than 95 percent. [cite] Government defined the harm and measured it. Companies found the way.
+
+Carterfone, a 1968 ruling, let Americans connect any safe device to AT&T's phone network, whether AT&T liked it or not. [cite] It protected the network from real harm, and it is the reason the answering machine, the fax machine, and the modem could exist.
+
+The AT&T breakup split the phone monopoly so competitors could enter, and long-distance prices fell sharply. [cite] The Microsoft case stopped a dominant platform from using its position to shut out newer rivals. [cite] Both stood for one principle: whoever owns today's infrastructure does not get to eliminate tomorrow's alternatives.
+
+And DARPA's Grand Challenge put a prize behind the self-driving car. In 2004, no car finished. One year later, five did. [cite] The same agency funded the research that became the internet. [cite] Government did not have to pick a winner or ban anything. It made a hard problem worth solving.
+
+### Four principles
+
+So from those examples, four principles for AI.
+
+1. Preserve the ability to challenge incumbents. Regulation should not raise the cost of entry or experimentation more than it must. Where it is feasible, rules that support interoperability, data portability, and switching make it easier for people to leave one provider and for new companies to compete. Safety rules will carry real costs. But those costs should match the risk being addressed, not simply be a price only today's largest firms can pay.
+
+2. Make responsibility follow consequential decisions. When an organization deploys an AI system in a way that can materially affect other people, it should not escape responsibility because the machine made the immediate decision. Where harm can fairly be traced to how a system was designed, deployed, or supervised, liability, disclosure, and independent evaluation give firms reason to find and reduce those risks before pushing the costs onto everyone else.
+
+3. Limit the consequences of dangerous experiments without limiting learning. Some failures are too consequential to discover through open deployment. So where the risk can be contained, developers should test and improve systems in settings that limit their ability to cause irreversible harm, and as systems are connected to more consequential tools, resources, and decisions, the evidence and safeguards expected of them should rise. Containment will never remove every risk. But it lets us learn what dangerous systems can do without treating every experiment as a bet on the world.
+
+4. Reward socially valuable progress. Government does not have to act only through prohibition. Research funding, procurement, prizes, and grants raise the returns to working on problems with large public benefit that markets underinvest in: scientific research, medicine, energy, defensive technology, and AI safety itself. Government does not need to choose the winning approach in advance. It can make important problems more valuable to solve.
+
+None of these asks the frontier to stop. None hands the future to a handful of companies or a handful of regulators. Each is a rule of the game, written so that the people building the most powerful technology of our time have to keep earning our choice, and keep answering to us.
+
+## A future that is ours
+
+So we should not be timid about what we want. We build technology because the world still contains problems we refuse to accept. We should want intelligence to become dramatically more powerful. We should want it curing the diseases we cannot cure today, answering the questions we cannot answer, creating abundance where there is scarcity, and giving people powers they do not yet have. We should want it in that waiting room.
+
+But there will never be one agreed definition of what an aligned intelligence should value. Companies, researchers, governments, communities, and individuals will disagree about how these systems should behave and what kind of future they should help create. That disagreement is not a problem we are going to engineer away.
+
+That is why democracy matters here. Democracy does not depend on everyone agreeing, or on always making the right decision. It begins with a faith that ordinary people should keep meaningful power over the systems that govern their lives. We preserve that power through rights, through checks and balances, through competition, through accountability and access to information, and through the ability to challenge or replace institutions that no longer serve us.
+
+So our technological future should rest on the same faith. Neither a handful of companies nor a handful of regulators should permanently decide what progress is allowed to become. We should build institutions that learn as technology changes, correct mistakes when they happen, preserve alternatives, and keep giving people a real say in where we go.
+
+Which means the false choice we started with, slow down or speed up, is not a choice at all. It is two ways of leaving the wheel in someone else's hands.
+
+That is Aligned Acceleration: building faster, while deliberately building a world in which solving problems wins, our ability to steer improves alongside the technology itself, and people keep the power to shape what comes next.
+
+None of this happens on its own. It depends on what we insist on. Refuse the false choice when it is offered to you. Choose the tools you can leave over the tools that own you. Tell the people who write the rules what you want from them.
+
+We should not be afraid of becoming more capable. We should make sure that as our technology becomes more powerful, people become more powerful over their own lives too.
+
+That is what technology is for.
