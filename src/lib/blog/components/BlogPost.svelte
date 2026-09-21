@@ -174,7 +174,7 @@
 		<header class="blog-hero">
 			{#if image}
 				<div class="hero-figure">
-					<img src={image} alt="" />
+					<img src={image} alt="Illustration for {heroTitle}" />
 				</div>
 			{/if}
 			<span class="hero-rule" aria-hidden="true"></span>

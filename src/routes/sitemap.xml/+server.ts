@@ -3,12 +3,13 @@ import { SITE_URL } from '$lib/seo/site';
 
 import { publishedBlogPosts } from '$lib/blog/posts';
 
-const routes = [
-	'/',
-	'/about',
-	'/built',
-	'/blog',
-	...publishedBlogPosts.map((post) => `/blog/${post.slug}`)
+const newest = publishedBlogPosts.map((p) => p.date).sort().at(-1);
+const routes: Array<[string, string | undefined]> = [
+	['/', undefined],
+	['/about', undefined],
+	['/built', undefined],
+	['/blog', newest],
+	...publishedBlogPosts.map((post): [string, string] => [`/blog/${post.slug}`, post.date])
 ];
 
 const escapeXml = (value: string) =>
@@ -19,9 +20,9 @@ const escapeXml = (value: string) =>
 		.replace(/</g, '&lt;')
 		.replace(/>/g, '&gt;');
 
-const toXml = (path: string) => {
+const toXml = ([path, lastmod]: [string, string | undefined]) => {
 	const url = new URL(path, SITE_URL).toString();
-	return `<url><loc>${escapeXml(url)}</loc></url>`;
+	return `<url><loc>${escapeXml(url)}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`;
 };
 
 export const GET: RequestHandler = async () => {
