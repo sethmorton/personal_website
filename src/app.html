@@ -31,8 +31,13 @@
 			}
 		</script>
 		<meta charset="utf-8" />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			rel="preload"
+			href="/fonts/literata-normal-400-700.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
+		/>
 		<link
 			rel="icon"
 			href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%2210 0 100 100%22><text y=%22.90em%22 font-size=%2290%22>🍵</text></svg>"
@@ -40,11 +45,20 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="alternate" type="application/rss+xml" title="Seth Morton" href="/rss.xml" />
 		%sveltekit.head%
-		<script
-			defer
-			src="https://cloud.umami.is/script.js"
-			data-website-id="d82550e2-c225-4149-83ce-207e0aed3d36"
-		></script>
+		<script>
+			// Analytics after the page's load and its next painted frame, so its third-party
+			// connection never delays first paint.
+			addEventListener('load', () =>
+				requestAnimationFrame(() =>
+					setTimeout(() => {
+						const s = document.createElement('script');
+						s.src = 'https://cloud.umami.is/script.js';
+						s.dataset.websiteId = 'd82550e2-c225-4149-83ce-207e0aed3d36';
+						document.head.append(s);
+					})
+				)
+			);
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>

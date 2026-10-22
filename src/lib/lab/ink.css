@@ -1,0 +1,28 @@
+/* What the ink canvases show before the worker's plate arrives (both carry class "ink", the
+   base canvas comes first). Text is server-rendered, so the page is readable throughout. */
+
+/* Phones: the figure is a fixed crop of the plate, so a pre-rendered copy
+   (static/ink/phone-figure.webp) appears with the HTML and the live canvas paints the same
+   pixels over it. Regenerate it whenever the trace or PHONE_CROP changes. */
+@media (max-width: 760px) {
+	canvas.ink:first-of-type {
+		background: var(--paper) url('/ink/phone-figure.webp') 0 0 / 100% 100% no-repeat;
+	}
+}
+
+/* Desktop: the warp depends on the layout, so there is no pre-rendered copy. The ink fades
+   in instead of popping. */
+@media (min-width: 761px) {
+	canvas.ink {
+		opacity: 0;
+		transition: opacity 0.6s ease-out;
+	}
+	canvas.ink[data-painted] {
+		opacity: 1;
+	}
+}
+@media (min-width: 761px) and (prefers-reduced-motion: reduce) {
+	canvas.ink {
+		transition: none;
+	}
+}

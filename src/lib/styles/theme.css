@@ -9,8 +9,8 @@
 	--accent-hover: color-mix(in srgb, var(--blue), var(--ink) 20%);
 	--accent-soft: color-mix(in srgb, var(--blue) 6%, var(--paper));
 	--font-display: Georgia, 'Times New Roman', serif;
-	--font-body: 'Literata', Georgia, 'Times New Roman', serif;
-	--font-ui: 'Source Sans 3', sans-serif;
+	--font-body: 'Literata', 'Literata Fallback', Georgia, 'Times New Roman', serif;
+	--font-ui: 'Source Sans 3', 'Source Sans 3 Fallback', sans-serif;
 	--font-code: 'IBM Plex Mono', ui-monospace, monospace;
 	--page-width: 900px;
 	--reading-width: 672px;
