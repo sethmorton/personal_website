@@ -1,4 +1,4 @@
-// Curated "Selected writing" list shown on the homepage.
+// Curated "Selected writing" list shown on the homepage, newest first (dates in blog/posts.ts).
 export const selectedWriting = [
 	{
 		title: 'The Shape of Inference',
@@ -13,12 +13,6 @@ export const selectedWriting = [
 		href: '/blog/the_geometry_of_surprise'
 	},
 	{
-		title: 'On Growth and the Low-Hanging Fruit of Immortality',
-		description:
-			"Achieving immortality is closer than you might think, and what does growth mean when it's no longer constrained by time?",
-		href: '/blog/on_growth_and_the_low_hanging_fruit_of_immortality'
-	},
-	{
 		title: 'What You Attend To Cannot Be Static',
 		description:
 			'Why fixed attention keeps models from learning continuously, and how thermodynamic computing could let them adapt in real time.',
@@ -29,6 +23,12 @@ export const selectedWriting = [
 		description:
 			'The differences in building software for biology vs software for everything else.',
 		href: '/blog/the_black_box_of_biology'
+	},
+	{
+		title: 'On Growth and the Low-Hanging Fruit of Immortality',
+		description:
+			"Achieving immortality is closer than you might think, and what does growth mean when it's no longer constrained by time?",
+		href: '/blog/on_growth_and_the_low_hanging_fruit_of_immortality'
 	}
 ];
 

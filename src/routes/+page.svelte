@@ -2,10 +2,11 @@
 	import { onMount } from 'svelte';
 	import SEO from '$lib/blog/components/SEO.svelte';
 	import Bio from '$lib/lab/Bio.svelte';
+	import Cursor from '$lib/lab/Cursor.svelte';
 	import { selectedWriting, socialLinks } from '$lib/data/writing';
 	import { mountInk } from '$lib/lab/inkNeurons';
 
-	const RELATED = [[1, 3], [0, 3], [4], [0, 1], [2]];
+	const RELATED = [[1, 2], [0, 2], [0, 1], [4], [3]];
 	let home: HTMLElement;
 	let base: HTMLCanvasElement;
 	let overlay: HTMLCanvasElement;
@@ -37,7 +38,16 @@
 	<div class="content">
 		<section class="intro" data-intro aria-labelledby="name">
 			<header>
-				<img class="portrait" src="/seth_image.jpg" alt="" width="56" height="56" />
+				<span class="portrait">
+					<img src="/seth_image.jpg" alt="" width="56" height="56" />
+					<!-- One pen loop that overshoots its start, drawn on hover. -->
+					<svg viewBox="0 0 100 100" aria-hidden="true"
+						><path
+							pathLength="1"
+							d="M78 14C62 2 24 4 9 30-4 54 10 88 44 95 74 101 97 80 96 50 95 26 80 10 56 7"
+						/></svg
+					>
+				</span>
 				<h1 id="name" data-text>Seth Morton</h1>
 			</header>
 			<div class="bio" data-text><Bio /></div>
@@ -74,6 +84,7 @@
 		</section>
 	</div>
 </main>
+<Cursor />
 
 <style>
 	.home {
@@ -107,15 +118,52 @@
 	header {
 		display: flex;
 		align-items: flex-end;
+		width: fit-content;
 		gap: clamp(14px, 1.3cqw, 48px);
 		margin-bottom: clamp(24px, 2.5cqw, 80px);
 	}
 	.portrait {
+		position: relative;
+		flex-shrink: 0;
 		width: clamp(48px, 4.2cqw, 160px);
 		height: clamp(48px, 4.2cqw, 160px);
 		margin-bottom: 0.3cqw;
+	}
+	.portrait img {
+		display: block;
+		width: 100%;
+		height: 100%;
 		border-radius: 50%;
 		object-fit: cover;
+		transition:
+			rotate 480ms cubic-bezier(0.34, 1.56, 0.64, 1),
+			scale 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+	}
+	.portrait svg {
+		position: absolute;
+		inset: -16%;
+		overflow: visible;
+		fill: none;
+		stroke: var(--blue);
+		stroke-width: 1.5px;
+		stroke-linecap: round;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+		transition: stroke-dashoffset 260ms ease-in;
+	}
+	.portrait path {
+		vector-effect: non-scaling-stroke;
+	}
+	/* Name or portrait: the photo tips and springs, and a pen circles it. */
+	@media (hover: hover) {
+		header:hover .portrait img {
+			rotate: -7deg;
+			scale: 1.07;
+		}
+		header:hover .portrait svg {
+			stroke-dashoffset: 0;
+			transition: stroke-dashoffset 560ms cubic-bezier(0.6, 0, 0.2, 1) 60ms;
+		}
 	}
 	/* One line: sized so name plus portrait fit the bio column at every width. */
 	h1 {
@@ -281,7 +329,9 @@
 	@media (prefers-reduced-motion: reduce) {
 		.home :global(a),
 		.pen-link,
-		.title-words {
+		.title-words,
+		.portrait img,
+		.portrait svg {
 			transition: none;
 		}
 	}
