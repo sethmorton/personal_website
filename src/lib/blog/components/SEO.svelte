@@ -35,8 +35,8 @@
 		url = undefined as string | undefined,
 		image = SITE_IMAGE,
 		imageAlt = SITE_IMAGE_ALT,
-		imageWidth = image === SITE_IMAGE ? 471 : undefined,
-		imageHeight = image === SITE_IMAGE ? 510 : undefined,
+		imageWidth = image === SITE_IMAGE ? 1200 : undefined,
+		imageHeight = image === SITE_IMAGE ? 630 : undefined,
 		publishedTime,
 		robots = 'index, follow, max-image-preview:large',
 		twitterCard = 'summary_large_image' as TwitterCard
