@@ -27,67 +27,67 @@ export type BlogPostEntry = {
 
 export const publishedBlogPosts: BlogPostEntry[] = [
 	{
-		title: 'balance',
+		title: 'Balance',
 		slug: 'balance',
 		date: '2024-11-19',
 		content: balanceContent
 	},
 	{
-		title: 'gratitude & hyperbolic discounting',
+		title: 'Gratitude & Hyperbolic Discounting',
 		slug: 'gratitude_&_hyperbolic_discounting',
 		date: '2024-12-18',
 		content: gratitudeContent
 	},
 	{
-		title: 'serendipity & the lonely generation',
+		title: 'Serendipity & the Lonely Generation',
 		slug: 'serendipity_&_the_lonely_generation',
 		date: '2025-01-31',
 		content: serendipityContent
 	},
 	{
-		title: 'where we fit into the future of AI',
+		title: 'Where We Fit Into the Future of AI',
 		slug: 'where_we_fit_into_the_future_of_ai',
 		date: '2025-05-12',
 		content: futureAiContent
 	},
 	{
-		title: 'on growth and the low-hanging fruit of immortality',
+		title: 'On Growth and the Low-Hanging Fruit of Immortality',
 		slug: 'on_growth_and_the_low_hanging_fruit_of_immortality',
 		date: '2025-09-13',
 		content: onGrowthContent
 	},
 	{
-		title: 'the black box of biology',
+		title: 'The Black Box of Biology',
 		slug: 'the_black_box_of_biology',
 		date: '2025-10-18',
 		content: theBlackBoxOfBiologyContent
 	},
 	{
-		title: 'when forgetting is no longer the default',
+		title: 'When Forgetting Is No Longer the Default',
 		slug: 'when_forgetting_is_no_longer_the_default',
 		date: '2025-10-22',
 		content: whenForgettingIsNoLongerTheDefaultContent
 	},
 	{
-		title: 'biotech has a distribution problem',
+		title: 'Biotech Has a Distribution Problem',
 		slug: 'biotech_has_a_distribution_problem',
 		date: '2025-12-14',
 		content: biotechHasADistributionProblemContent
 	},
 	{
-		title: "memory isn't learning",
+		title: "Memory Isn't Learning",
 		slug: 'memory_isnt_learning',
 		date: '2026-03-31',
 		content: memoryIsntLearningContent
 	},
 	{
-		title: 'what you attend to cannot be static',
+		title: 'What You Attend to Cannot Be Static',
 		slug: 'what_you_attend_to_cannot_be_static',
 		date: '2026-04-13',
 		content: whatYouAttendToCannotBeStaticContent
 	},
 	{
-		title: 'the geometry of surprise',
+		title: 'The Geometry of Surprise',
 		slug: 'the_geometry_of_surprise',
 		date: '2026-04-23',
 		content: theGeometryOfSurpriseContent

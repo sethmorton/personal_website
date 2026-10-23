@@ -20,7 +20,7 @@ export const BLOG_META: Record<string, BlogMeta> = {
 		type: 'article'
 	},
 	'serendipity_&_the_lonely_generation': {
-		title: 'Serendipity & The Lonely Generation',
+		title: 'Serendipity & the Lonely Generation',
 		description: 'Designing for chance encounters in an isolated world.',
 		type: 'article'
 	},
@@ -82,7 +82,7 @@ export const BLOG_META: Record<string, BlogMeta> = {
 		type: 'article'
 	},
 	what_you_attend_to_cannot_be_static: {
-		title: 'What You Attend To Cannot Be Static',
+		title: 'What You Attend to Cannot Be Static',
 		description:
 			'Why frozen attention weights block continual learning, and why thermodynamic computation may be the real path forward.',
 		type: 'article'
