@@ -15,3 +15,5 @@ Welcome to the repository for my personal website. This site showcases my work, 
 - Responsive design
 - Links to my projects and social profiles
 - About me section
+
+The selected-work page at `/built` links to GeneLoop at https://gene-loop.com.

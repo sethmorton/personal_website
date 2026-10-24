@@ -23,7 +23,7 @@
 				<ContentLink
 					title="Geneloop"
 					description="AI-powered sequence design platform."
-					href="https://geneloop.bio"
+					href="https://gene-loop.com"
 					external
 				/>
 			</li>
