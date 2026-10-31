@@ -28,6 +28,7 @@
 		<BlogPost
 			content={selectedBlogPost.content}
 			teaser={selectedBlogPost.teaser}
+			hiss={selectedBlogPost.hiss}
 			publishDate={selectedBlogPost.date}
 			title={selectedBlogPost.title}
 			image={selectedBlogPost.image ?? `/blog/${slug}.webp`}

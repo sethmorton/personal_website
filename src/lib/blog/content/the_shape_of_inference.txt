@@ -16,7 +16,7 @@ What eventually resolved the problem was a phone call: a colleague mentioned off
 
 Fourteen years later, Penzias and Wilson were in Stockholm [accepting the Nobel Prize](https://www.nobelprize.org/prizes/physics/1978/speedread/).
 
-The hiss turned out to be the [cosmic microwave background](https://ui.adsabs.harvard.edu/abs/1965ApJ...142..419P/abstract) - the first direct evidence of the Big Bang.
+The hiss turned out to be the [cosmic microwave background](https://ui.adsabs.harvard.edu/abs/1965ApJ...142..419P/abstract) - the first direct evidence of the Big Bang. [[sn: Planck's 2018 map of that hiss is now hiding behind the horn at the top of this page. On desktop, scroll up and hold your cursor over the sky. Map: [ESA/Planck Collaboration](https://www.esa.int/ESA_Multimedia/Images/2018/07/Planck_s_view_of_the_cosmic_microwave_background).]]<span data-hiss-reveal></span>
 
 I think a lot about this story. On the day of that phone call, Penzias and Wilson collected zero new measurements.
 

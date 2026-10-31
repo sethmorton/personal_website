@@ -3,7 +3,16 @@
 	import katex from 'katex';
 	import { ANIMS } from '$lib/blog/anim';
 	import VariantFigure from '$lib/blog/anim/VariantFigure.svelte';
-	let { publishDate, content, onClose, title = '', image = '', teaser = '' } = $props();
+	import HeroHiss from '$lib/blog/components/HeroHiss.svelte';
+	let {
+		publishDate,
+		content,
+		onClose,
+		title = '',
+		image = '',
+		teaser = '',
+		hiss = false
+	} = $props();
 
 	// If the post opens with a markdown heading, use it as the hero title (so the
 	// casing stays in the author's voice) and strip that line from the body so it
@@ -174,6 +183,7 @@
 		<header class="blog-hero">
 			{#if image}
 				<div class="hero-figure">
+					{#if hiss}<HeroHiss />{/if}
 					<img src={image} alt="Illustration for {heroTitle}" />
 				</div>
 			{/if}
@@ -239,6 +249,7 @@
 	}
 
 	.hero-figure {
+		position: relative;
 		margin: 0 0 3rem;
 		display: flex;
 		justify-content: center;
@@ -246,6 +257,7 @@
 	}
 
 	.hero-figure img {
+		position: relative;
 		display: block;
 		width: auto;
 		max-width: 70%;

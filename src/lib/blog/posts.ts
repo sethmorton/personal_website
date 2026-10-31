@@ -23,6 +23,8 @@ export type BlogPostEntry = {
 	image?: string;
 	/** Optional short film, loaded only when opened. */
 	teaser?: string;
+	/** Pointer sweeps CMB static behind the hero (The Shape of Inference). */
+	hiss?: boolean;
 };
 
 export const publishedBlogPosts: BlogPostEntry[] = [
@@ -97,7 +99,8 @@ export const publishedBlogPosts: BlogPostEntry[] = [
 		slug: 'the_shape_of_inference',
 		date: '2026-09-07',
 		content: theShapeOfInferenceContent,
-		teaser: inferenceFilm
+		teaser: inferenceFilm,
+		hiss: true
 	}
 ];
 
