@@ -84,11 +84,19 @@ export function inkColor(pal: number[][], a: number) {
 	return `rgb(${c(0)},${c(1)},${c(2)})`;
 }
 
+// Strokes shorter than this (plate px) away from the somata are tracer fragments; their ink
+// fades with length so they read as texture, not as stray beads.
+const FRAGMENT = 10;
+// Within this distance of a soma (plate px along the fibres) short strokes are its contour
+// rings and stay at full ink.
+const SOMA_R = 120;
+
 /**
  * Draws every segment with its own width and ink, composited with 'darken' so joints never
- * bead. `xy` holds every stroke point already warped to canvas px (strokes concatenated),
- * `dotXY` the dots; `k` is canvas px per plate px. `boost[b]` thickens main-cell fibres
- * leading to terminal b (learned paths); 1 leaves them as traced.
+ * bead. Ink is eased along each stroke ([1,2,1]): the tracer's per-point steps otherwise show
+ * as bands at full device resolution. `xy` holds every stroke point already warped to canvas
+ * px (strokes concatenated), `dotXY` the dots; `k` is canvas px per plate px. `boost[b]`
+ * thickens main-cell fibres leading to terminal b (learned paths); 1 leaves them as traced.
  */
 export function draw(
 	ctx: OffscreenCanvasRenderingContext2D,
@@ -103,17 +111,34 @@ export function draw(
 	ctx.lineCap = 'round';
 	let p = 0;
 	for (const s of t.strokes) {
-		for (let i = 1; i < s.w.length; i++) {
+		const n = s.w.length;
+		let len = 0;
+		for (let i = 1; i < n; i++)
+			len += Math.hypot(
+				(s.pts[2 * i] - s.pts[2 * i - 2]) * t.W,
+				(s.pts[2 * i + 1] - s.pts[2 * i - 1]) * t.H
+			);
+		const fade = s.d[0] >= 0 && s.d[0] < SOMA_R ? 1 : Math.min(1, len / FRAGMENT);
+		const ink = s.a.map((x, i) =>
+			i === 0 || i === n - 1 ? x : (s.a[i - 1] + 2 * x + s.a[i + 1]) / 4
+		);
+		const X = (i: number) => xy[p + 2 * i],
+			Y = (i: number) => xy[p + 2 * i + 1];
+		// One quadratic piece per point, from the midpoint before it to the midpoint after it
+		// (the stroke's own ends at its first and last point): a smooth curve, not a polyline.
+		for (let i = 0; n > 1 && i < n; i++) {
+			const i0 = Math.max(i - 1, 0),
+				i1 = Math.min(i + 1, n - 1);
 			const g = s.c[i] === 0 && s.b[i] >= 0 ? boost[s.b[i]] : 1;
-			const w = ((s.w[i - 1] + s.w[i]) / 2) * k * g,
-				a = Math.min(1, ((s.a[i - 1] + s.a[i]) / 2) * (0.6 + 0.4 * g));
+			const w = ((s.w[i0] + 2 * s.w[i] + s.w[i1]) / 4) * k * g,
+				a = Math.min(1, ink[i] * (0.6 + 0.4 * g)) * fade;
 			// Sub-pixel strands keep their ink mass (width × alpha) but never go below 0.7px.
 			const lw = Math.max(w, 0.7);
 			ctx.strokeStyle = inkColor(t.pal, Math.min(1, (a * w) / lw));
 			ctx.lineWidth = lw;
 			ctx.beginPath();
-			ctx.moveTo(xy[p + 2 * i - 2], xy[p + 2 * i - 1]);
-			ctx.lineTo(xy[p + 2 * i], xy[p + 2 * i + 1]);
+			ctx.moveTo((X(i0) + X(i)) / 2, (Y(i0) + Y(i)) / 2);
+			ctx.quadraticCurveTo(X(i), Y(i), (X(i) + X(i1)) / 2, (Y(i) + Y(i1)) / 2);
 			ctx.stroke();
 		}
 		p += s.pts.length;
