@@ -1,5 +1,6 @@
 // Renderer and warp for the traced neuron plate (src/lib/lab/trace.json, built from the
-// reference illustration by /tmp/inktrace/trace.py). Strokes are centerlines with per-point
+// reference illustration by /tmp/inktrace/trace.py, then cleaned by scripts/prune-trace.mjs).
+// Strokes are centerlines with per-point
 // width and ink level; a thin-plate spline bends the plate onto the live page layout.
 
 /**
@@ -84,17 +85,11 @@ export function inkColor(pal: number[][], a: number) {
 	return `rgb(${c(0)},${c(1)},${c(2)})`;
 }
 
-// Strokes shorter than this (plate px) away from the somata are tracer fragments; their ink
-// fades with length so they read as texture, not as stray beads.
-const FRAGMENT = 10;
-// Within this distance of a soma (plate px along the fibres) short strokes are its contour
-// rings and stay at full ink.
-const SOMA_R = 120;
-
 /**
- * Draws every segment with its own width and ink, composited with 'darken' so joints never
- * bead. Ink is eased along each stroke ([1,2,1]): the tracer's per-point steps otherwise show
- * as bands at full device resolution. `xy` holds every stroke point already warped to canvas
+ * Draws every stroke as a smooth curve, each piece with its own width and ink, composited
+ * with 'darken' so joints never bead. Ink is eased along each stroke ([1,2,1]): the tracer's
+ * per-point steps otherwise show as bands at full device resolution. `xy` holds every stroke
+ * point already warped to canvas
  * px (strokes concatenated), `dotXY` the dots; `k` is canvas px per plate px. `boost[b]`
  * thickens main-cell fibres leading to terminal b (learned paths); 1 leaves them as traced.
  */
@@ -112,13 +107,6 @@ export function draw(
 	let p = 0;
 	for (const s of t.strokes) {
 		const n = s.w.length;
-		let len = 0;
-		for (let i = 1; i < n; i++)
-			len += Math.hypot(
-				(s.pts[2 * i] - s.pts[2 * i - 2]) * t.W,
-				(s.pts[2 * i + 1] - s.pts[2 * i - 1]) * t.H
-			);
-		const fade = s.d[0] >= 0 && s.d[0] < SOMA_R ? 1 : Math.min(1, len / FRAGMENT);
 		const ink = s.a.map((x, i) =>
 			i === 0 || i === n - 1 ? x : (s.a[i - 1] + 2 * x + s.a[i + 1]) / 4
 		);
@@ -131,7 +119,7 @@ export function draw(
 				i1 = Math.min(i + 1, n - 1);
 			const g = s.c[i] === 0 && s.b[i] >= 0 ? boost[s.b[i]] : 1;
 			const w = ((s.w[i0] + 2 * s.w[i] + s.w[i1]) / 4) * k * g,
-				a = Math.min(1, ink[i] * (0.6 + 0.4 * g)) * fade;
+				a = Math.min(1, ink[i] * (0.6 + 0.4 * g));
 			// Sub-pixel strands keep their ink mass (width × alpha) but never go below 0.7px.
 			const lw = Math.max(w, 0.7);
 			ctx.strokeStyle = inkColor(t.pal, Math.min(1, (a * w) / lw));

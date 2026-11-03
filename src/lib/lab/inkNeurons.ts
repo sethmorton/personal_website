@@ -7,7 +7,7 @@
 import { inkColor } from './ink';
 import './ink.css'; // loading states: phone placeholder, desktop fade-in
 import type { PlateMeta, PlatePainted, PlateRequest, PlateWarp } from './plate.worker';
-// Content-hashed asset URL, so the 780 KB trace is cached immutably.
+// Content-hashed asset URL, so the 620 KB trace is cached immutably.
 import traceUrl from './trace.json?url';
 
 type Pt = [number, number];
