@@ -2,10 +2,14 @@
    base canvas comes first). Text is server-rendered, so the page is readable throughout. */
 
 /* Phones: the figure is a fixed crop of the plate, so a pre-rendered copy
-   (static/ink/phone-figure.webp) appears with the HTML and the live canvas paints the same
-   pixels over it. Regenerate it whenever the trace or PHONE_CROP changes. */
+   (static/ink/phone-figure.webp) appears with the HTML until the live canvas paints. It is
+   dropped then: left under the transparent canvas, its upscaled lossy pixels blur every line.
+   Regenerate it whenever the trace or PHONE_CROP changes. */
 @media (max-width: 760px) {
 	canvas.ink:first-of-type {
+		background: var(--paper);
+	}
+	canvas.ink:first-of-type:not([data-painted]) {
 		background: var(--paper) url('/ink/phone-figure.webp') 0 0 / 100% 100% no-repeat;
 	}
 }

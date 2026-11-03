@@ -128,7 +128,7 @@ export function mountInk({
 	const layout = () => {
 		if (!meta) return;
 		const { W, H, plateDots } = meta;
-		dpr = Math.min(window.devicePixelRatio || 1, 2);
+		dpr = window.devicePixelRatio || 1;
 		w = home.clientWidth;
 		const box = home.getBoundingClientRect();
 		const intro = home.querySelector('[data-intro]')!.getBoundingClientRect();
